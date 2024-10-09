@@ -96,10 +96,11 @@
             <option value="th">Thai</option>
         </select>
         <br><br>
-        <button onclick="filterHospitals('all')" data-i18n="all">All</button>
-        <button onclick="filterHospitals('deployed')" data-i18n="deployed">Deployed</button>
-        <button onclick="filterHospitals('in-progress')" data-i18n="inProgress">In Progress</button>
-        <button onclick="filterHospitals('signed')" data-i18n="signed">Signed</button>
+
+        <!-- Remplacer les boutons de filtrage par des checkboxs -->
+        <label><input type="checkbox" id="deployedFilter" checked> <span data-i18n="deployed" style="color:green;">Deployed</span></label><br>
+        <label><input type="checkbox" id="inProgressFilter" checked> <span data-i18n="inProgress" style="color:orange;">In Progress</span></label><br>
+        <label><input type="checkbox" id="signedFilter" checked> <span data-i18n="signed" style="color:blue;">Signed</span></label><br>
     </div>
 
     <div id="legend">
@@ -163,8 +164,9 @@
         var map = L.map('map').setView([48.8566, 2.3522], 5);
         var markersCluster = L.markerClusterGroup();
 
-        var lightTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-        var darkTiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png');
+        // Utilisation de CartoDB pour les tuiles
+        var lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png');
+        var darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
 
         lightTiles.addTo(map);
 
@@ -222,16 +224,28 @@
         });
         map.addLayer(markersCluster);
 
-        function filterHospitals(status) {
+        // Filtrer les hôpitaux en fonction des checkboxs
+        function filterHospitals() {
+            var deployedChecked = document.getElementById('deployedFilter').checked;
+            var inProgressChecked = document.getElementById('inProgressFilter').checked;
+            var signedChecked = document.getElementById('signedFilter').checked;
+
             markersCluster.clearLayers();
             hospitals.forEach(function(hospital) {
-                if (status === 'all' || hospital.status === status) {
+                if ((deployedChecked && hospital.status === 'deployed') ||
+                    (inProgressChecked && hospital.status === 'in-progress') ||
+                    (signedChecked && hospital.status === 'signed')) {
                     createMarker(hospital);
                 }
             });
-            refreshPopups();  // Assurez-vous que les popups sont mis à jour lors de la sélection
         }
 
+        // Appliquer le filtre à chaque changement des checkboxs
+        document.getElementById('deployedFilter').addEventListener('change', filterHospitals);
+        document.getElementById('inProgressFilter').addEventListener('change', filterHospitals);
+        document.getElementById('signedFilter').addEventListener('change', filterHospitals);
+
+        // Statistiques avec Chart.js
         var ctx = document.getElementById('statsChart').getContext('2d');
         var chart = new Chart(ctx, {
             type: 'doughnut',
@@ -253,6 +267,7 @@
             }
         });
 
+        // Basculer entre mode clair et mode sombre
         document.getElementById('toggleTheme').addEventListener('click', function() {
             document.getElementById('map').classList.add('hidden');
             setTimeout(function() {
