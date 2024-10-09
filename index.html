@@ -134,7 +134,7 @@
                 "status": "deployed",
                 "address": "1 Rue de l'Hôpital, Paris",
                 "website": "http://hospital1.com",
-                "photo": "https://via.placeholder.com/100"
+                "photo": "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
             },
             {
                 "name": "Hospital 2",
@@ -145,7 +145,7 @@
                 "status": "in-progress",
                 "address": "2 Rue de l'Hôpital, Lyon",
                 "website": "http://hospital2.com",
-                "photo": "https://via.placeholder.com/100"
+                "photo": "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
             },
             {
                 "name": "Hospital 3",
@@ -156,7 +156,7 @@
                 "status": "signed",
                 "address": "3 Straße Krankenhaus, Berlin",
                 "website": "http://hospital3.com",
-                "photo": "https://via.placeholder.com/100"
+                "photo": "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
             }
         ];
 
@@ -484,7 +484,7 @@
             if (err) return console.error('Something went wrong:', err);
             updateUI();
         });
-        
+
         function updateUI() {
             document.querySelectorAll('[data-i18n]').forEach(function(element) {
                 element.textContent = i18next.t(element.getAttribute('data-i18n'));
