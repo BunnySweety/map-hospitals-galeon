@@ -16,6 +16,13 @@
     <script src="https://unpkg.com/i18next@20.1.0/i18next.min.js"></script>
 
     <style>
+        :root {
+            --primary-color: #004080; /* Couleur principale */
+            --secondary-color: #00aaff; /* Couleur secondaire */
+            --text-color: #333; /* Couleur par défaut du texte */
+            --background-color: #f1f1f1; /* Couleur de fond claire */
+        }
+
         body, html {
             height: 100%;
             margin: 0;
@@ -36,26 +43,27 @@
             top: 10px;
             left: 60px;
             z-index: 1000;
-            background: var(--bg-color, white);
-            color: var(--text-color, black);
+            background: #fff;
+            color: var(--text-color);
             padding: 10px;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
             max-width: 250px;
+            border: 1px solid var(--primary-color);
         }
 
         #toggleFilters {
             position: absolute;
-            top: 10px;
+            top: 90px;
             left: 10px;
             z-index: 1000;
-            background: var(--bg-color, white);
-            color: var(--text-color, black);
+            background: #fff;
+            color: var(--text-color);
             padding: 10px;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
             cursor: pointer;
-            display: none; /* Affiché uniquement sur mobile */
+            display: block;
         }
 
         #legend {
@@ -63,11 +71,12 @@
             bottom: 10px;
             left: 10px;
             z-index: 1000;
-            background: var(--bg-color, white);
-            color: var(--text-color, black);
+            background: #fff;
+            color: var(--text-color);
             padding: 10px;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--primary-color);
         }
 
         #chartContainer {
@@ -75,23 +84,37 @@
             bottom: 10px;
             right: 10px;
             z-index: 1000;
-            background: var(--bg-color, white);
-            color: var(--text-color, black);
+            background: #fff;
+            color: var(--text-color);
             padding: 10px;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--primary-color);
         }
 
+        /* Icône pour basculer entre modes clair/sombre */
         #themeToggle {
             position: absolute;
-            top: 10px; /* Positionné à 10px du haut */
+            top: 10px;
             right: 10px;
             z-index: 1001;
-            background: var(--bg-color, white);
-            color: var(--text-color, black);
+            background: var(--primary-color);
+            color: #fff;
             padding: 10px;
-            border-radius: 8px;
+            border-radius: 50%;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #themeToggle i {
+            font-size: 20px;
+        }   
+
+        /* Cacher le logo Leaflet */
+        .leaflet-control-attribution {
+            display: none !important;
         }
 
         /* Réduire la taille du donuts et de sa légende sur mobile */
@@ -135,7 +158,111 @@
             display: none;
         }
 
+        /* Amélioration du thème sombre */
+        body.dark-mode input, 
+        body.dark-mode select,
+        #filters.dark-mode, 
+        #legend.dark-mode, 
+        #chartContainer.dark-mode, 
+        #themeToggle.dark-mode,
+        #toggleFilters.dark-mode {
+            background: #2c2c2c;
+            color: #e0e0e0;
+            border-color: #444;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Placeholder */
+        body.dark-mode input::placeholder {
+            color: #b3b3b3;
+        }
+
+        /* Bordures plus visibles */
+        body.dark-mode input, 
+        body.dark-mode select {
+            border: 1px solid #555;
+        }
+
+        /* Amélioration des légendes */
+        #legend.dark-mode p,
+        #chartContainer.dark-mode p {
+            color: #f1f1f1;
+            font-size: 1rem;
+        }
+
+        /* Checkboxs */
+        #filters.dark-mode label input[type="checkbox"]:checked + span {
+            color: #ffffff;
+        }
+
+        /* Styles pour le contrôle de zoom en mode sombre */
+        body.dark-mode .leaflet-control-zoom a {
+            background-color: #333; /* Couleur de fond sombre */
+            color: #f1f1f1; /* Couleur du texte plus clair */
+            border: 1px solid #666; /* Bordure contrastée */
+        }
+
+        /* Styles lorsque le contrôle de zoom est survolé en mode sombre */
+        body.dark-mode .leaflet-control-zoom a:hover {
+            background-color: #555; /* Légère différence de couleur lors du survol */
+            color: #ffffff; /* Couleur du texte encore plus claire pour le survol */
+        }
+
+        /* Styles pour les popups en mode sombre */
+        body.dark-mode .leaflet-popup-content-wrapper {
+            background-color: #2c2c2c; /* Fond plus sombre pour le popup */
+            color: #e0e0e0; /* Texte plus clair pour le mode sombre */
+            border-radius: 8px;
+            border: 1px solid #444; /* Bordure légèrement contrastée */
+        }
+
+        body.dark-mode .leaflet-popup-tip {
+            background-color: #2c2c2c; /* Ajuster la couleur du tip */
+        }
+
+        body.dark-mode a {
+            color: #1e90ff; /* Couleur des liens en mode sombre */
+        }
+
+        body.dark-mode .leaflet-popup-content-wrapper img {
+            border: 1px solid #444; /* Bordure autour des images en mode sombre */
+        }
+
+        /* Styles pour le nom de l'hôpital dans les popups en mode sombre */
+        body.dark-mode .leaflet-popup-content-wrapper h1 {
+            color: #00aaff; /* Utiliser une couleur vive comme le bleu clair */
+            font-size: 1.4em; /* Agrandir un peu la taille de la police */
+            font-weight: bold; /* Rendre le texte en gras pour le faire ressortir */
+            margin-bottom: 10px; /* Ajouter un espacement en dessous */
+        }
+
+        /* Améliorer la lisibilité des labels de checkbox en mode sombre */
+        body.dark-mode label span {
+            color: #ffffff !important; /* Blanc pour une meilleure lisibilité */
+        }
+
+        /* Changer la couleur des textes lorsque les cases sont cochées */
+        body.dark-mode label input[type="checkbox"]:checked + span[data-i18n="deployed"] {
+            color: #60d829d3 !important; /* Vert vif pour déployé */
+        }
+
+        body.dark-mode label input[type="checkbox"]:checked + span[data-i18n="inProgress"] {
+            color: #ffcc00 !important; /* Jaune/orange vif pour en cours */
+        }
+
+        body.dark-mode label input[type="checkbox"]:checked + span[data-i18n="signed"] {
+            color: #4887fa !important; /* Bleu vif pour signé */
+        }
+
+        /* Bordure claire pour les checkboxs */
+        body.dark-mode label input[type="checkbox"] {
+            outline: 1px solid #ffffff !important; /* Bordure blanche pour les checkbox */
+            background-color: #333333 !important; /* Fond de la case en gris foncé */
+        }
     </style>
+
+    <!-- Ajout de Font Awesome pour l'icône -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <div id="toggleFilters">☰</div>
@@ -203,8 +330,9 @@
         <canvas id="statsChart" width="200" height="200"></canvas>
     </div>
 
+    <!-- Remplacement du bouton texte par une icône -->
     <div id="themeToggle">
-        <button id="toggleTheme" data-i18n="toggleTheme">Dark/Light Mode</button>
+        <i class="fas fa-adjust"></i> <!-- Icône pour Dark/Light mode -->
     </div>
 
     <div id="map"></div>
@@ -254,54 +382,20 @@
             }
         ];
 
+        // Fonction pour vérifier si le mode sombre est activé
+        function isDarkMode() {
+            return document.body.classList.contains('dark-mode');
+        }
+
+        // Initialisation de la carte Leaflet
         var map = L.map('map').setView([48.8566, 2.3522], 5);
         var markersCluster = L.markerClusterGroup();
 
-        // Utilisation de CartoDB pour les tuiles
         var lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png');
         var darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
-
         lightTiles.addTo(map);
 
-        // Définir des cercles en fonction du statut
-        function getStatusColor(status) {
-            if (status === 'deployed') return 'green';
-            if (status === 'in-progress') return 'orange';
-            return 'blue';
-        }
-
-        function createMarker(hospital) {
-            var marker = L.circleMarker([hospital.lat, hospital.lon], {
-                radius: 8,
-                fillColor: getStatusColor(hospital.status),
-                color: getStatusColor(hospital.status),
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.8
-            });
-            marker.bindPopup(generatePopupContent(hospital));
-            markersCluster.addLayer(marker);
-        }
-
-        function generatePopupContent(hospital) {
-            return `
-                <div style="text-align: center;">
-                    <b>${hospital.name}</b><br>
-                    <img src="${hospital.photo}" style="width:100px; height:auto;" alt="Photo"><br>
-                    <a href="${hospital.website}" target="_blank">${i18next.t('visitWebsite') || 'Visit Website'}</a><br>
-                    <p>${i18next.t('status') || 'Status'}: <span style="color: ${getStatusColor(hospital.status)};">${i18next.t(hospital.status) || hospital.status}</span></p>
-                    <p>${i18next.t('address') || 'Address'}: ${hospital.address}</p>
-                </div>
-            `;
-        }
-
-        function refreshPopups() {
-            markersCluster.eachLayer(function(marker) {
-                var hospital = marker.options.hospitalData;
-                marker.setPopupContent(generatePopupContent(hospital));
-            });
-        }
-
+        // Générer les marqueurs pour chaque hôpital et les ajouter au cluster
         hospitals.forEach(function(hospital) {
             var marker = L.circleMarker([hospital.lat, hospital.lon], {
                 radius: 8,
@@ -309,47 +403,14 @@
                 color: getStatusColor(hospital.status),
                 weight: 1,
                 opacity: 1,
-                fillOpacity: 0.8,
-                hospitalData: hospital  // Stocker les données hospitalières dans le marqueur pour les popups
-            });
-            marker.bindPopup(generatePopupContent(hospital));
+                fillOpacity: 0.8
+            }).bindPopup(generatePopupContent(hospital));
             markersCluster.addLayer(marker);
         });
+
         map.addLayer(markersCluster);
 
-        // Filtrer les hôpitaux en fonction des checkboxs, continent, pays et ville
-        function filterHospitals() {
-            var continent = document.getElementById('continentSelect').value.toLowerCase();
-            var country = document.getElementById('countryFilter').value.toLowerCase();
-            var city = document.getElementById('cityFilter').value.toLowerCase();
-            var deployedChecked = document.getElementById('deployedFilter').checked;
-            var inProgressChecked = document.getElementById('inProgressFilter').checked;
-            var signedChecked = document.getElementById('signedFilter').checked;
-
-            markersCluster.clearLayers();
-            hospitals.forEach(function(hospital) {
-                var continentMatches = (continent === 'all' || hospital.continent.toLowerCase() === continent);
-                var countryMatches = hospital.country.toLowerCase().includes(country);
-                var cityMatches = hospital.city.toLowerCase().includes(city);
-                var statusMatches = (deployedChecked && hospital.status === 'deployed') ||
-                                    (inProgressChecked && hospital.status === 'in-progress') ||
-                                    (signedChecked && hospital.status === 'signed');
-
-                if (continentMatches && countryMatches && cityMatches && statusMatches) {
-                    createMarker(hospital);
-                }
-            });
-        }
-
-        // Appliquer le filtre à chaque modification des champs
-        document.getElementById('continentSelect').addEventListener('change', filterHospitals);
-        document.getElementById('countryFilter').addEventListener('input', filterHospitals);
-        document.getElementById('cityFilter').addEventListener('input', filterHospitals);
-        document.getElementById('deployedFilter').addEventListener('change', filterHospitals);
-        document.getElementById('inProgressFilter').addEventListener('change', filterHospitals);
-        document.getElementById('signedFilter').addEventListener('change', filterHospitals);
-
-        // Statistiques avec Chart.js
+        // Génération du graphique avec Chart.js
         var ctx = document.getElementById('statsChart').getContext('2d');
         var chart = new Chart(ctx, {
             type: 'doughnut',
@@ -368,43 +429,124 @@
                     ],
                     backgroundColor: ['green', 'orange', 'blue']
                 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            font: {
+                                size: 13 // Taille de la police pour la légende
+                            },
+                            color: function(context) {
+                                return isDarkMode() ? '#ffffff' : '#333333'; // Couleur de la police en fonction du mode sombre
+                            }
+                        }
+                    },
+                    tooltip: {
+                        bodyFont: {
+                            size: 13
+                        },
+                        titleFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            labelTextColor: function() {
+                                return isDarkMode() ? '#ffffff' : '#333333'; // Couleur de la police lors du survol
+                            },
+                            titleTextColor: function() {
+                                return isDarkMode() ? '#ffffff' : '#333333'; // Couleur du titre lors du survol
+                            }
+                        },
+                        backgroundColor: function() {
+                            return isDarkMode() ? '#2c2c2c' : '#ffffff'; // Couleur de fond du tooltip en mode sombre
+                        },
+                        borderColor: function() {
+                            return isDarkMode() ? '#444' : '#ddd'; // Bordure du tooltip selon le mode
+                        },
+                        borderWidth: 1
+                    }
+                }
             }
         });
+
+        // Génère le contenu de la popup
+        function generatePopupContent(hospital) {
+            return `
+                <div style="text-align: center;">
+                    <h2 style="color: #00aaff; font-size: 1.5em; font-weight: bold; margin-bottom: 10px;">${hospital.name}</h2>
+                    <img src="${hospital.photo}" style="width:150px; height:auto; border-radius: 5px; margin-bottom: 10px;" alt="Photo of ${hospital.name}"><br>
+                    <a href="${hospital.website}" target="_blank" style="color: var(--secondary-color); font-size: 1.2em; font-weight: bold;">
+                        ${i18next.t('visitWebsite') || 'Visit Website'}
+                    </a><br>
+                    <p style="margin-top: 10px; font-size: 1.2em;">${i18next.t('status') || 'Status'}: <span style="color: ${getStatusColor(hospital.status)};">
+                        ${i18next.t(hospital.status) || hospital.status}
+                    </span></p>
+                    <p style="font-size: 1.1em;">${i18next.t('address') || 'Address'}: ${hospital.address}</p>
+                </div>
+            `;
+        }
+
+        // Retourne la couleur en fonction du statut
+        function getStatusColor(status) {
+            if (status === 'deployed') return 'green';
+            if (status === 'in-progress') return 'orange';
+            return 'blue';
+        }
 
         // Basculer entre mode clair et mode sombre
-        var isDarkMode = false;
-        document.getElementById('toggleTheme').addEventListener('click', function() {
-            document.getElementById('map').classList.add('hidden');
-            setTimeout(function() {
-                if (map.hasLayer(lightTiles)) {
-                    map.removeLayer(lightTiles);
-                    map.addLayer(darkTiles);
-                    isDarkMode = true;
-                    document.documentElement.style.setProperty('--bg-color', '#333');
-                    document.documentElement.style.setProperty('--text-color', '#fff');
-                } else {
-                    map.removeLayer(darkTiles);
-                    map.addLayer(lightTiles);
-                    isDarkMode = false;
-                    document.documentElement.style.setProperty('--bg-color', 'white');
-                    document.documentElement.style.setProperty('--text-color', 'black');
-                }
-                document.getElementById('map').classList.remove('hidden');
-            }, 500);
-        });
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            document.getElementById('filters').classList.toggle('dark-mode');
+            document.getElementById('legend').classList.toggle('dark-mode');
+            document.getElementById('chartContainer').classList.toggle('dark-mode');
+            document.getElementById('themeToggle').classList.toggle('dark-mode');
+            document.getElementById('toggleFilters').classList.toggle('dark-mode');
 
-        // Affichage/masquage des filtres
-        document.getElementById('toggleFilters').addEventListener('click', function() {
-            var filtersDiv = document.getElementById('filters');
-            if (filtersDiv.style.display === 'none' || filtersDiv.classList.contains('hidden-filters')) {
-                filtersDiv.style.display = 'block';
-                filtersDiv.classList.remove('hidden-filters');
+            // Changer la carte entre les tuiles claires et sombres
+            if (map.hasLayer(lightTiles)) {
+                map.removeLayer(lightTiles);
+                map.addLayer(darkTiles);
             } else {
-                filtersDiv.style.display = 'none';
-                filtersDiv.classList.add('hidden-filters');
+                map.removeLayer(darkTiles);
+                map.addLayer(lightTiles);
             }
+
+            // Mettre à jour le graphique pour appliquer les nouvelles couleurs
+            chart.update();
         });
 
+        // Fonction pour actualiser les traductions et les éléments visuels
+        function updateUI() {
+            document.querySelectorAll('[data-i18n]').forEach(function(element) {
+                element.textContent = i18next.t(element.getAttribute('data-i18n'));
+            });
+
+            // Mettre à jour les placeholders
+            document.querySelectorAll('[data-placeholder]').forEach(function(element) {
+                element.placeholder = i18next.t(element.getAttribute('data-placeholder'));
+            });
+
+            chart.data.labels = [
+                i18next.t('deployed') || 'Deployed',
+                i18next.t('inProgress') || 'In Progress',
+                i18next.t('signed') || 'Signed'
+            ];
+            chart.update();
+
+            refreshPopups();  // Mettre à jour les popups avec les nouvelles traductions
+        }
+
+        document.getElementById('languageSelect').addEventListener('change', function() {
+            var selectedLanguage = this.value;
+            i18next.changeLanguage(selectedLanguage, function(err, t) {
+                if (err) return console.error('Something went wrong:', err);
+                updateUI();
+            });
+        });
+
+        // Initialisation de i18next avec toutes les traductions
         i18next.init({
             lng: 'en',
             fallbackLng: 'en',
@@ -701,34 +843,6 @@
         }, function(err, t) {
             if (err) return console.error('Something went wrong:', err);
             updateUI();
-        });
-
-        function updateUI() {
-            document.querySelectorAll('[data-i18n]').forEach(function(element) {
-                element.textContent = i18next.t(element.getAttribute('data-i18n'));
-            });
-
-            // Mettre à jour les placeholders
-            document.querySelectorAll('[data-placeholder]').forEach(function(element) {
-                element.placeholder = i18next.t(element.getAttribute('data-placeholder'));
-            });
-
-            chart.data.labels = [
-                i18next.t('deployed') || 'Deployed',
-                i18next.t('inProgress') || 'In Progress',
-                i18next.t('signed') || 'Signed'
-            ];
-            chart.update();
-
-            refreshPopups();  // Mettre à jour les popups avec les nouvelles traductions
-        }
-
-        document.getElementById('languageSelect').addEventListener('change', function() {
-            var selectedLanguage = this.value;
-            i18next.changeLanguage(selectedLanguage, function(err, t) {
-                if (err) return console.error('Something went wrong:', err);
-                updateUI();
-            });
         });
     </script>
 </body>
