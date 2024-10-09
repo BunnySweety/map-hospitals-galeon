@@ -20,57 +20,126 @@
             height: 100%;
             margin: 0;
         }
+
         #map {
             height: 100%;
             width: 100%;
             transition: opacity 0.5s ease-in-out;
         }
+
         #map.hidden {
             opacity: 0;
         }
+
         #filters {
             position: absolute;
             top: 10px;
             left: 60px;
             z-index: 1000;
-            background: white;
+            background: var(--bg-color, white);
+            color: var(--text-color, black);
             padding: 10px;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            max-width: 250px;
         }
+
+        #toggleFilters {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: var(--bg-color, white);
+            color: var(--text-color, black);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            display: none; /* Affiché uniquement sur mobile */
+        }
+
         #legend {
             position: absolute;
             bottom: 10px;
             left: 10px;
             z-index: 1000;
-            background: white;
+            background: var(--bg-color, white);
+            color: var(--text-color, black);
             padding: 10px;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
         }
+
         #chartContainer {
             position: absolute;
             bottom: 10px;
             right: 10px;
             z-index: 1000;
-            background: white;
+            background: var(--bg-color, white);
+            color: var(--text-color, black);
             padding: 10px;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
         }
+
         #themeToggle {
             position: absolute;
-            top: 10px;
+            top: 10px; /* Positionné à 10px du haut */
             right: 10px;
-            z-index: 1000;
-            background: white;
+            z-index: 1001;
+            background: var(--bg-color, white);
+            color: var(--text-color, black);
             padding: 10px;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
         }
+
+        /* Réduire la taille du donuts et de sa légende sur mobile */
+        @media (max-width: 768px) {
+            #filters {
+                display: none; /* Masquer les filtres par défaut sur mobile */
+                position: absolute;
+                top: 60px;
+                left: 10px;
+                width: 90%;
+                max-width: none;
+            }
+
+            #toggleFilters {
+                display: block; /* Afficher le bouton de bascule */
+            }
+
+            #chartContainer {
+                width: 150px;
+                height: 150px;
+            }
+
+            #legend {
+                padding: 5px;
+            }
+
+            canvas {
+                width: 100px;
+                height: 100px;
+            }
+
+            /* Ajuster le thème pour éviter la superposition sur mobile */
+            #themeToggle {
+                top: 10px;
+                right: 10px;
+            }
+        }
+
+        /* Styles pour cacher l'interface de filtre avec transition */
+        .hidden-filters {
+            display: none;
+        }
+
     </style>
 </head>
 <body>
+    <div id="toggleFilters">☰</div>
+
     <div id="filters">
         <label for="languageSelect" data-i18n="language">Language:</label>
         <select id="languageSelect">
@@ -100,7 +169,7 @@
         <!-- Ajout du filtrage par continent -->
         <label for="continentSelect" data-i18n="continent">Continent:</label>
         <select id="continentSelect">
-            <option value="all">All</option>
+            <option value="all" data-i18n="all">All</option>
             <option value="Europe">Europe</option>
             <option value="Asia">Asia</option>
             <option value="Africa">Africa</option>
@@ -112,10 +181,10 @@
 
         <!-- Filtrage par pays et ville avec champ texte -->
         <label for="countryFilter" data-i18n="country">Country:</label>
-        <input type="text" id="countryFilter" placeholder="Enter country...">
+        <input type="text" id="countryFilter" placeholder="" data-placeholder="enterCountry">
         <br><br>
         <label for="cityFilter" data-i18n="city">City:</label>
-        <input type="text" id="cityFilter" placeholder="Enter city...">
+        <input type="text" id="cityFilter" placeholder="" data-placeholder="enterCity">
         <br><br>
 
         <!-- Remplacer les boutons de filtrage par des checkboxs -->
@@ -303,18 +372,37 @@
         });
 
         // Basculer entre mode clair et mode sombre
+        var isDarkMode = false;
         document.getElementById('toggleTheme').addEventListener('click', function() {
             document.getElementById('map').classList.add('hidden');
             setTimeout(function() {
                 if (map.hasLayer(lightTiles)) {
                     map.removeLayer(lightTiles);
                     map.addLayer(darkTiles);
+                    isDarkMode = true;
+                    document.documentElement.style.setProperty('--bg-color', '#333');
+                    document.documentElement.style.setProperty('--text-color', '#fff');
                 } else {
                     map.removeLayer(darkTiles);
                     map.addLayer(lightTiles);
+                    isDarkMode = false;
+                    document.documentElement.style.setProperty('--bg-color', 'white');
+                    document.documentElement.style.setProperty('--text-color', 'black');
                 }
                 document.getElementById('map').classList.remove('hidden');
             }, 500);
+        });
+
+        // Affichage/masquage des filtres
+        document.getElementById('toggleFilters').addEventListener('click', function() {
+            var filtersDiv = document.getElementById('filters');
+            if (filtersDiv.style.display === 'none' || filtersDiv.classList.contains('hidden-filters')) {
+                filtersDiv.style.display = 'block';
+                filtersDiv.classList.remove('hidden-filters');
+            } else {
+                filtersDiv.style.display = 'none';
+                filtersDiv.classList.add('hidden-filters');
+            }
         });
 
         i18next.init({
@@ -327,6 +415,8 @@
                         "continent": "Continent",
                         "country": "Country",
                         "city": "City",
+                        "enterCountry": "Enter country...",
+                        "enterCity": "Enter city...",
                         "deployed": "Deployed",
                         "inProgress": "In Progress",
                         "signed": "Signed",
@@ -343,6 +433,8 @@
                         "continent": "Continent",
                         "country": "Pays",
                         "city": "Ville",
+                        "enterCountry": "Entrez le pays...",
+                        "enterCity": "Entrez la ville...",
                         "deployed": "Déployé",
                         "inProgress": "En cours",
                         "signed": "Signé",
@@ -359,6 +451,8 @@
                         "continent": "Continente",
                         "country": "País",
                         "city": "Ciudad",
+                        "enterCountry": "Ingrese el país...",
+                        "enterCity": "Ingrese la ciudad...",
                         "deployed": "Desplegado",
                         "inProgress": "En Progreso",
                         "signed": "Firmado",
@@ -375,6 +469,8 @@
                         "continent": "Kontinent",
                         "country": "Land",
                         "city": "Stadt",
+                        "enterCountry": "Geben Sie das Land ein...",
+                        "enterCity": "Geben Sie die Stadt ein...",
                         "deployed": "Bereitgestellt",
                         "inProgress": "In Bearbeitung",
                         "signed": "Unterzeichnet",
@@ -391,6 +487,8 @@
                         "continent": "Continente",
                         "country": "Paese",
                         "city": "Città",
+                        "enterCountry": "Inserisci il paese...",
+                        "enterCity": "Inserisci la città...",
                         "deployed": "Distribuito",
                         "inProgress": "In Corso",
                         "signed": "Firmato",
@@ -407,6 +505,8 @@
                         "continent": "Continente",
                         "country": "País",
                         "city": "Cidade",
+                        "enterCountry": "Digite o país...",
+                        "enterCity": "Digite a cidade...",
                         "deployed": "Implantado",
                         "inProgress": "Em Progresso",
                         "signed": "Assinado",
@@ -423,6 +523,8 @@
                         "continent": "Континент",
                         "country": "Страна",
                         "city": "Город",
+                        "enterCountry": "Введите страну...",
+                        "enterCity": "Введите город...",
                         "deployed": "Развернуто",
                         "inProgress": "В процессе",
                         "signed": "Подписано",
@@ -439,6 +541,8 @@
                         "continent": "大陆",
                         "country": "国家",
                         "city": "城市",
+                        "enterCountry": "输入国家...",
+                        "enterCity": "输入城市...",
                         "deployed": "已部署",
                         "inProgress": "进行中",
                         "signed": "已签署",
@@ -455,6 +559,8 @@
                         "continent": "महाद्वीप",
                         "country": "देश",
                         "city": "शहर",
+                        "enterCountry": "देश दर्ज करें...",
+                        "enterCity": "शहर दर्ज करें...",
                         "deployed": "तैनात",
                         "inProgress": "प्रगति पर",
                         "signed": "हस्ताक्षरित",
@@ -471,6 +577,8 @@
                         "continent": "قارة",
                         "country": "بلد",
                         "city": "مدينة",
+                        "enterCountry": "أدخل البلد...",
+                        "enterCity": "أدخل المدينة...",
                         "deployed": "تم النشر",
                         "inProgress": "قيد التقدم",
                         "signed": "تم التوقيع",
@@ -487,6 +595,8 @@
                         "continent": "대륙",
                         "country": "국가",
                         "city": "도시",
+                        "enterCountry": "국가 입력...",
+                        "enterCity": "도시 입력...",
                         "deployed": "배치됨",
                         "inProgress": "진행 중",
                         "signed": "서명됨",
@@ -503,6 +613,8 @@
                         "continent": "大陸",
                         "country": "国",
                         "city": "市",
+                        "enterCountry": "国を入力...",
+                        "enterCity": "都市を入力...",
                         "deployed": "展開済み",
                         "inProgress": "進行中",
                         "signed": "署名済み",
@@ -519,6 +631,8 @@
                         "continent": "ਮਹਾਦੀਪ",
                         "country": "ਦੇਸ਼",
                         "city": "ਸ਼ਹਿਰ",
+                        "enterCountry": "ਦੇਸ਼ ਦਰਜ ਕਰੋ...",
+                        "enterCity": "ਸ਼ਹਿਰ ਦਰਜ ਕਰੋ...",
                         "deployed": "ਤੈਨਾਤ",
                         "inProgress": "ਚਲ ਰਿਹਾ ਹੈ",
                         "signed": "ਦਸਤਖ਼ਤ ਕੀਤੇ",
@@ -535,6 +649,8 @@
                         "continent": "মহাদেশ",
                         "country": "দেশ",
                         "city": "শহর",
+                        "enterCountry": "দেশ লিখুন...",
+                        "enterCity": "শহর লিখুন...",
                         "deployed": "মোতায়েন",
                         "inProgress": "চলমান",
                         "signed": "স্বাক্ষরিত",
@@ -551,6 +667,8 @@
                         "continent": "Châu lục",
                         "country": "Quốc gia",
                         "city": "Thành phố",
+                        "enterCountry": "Nhập quốc gia...",
+                        "enterCity": "Nhập thành phố...",
                         "deployed": "Đã triển khai",
                         "inProgress": "Đang thực hiện",
                         "signed": "Đã ký",
@@ -567,6 +685,8 @@
                         "continent": "ทวีป",
                         "country": "ประเทศ",
                         "city": "เมือง",
+                        "enterCountry": "ป้อนประเทศ...",
+                        "enterCity": "ป้อนเมือง...",
                         "deployed": "ปรับใช้แล้ว",
                         "inProgress": "อยู่ในระหว่างดำเนินการ",
                         "signed": "ลงนามแล้ว",
@@ -586,6 +706,11 @@
         function updateUI() {
             document.querySelectorAll('[data-i18n]').forEach(function(element) {
                 element.textContent = i18next.t(element.getAttribute('data-i18n'));
+            });
+
+            // Mettre à jour les placeholders
+            document.querySelectorAll('[data-placeholder]').forEach(function(element) {
+                element.placeholder = i18next.t(element.getAttribute('data-placeholder'));
             });
 
             chart.data.labels = [
