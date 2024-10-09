@@ -97,6 +97,27 @@
         </select>
         <br><br>
 
+        <!-- Ajout du filtrage par continent -->
+        <label for="continentSelect" data-i18n="continent">Continent:</label>
+        <select id="continentSelect">
+            <option value="all">All</option>
+            <option value="Europe">Europe</option>
+            <option value="Asia">Asia</option>
+            <option value="Africa">Africa</option>
+            <option value="North America">North America</option>
+            <option value="South America">South America</option>
+            <option value="Oceania">Oceania</option>
+        </select>
+        <br><br>
+
+        <!-- Filtrage par pays et ville avec champ texte -->
+        <label for="countryFilter" data-i18n="country">Country:</label>
+        <input type="text" id="countryFilter" placeholder="Enter country...">
+        <br><br>
+        <label for="cityFilter" data-i18n="city">City:</label>
+        <input type="text" id="cityFilter" placeholder="Enter city...">
+        <br><br>
+
         <!-- Remplacer les boutons de filtrage par des checkboxs -->
         <label><input type="checkbox" id="deployedFilter" checked> <span data-i18n="deployed" style="color:green;">Deployed</span></label><br>
         <label><input type="checkbox" id="inProgressFilter" checked> <span data-i18n="inProgress" style="color:orange;">In Progress</span></label><br>
@@ -130,6 +151,7 @@
                 "name": "Hospital 1",
                 "city": "Paris",
                 "country": "France",
+                "continent": "Europe",
                 "lat": 48.8566,
                 "lon": 2.3522,
                 "status": "deployed",
@@ -141,6 +163,7 @@
                 "name": "Hospital 2",
                 "city": "Lyon",
                 "country": "France",
+                "continent": "Europe",
                 "lat": 45.764,
                 "lon": 4.8357,
                 "status": "in-progress",
@@ -152,6 +175,7 @@
                 "name": "Hospital 3",
                 "city": "Berlin",
                 "country": "Germany",
+                "continent": "Europe",
                 "lat": 52.52,
                 "lon": 13.405,
                 "status": "signed",
@@ -224,23 +248,34 @@
         });
         map.addLayer(markersCluster);
 
-        // Filtrer les hôpitaux en fonction des checkboxs
+        // Filtrer les hôpitaux en fonction des checkboxs, continent, pays et ville
         function filterHospitals() {
+            var continent = document.getElementById('continentSelect').value.toLowerCase();
+            var country = document.getElementById('countryFilter').value.toLowerCase();
+            var city = document.getElementById('cityFilter').value.toLowerCase();
             var deployedChecked = document.getElementById('deployedFilter').checked;
             var inProgressChecked = document.getElementById('inProgressFilter').checked;
             var signedChecked = document.getElementById('signedFilter').checked;
 
             markersCluster.clearLayers();
             hospitals.forEach(function(hospital) {
-                if ((deployedChecked && hospital.status === 'deployed') ||
-                    (inProgressChecked && hospital.status === 'in-progress') ||
-                    (signedChecked && hospital.status === 'signed')) {
+                var continentMatches = (continent === 'all' || hospital.continent.toLowerCase() === continent);
+                var countryMatches = hospital.country.toLowerCase().includes(country);
+                var cityMatches = hospital.city.toLowerCase().includes(city);
+                var statusMatches = (deployedChecked && hospital.status === 'deployed') ||
+                                    (inProgressChecked && hospital.status === 'in-progress') ||
+                                    (signedChecked && hospital.status === 'signed');
+
+                if (continentMatches && countryMatches && cityMatches && statusMatches) {
                     createMarker(hospital);
                 }
             });
         }
 
-        // Appliquer le filtre à chaque changement des checkboxs
+        // Appliquer le filtre à chaque modification des champs
+        document.getElementById('continentSelect').addEventListener('change', filterHospitals);
+        document.getElementById('countryFilter').addEventListener('input', filterHospitals);
+        document.getElementById('cityFilter').addEventListener('input', filterHospitals);
         document.getElementById('deployedFilter').addEventListener('change', filterHospitals);
         document.getElementById('inProgressFilter').addEventListener('change', filterHospitals);
         document.getElementById('signedFilter').addEventListener('change', filterHospitals);
@@ -289,6 +324,9 @@
                 en: {
                     translation: {
                         "language": "Language",
+                        "continent": "Continent",
+                        "country": "Country",
+                        "city": "City",
                         "deployed": "Deployed",
                         "inProgress": "In Progress",
                         "signed": "Signed",
@@ -302,6 +340,9 @@
                 fr: {
                     translation: {
                         "language": "Langue",
+                        "continent": "Continent",
+                        "country": "Pays",
+                        "city": "Ville",
                         "deployed": "Déployé",
                         "inProgress": "En cours",
                         "signed": "Signé",
@@ -315,6 +356,9 @@
                 es: {
                     translation: {
                         "language": "Idioma",
+                        "continent": "Continente",
+                        "country": "País",
+                        "city": "Ciudad",
                         "deployed": "Desplegado",
                         "inProgress": "En Progreso",
                         "signed": "Firmado",
@@ -328,6 +372,9 @@
                 de: {
                     translation: {
                         "language": "Sprache",
+                        "continent": "Kontinent",
+                        "country": "Land",
+                        "city": "Stadt",
                         "deployed": "Bereitgestellt",
                         "inProgress": "In Bearbeitung",
                         "signed": "Unterzeichnet",
@@ -341,6 +388,9 @@
                 it: {
                     translation: {
                         "language": "Lingua",
+                        "continent": "Continente",
+                        "country": "Paese",
+                        "city": "Città",
                         "deployed": "Distribuito",
                         "inProgress": "In Corso",
                         "signed": "Firmato",
@@ -354,6 +404,9 @@
                 pt: {
                     translation: {
                         "language": "Língua",
+                        "continent": "Continente",
+                        "country": "País",
+                        "city": "Cidade",
                         "deployed": "Implantado",
                         "inProgress": "Em Progresso",
                         "signed": "Assinado",
@@ -367,6 +420,9 @@
                 ru: {
                     translation: {
                         "language": "Язык",
+                        "continent": "Континент",
+                        "country": "Страна",
+                        "city": "Город",
                         "deployed": "Развернуто",
                         "inProgress": "В процессе",
                         "signed": "Подписано",
@@ -380,6 +436,9 @@
                 zh: {
                     translation: {
                         "language": "语言",
+                        "continent": "大陆",
+                        "country": "国家",
+                        "city": "城市",
                         "deployed": "已部署",
                         "inProgress": "进行中",
                         "signed": "已签署",
@@ -393,6 +452,9 @@
                 hi: {
                     translation: {
                         "language": "भाषा",
+                        "continent": "महाद्वीप",
+                        "country": "देश",
+                        "city": "शहर",
                         "deployed": "तैनात",
                         "inProgress": "प्रगति पर",
                         "signed": "हस्ताक्षरित",
@@ -406,6 +468,9 @@
                 ar: {
                     translation: {
                         "language": "لغة",
+                        "continent": "قارة",
+                        "country": "بلد",
+                        "city": "مدينة",
                         "deployed": "تم النشر",
                         "inProgress": "قيد التقدم",
                         "signed": "تم التوقيع",
@@ -419,6 +484,9 @@
                 ko: {
                     translation: {
                         "language": "언어",
+                        "continent": "대륙",
+                        "country": "국가",
+                        "city": "도시",
                         "deployed": "배치됨",
                         "inProgress": "진행 중",
                         "signed": "서명됨",
@@ -432,6 +500,9 @@
                 ja: {
                     translation: {
                         "language": "言語",
+                        "continent": "大陸",
+                        "country": "国",
+                        "city": "市",
                         "deployed": "展開済み",
                         "inProgress": "進行中",
                         "signed": "署名済み",
@@ -445,6 +516,9 @@
                 pa: {
                     translation: {
                         "language": "ਭਾਸ਼ਾ",
+                        "continent": "ਮਹਾਦੀਪ",
+                        "country": "ਦੇਸ਼",
+                        "city": "ਸ਼ਹਿਰ",
                         "deployed": "ਤੈਨਾਤ",
                         "inProgress": "ਚਲ ਰਿਹਾ ਹੈ",
                         "signed": "ਦਸਤਖ਼ਤ ਕੀਤੇ",
@@ -458,6 +532,9 @@
                 bn: {
                     translation: {
                         "language": "ভাষা",
+                        "continent": "মহাদেশ",
+                        "country": "দেশ",
+                        "city": "শহর",
                         "deployed": "মোতায়েন",
                         "inProgress": "চলমান",
                         "signed": "স্বাক্ষরিত",
@@ -471,6 +548,9 @@
                 vi: {
                     translation: {
                         "language": "Ngôn ngữ",
+                        "continent": "Châu lục",
+                        "country": "Quốc gia",
+                        "city": "Thành phố",
                         "deployed": "Đã triển khai",
                         "inProgress": "Đang thực hiện",
                         "signed": "Đã ký",
@@ -484,6 +564,9 @@
                 th: {
                     translation: {
                         "language": "ภาษา",
+                        "continent": "ทวีป",
+                        "country": "ประเทศ",
+                        "city": "เมือง",
                         "deployed": "ปรับใช้แล้ว",
                         "inProgress": "อยู่ในระหว่างดำเนินการ",
                         "signed": "ลงนามแล้ว",
