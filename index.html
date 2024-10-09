@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map of Hospitals Using Galeon</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <!-- MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- i18next for multilingual support -->
+    <script src="https://unpkg.com/i18next@20.1.0/i18next.min.js"></script>
+
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+            transition: opacity 0.5s ease-in-out;
+        }
+        #map.hidden {
+            opacity: 0;
+        }
+        #filters {
+            position: absolute;
+            top: 10px;
+            left: 60px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        #legend {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        #chartContainer {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        #themeToggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="filters">
+        <label for="languageSelect" data-i18n="language">Language:</label>
+        <select id="languageSelect">
+            <option value="en">English</option>
+            <option value="zh">Chinese (Mandarin)</option>
+            <option value="es">Spanish</option>
+            <option value="hi">Hindi</option>
+            <option value="ar">Arabic</option>
+            <option value="pt">Portuguese</option>
+            <option value="bn">Bengali</option>
+            <option value="ru">Russian</option>
+            <option value="ja">Japanese</option>
+            <option value="pa">Punjabi</option>
+            <option value="de">German</option>
+            <option value="ko">Korean</option>
+            <option value="fr">French</option>
+            <option value="te">Telugu</option>
+            <option value="mr">Marathi</option>
+            <option value="ta">Tamil</option>
+            <option value="tr">Turkish</option>
+            <option value="vi">Vietnamese</option>
+            <option value="it">Italian</option>
+            <option value="th">Thai</option>
+        </select>
+        <br><br>
+        <button onclick="filterHospitals('all')" data-i18n="all">All</button>
+        <button onclick="filterHospitals('deployed')" data-i18n="deployed">Deployed</button>
+        <button onclick="filterHospitals('in-progress')" data-i18n="inProgress">In Progress</button>
+        <button onclick="filterHospitals('signed')" data-i18n="signed">Signed</button>
+    </div>
+
+    <div id="legend">
+        <p><span style="color:green;">●</span> <span data-i18n="deployed">Deployed</span></p>
+        <p><span style="color:orange;">●</span> <span data-i18n="inProgress">In Progress</span></p>
+        <p><span style="color:blue;">●</span> <span data-i18n="signed">Signed</span></p>
+    </div>
+
+    <div id="chartContainer">
+        <canvas id="statsChart" width="200" height="200"></canvas>
+    </div>
+
+    <div id="themeToggle">
+        <button id="toggleTheme" data-i18n="toggleTheme">Dark/Light Mode</button>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- MarkerCluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+    <script>
+        var hospitals = [
+            {
+                "name": "Hospital 1",
+                "city": "Paris",
+                "country": "France",
+                "lat": 48.8566,
+                "lon": 2.3522,
+                "status": "deployed",
+                "address": "1 Rue de l'Hôpital, Paris",
+                "website": "http://hospital1.com",
+                "photo": "https://via.placeholder.com/100"
+            },
+            {
+                "name": "Hospital 2",
+                "city": "Lyon",
+                "country": "France",
+                "lat": 45.764,
+                "lon": 4.8357,
+                "status": "in-progress",
+                "address": "2 Rue de l'Hôpital, Lyon",
+                "website": "http://hospital2.com",
+                "photo": "https://via.placeholder.com/100"
+            },
+            {
+                "name": "Hospital 3",
+                "city": "Berlin",
+                "country": "Germany",
+                "lat": 52.52,
+                "lon": 13.405,
+                "status": "signed",
+                "address": "3 Straße Krankenhaus, Berlin",
+                "website": "http://hospital3.com",
+                "photo": "https://via.placeholder.com/100"
+            }
+        ];
+
+        var map = L.map('map').setView([48.8566, 2.3522], 5);
+        var markersCluster = L.markerClusterGroup();
+
+        var lightTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+        var darkTiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png');
+
+        lightTiles.addTo(map);
+
+        // Définir des cercles en fonction du statut
+        function getStatusColor(status) {
+            if (status === 'deployed') return 'green';
+            if (status === 'in-progress') return 'orange';
+            return 'blue';
+        }
+
+        function createMarker(hospital) {
+            var marker = L.circleMarker([hospital.lat, hospital.lon], {
+                radius: 8,
+                fillColor: getStatusColor(hospital.status),
+                color: getStatusColor(hospital.status),
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            });
+            marker.bindPopup(generatePopupContent(hospital));
+            markersCluster.addLayer(marker);
+        }
+
+        function generatePopupContent(hospital) {
+            return `
+                <div style="text-align: center;">
+                    <b>${hospital.name}</b><br>
+                    <img src="${hospital.photo}" style="width:100px; height:auto;" alt="Photo"><br>
+                    <a href="${hospital.website}" target="_blank">${i18next.t('visitWebsite') || 'Visit Website'}</a><br>
+                    <p>${i18next.t('status') || 'Status'}: <span style="color: ${getStatusColor(hospital.status)};">${i18next.t(hospital.status) || hospital.status}</span></p>
+                    <p>${i18next.t('address') || 'Address'}: ${hospital.address}</p>
+                </div>
+            `;
+        }
+
+        function refreshPopups() {
+            markersCluster.eachLayer(function(marker) {
+                var hospital = marker.options.hospitalData;
+                marker.setPopupContent(generatePopupContent(hospital));
+            });
+        }
+
+        hospitals.forEach(function(hospital) {
+            var marker = L.circleMarker([hospital.lat, hospital.lon], {
+                radius: 8,
+                fillColor: getStatusColor(hospital.status),
+                color: getStatusColor(hospital.status),
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8,
+                hospitalData: hospital  // Stocker les données hospitalières dans le marqueur pour les popups
+            });
+            marker.bindPopup(generatePopupContent(hospital));
+            markersCluster.addLayer(marker);
+        });
+        map.addLayer(markersCluster);
+
+        function filterHospitals(status) {
+            markersCluster.clearLayers();
+            hospitals.forEach(function(hospital) {
+                if (status === 'all' || hospital.status === status) {
+                    createMarker(hospital);
+                }
+            });
+            refreshPopups();  // Assurez-vous que les popups sont mis à jour lors de la sélection
+        }
+
+        var ctx = document.getElementById('statsChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    i18next.t('deployed') || 'Deployed',
+                    i18next.t('inProgress') || 'In Progress',
+                    i18next.t('signed') || 'Signed'
+                ],
+                datasets: [{
+                    label: i18next.t('status') || 'Status',
+                    data: [
+                        hospitals.filter(h => h.status === 'deployed').length,
+                        hospitals.filter(h => h.status === 'in-progress').length,
+                        hospitals.filter(h => h.status === 'signed').length
+                    ],
+                    backgroundColor: ['green', 'orange', 'blue']
+                }]
+            }
+        });
+
+        document.getElementById('toggleTheme').addEventListener('click', function() {
+            document.getElementById('map').classList.add('hidden');
+            setTimeout(function() {
+                if (map.hasLayer(lightTiles)) {
+                    map.removeLayer(lightTiles);
+                    map.addLayer(darkTiles);
+                } else {
+                    map.removeLayer(darkTiles);
+                    map.addLayer(lightTiles);
+                }
+                document.getElementById('map').classList.remove('hidden');
+            }, 500);
+        });
+
+        i18next.init({
+            lng: 'en',
+            fallbackLng: 'en',
+            resources: {
+                en: {
+                    translation: {
+                        "language": "Language",
+                        "deployed": "Deployed",
+                        "inProgress": "In Progress",
+                        "signed": "Signed",
+                        "status": "Status",
+                        "visitWebsite": "Visit Website",
+                        "address": "Address",
+                        "all": "All",
+                        "toggleTheme": "Dark/Light Mode"
+                    }
+                },
+                fr: {
+                    translation: {
+                        "language": "Langue",
+                        "deployed": "Déployé",
+                        "inProgress": "En cours",
+                        "signed": "Signé",
+                        "status": "Statut",
+                        "visitWebsite": "Visitez le site",
+                        "address": "Adresse",
+                        "all": "Tous",
+                        "toggleTheme": "Mode Sombre/Clair"
+                    }
+                },
+                es: {
+                    translation: {
+                        "language": "Idioma",
+                        "deployed": "Desplegado",
+                        "inProgress": "En Progreso",
+                        "signed": "Firmado",
+                        "status": "Estado",
+                        "visitWebsite": "Visitar Sitio Web",
+                        "address": "Dirección",
+                        "all": "Todos",
+                        "toggleTheme": "Modo Oscuro/Claro"
+                    }
+                },
+                de: {
+                    translation: {
+                        "language": "Sprache",
+                        "deployed": "Bereitgestellt",
+                        "inProgress": "In Bearbeitung",
+                        "signed": "Unterzeichnet",
+                        "status": "Status",
+                        "visitWebsite": "Website besuchen",
+                        "address": "Adresse",
+                        "all": "Alle",
+                        "toggleTheme": "Dunkler/Heller Modus"
+                    }
+                },
+                it: {
+                    translation: {
+                        "language": "Lingua",
+                        "deployed": "Distribuito",
+                        "inProgress": "In Corso",
+                        "signed": "Firmato",
+                        "status": "Stato",
+                        "visitWebsite": "Visita il Sito",
+                        "address": "Indirizzo",
+                        "all": "Tutti",
+                        "toggleTheme": "Modalità Scura/Chiara"
+                    }
+                },
+                pt: {
+                    translation: {
+                        "language": "Língua",
+                        "deployed": "Implantado",
+                        "inProgress": "Em Progresso",
+                        "signed": "Assinado",
+                        "status": "Status",
+                        "visitWebsite": "Visitar Site",
+                        "address": "Endereço",
+                        "all": "Todos",
+                        "toggleTheme": "Modo Escuro/Claro"
+                    }
+                },
+                ru: {
+                    translation: {
+                        "language": "Язык",
+                        "deployed": "Развернуто",
+                        "inProgress": "В процессе",
+                        "signed": "Подписано",
+                        "status": "Статус",
+                        "visitWebsite": "Посетить сайт",
+                        "address": "Адрес",
+                        "all": "Все",
+                        "toggleTheme": "Тёмный/Светлый режим"
+                    }
+                },
+                zh: {
+                    translation: {
+                        "language": "语言",
+                        "deployed": "已部署",
+                        "inProgress": "进行中",
+                        "signed": "已签署",
+                        "status": "状态",
+                        "visitWebsite": "访问网站",
+                        "address": "地址",
+                        "all": "所有",
+                        "toggleTheme": "深色/浅色模式"
+                    }
+                },
+                hi: {
+                    translation: {
+                        "language": "भाषा",
+                        "deployed": "तैनात",
+                        "inProgress": "प्रगति पर",
+                        "signed": "हस्ताक्षरित",
+                        "status": "स्थिति",
+                        "visitWebsite": "वेबसाइट देखें",
+                        "address": "पता",
+                        "all": "सभी",
+                        "toggleTheme": "डार्क/लाइट मोड"
+                    }
+                },
+                ar: {
+                    translation: {
+                        "language": "لغة",
+                        "deployed": "تم النشر",
+                        "inProgress": "قيد التقدم",
+                        "signed": "تم التوقيع",
+                        "status": "الحالة",
+                        "visitWebsite": "زيارة الموقع",
+                        "address": "العنوان",
+                        "all": "الكل",
+                        "toggleTheme": "الوضع الداكن/السطوع"
+                    }
+                },
+                ko: {
+                    translation: {
+                        "language": "언어",
+                        "deployed": "배치됨",
+                        "inProgress": "진행 중",
+                        "signed": "서명됨",
+                        "status": "상태",
+                        "visitWebsite": "웹사이트 방문",
+                        "address": "주소",
+                        "all": "모두",
+                        "toggleTheme": "다크/라이트 모드"
+                    }
+                },
+                ja: {
+                    translation: {
+                        "language": "言語",
+                        "deployed": "展開済み",
+                        "inProgress": "進行中",
+                        "signed": "署名済み",
+                        "status": "ステータス",
+                        "visitWebsite": "ウェブサイトを訪問",
+                        "address": "住所",
+                        "all": "すべて",
+                        "toggleTheme": "ダーク/ライトモード"
+                    }
+                },
+                pa: {
+                    translation: {
+                        "language": "ਭਾਸ਼ਾ",
+                        "deployed": "ਤੈਨਾਤ",
+                        "inProgress": "ਚਲ ਰਿਹਾ ਹੈ",
+                        "signed": "ਦਸਤਖ਼ਤ ਕੀਤੇ",
+                        "status": "ਸਥਿਤੀ",
+                        "visitWebsite": "ਵੈਬਸਾਈਟ ਵੇਖੋ",
+                        "address": "ਪਤਾ",
+                        "all": "ਸਾਰੇ",
+                        "toggleTheme": "ਡਾਰਕ/ਲਾਈਟ ਮੋਡ"
+                    }
+                },
+                bn: {
+                    translation: {
+                        "language": "ভাষা",
+                        "deployed": "মোতায়েন",
+                        "inProgress": "চলমান",
+                        "signed": "স্বাক্ষরিত",
+                        "status": "অবস্থা",
+                        "visitWebsite": "ওয়েবসাইট দেখুন",
+                        "address": "ঠিকানা",
+                        "all": "সব",
+                        "toggleTheme": "ডার্ক/লাইট মোড"
+                    }
+                },
+                vi: {
+                    translation: {
+                        "language": "Ngôn ngữ",
+                        "deployed": "Đã triển khai",
+                        "inProgress": "Đang thực hiện",
+                        "signed": "Đã ký",
+                        "status": "Trạng thái",
+                        "visitWebsite": "Truy cập trang web",
+                        "address": "Địa chỉ",
+                        "all": "Tất cả",
+                        "toggleTheme": "Chế độ Tối/Sáng"
+                    }
+                },
+                th: {
+                    translation: {
+                        "language": "ภาษา",
+                        "deployed": "ปรับใช้แล้ว",
+                        "inProgress": "อยู่ในระหว่างดำเนินการ",
+                        "signed": "ลงนามแล้ว",
+                        "status": "สถานะ",
+                        "visitWebsite": "เยี่ยมชมเว็บไซต์",
+                        "address": "ที่อยู่",
+                        "all": "ทั้งหมด",
+                        "toggleTheme": "โหมดมืด/โหมดสว่าง"
+                    }
+                }
+            }
+        }, function(err, t) {
+            if (err) return console.error('Something went wrong:', err);
+            updateUI();
+        });
+        
+        function updateUI() {
+            document.querySelectorAll('[data-i18n]').forEach(function(element) {
+                element.textContent = i18next.t(element.getAttribute('data-i18n'));
+            });
+
+            chart.data.labels = [
+                i18next.t('deployed') || 'Deployed',
+                i18next.t('inProgress') || 'In Progress',
+                i18next.t('signed') || 'Signed'
+            ];
+            chart.update();
+
+            refreshPopups();  // Mettre à jour les popups avec les nouvelles traductions
+        }
+
+        document.getElementById('languageSelect').addEventListener('change', function() {
+            var selectedLanguage = this.value;
+            i18next.changeLanguage(selectedLanguage, function(err, t) {
+                if (err) return console.error('Something went wrong:', err);
+                updateUI();
+            });
+        });
+    </script>
+</body>
+</html>
