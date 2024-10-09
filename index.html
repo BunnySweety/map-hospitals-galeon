@@ -39,6 +39,7 @@
         }
 
         #filters {
+            display: block; /* Afficher les filtres par défaut */
             position: absolute;
             top: 10px;
             left: 60px;
@@ -267,7 +268,7 @@
 <body>
     <div id="toggleFilters">☰</div>
 
-    <div id="filters">
+    <div id="filters" class="hidden-filters">
         <label for="languageSelect" data-i18n="language">Language:</label>
         <select id="languageSelect">
             <option value="en">English</option>
@@ -451,19 +452,17 @@
                         titleFont: {
                             size: 13
                         },
-                        callbacks: {
-                            labelTextColor: function() {
-                                return isDarkMode() ? '#ffffff' : '#333333'; // Couleur de la police lors du survol
-                            },
-                            titleTextColor: function() {
-                                return isDarkMode() ? '#ffffff' : '#333333'; // Couleur du titre lors du survol
-                            }
+                        backgroundColor: function(context) {
+                            return isDarkMode() ? '#2c2c2c' : '#ffffff'; // Couleur de fond du tooltip
                         },
-                        backgroundColor: function() {
-                            return isDarkMode() ? '#2c2c2c' : '#ffffff'; // Couleur de fond du tooltip en mode sombre
+                        titleColor: function(context) {
+                            return isDarkMode() ? '#ffffff' : '#333'; // Couleur du titre du tooltip
                         },
-                        borderColor: function() {
-                            return isDarkMode() ? '#444' : '#ddd'; // Bordure du tooltip selon le mode
+                        bodyColor: function(context) {
+                            return isDarkMode() ? '#ffffff' : '#333'; // Couleur du texte du tooltip
+                        },
+                        borderColor: function(context) {
+                            return isDarkMode() ? '#444' : '#ddd'; // Couleur de la bordure du tooltip
                         },
                         borderWidth: 1
                     }
@@ -544,6 +543,11 @@
                 if (err) return console.error('Something went wrong:', err);
                 updateUI();
             });
+        });
+
+        // Fonction pour basculer l'affichage des filtres avec le bouton hamburger
+        document.getElementById('toggleFilters').addEventListener('click', function() {
+            document.getElementById('filters').classList.toggle('hidden-filters');
         });
 
         // Initialisation de i18next avec toutes les traductions
