@@ -3,851 +3,1318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Map of Hospitals Using Galeon</title>
-
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <!-- MarkerCluster CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- i18next for multilingual support -->
-    <script src="https://unpkg.com/i18next@20.1.0/i18next.min.js"></script>
-
+    <title>Galeon Hospitals Map</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
     <style>
         :root {
-            --primary-color: #004080; /* Couleur principale */
-            --secondary-color: #00aaff; /* Couleur secondaire */
-            --text-color: #333; /* Couleur par défaut du texte */
-            --background-color: #f1f1f1; /* Couleur de fond claire */
+            --background-color-light: #f9f9f9;
+            --text-color-light: #1f1f1f;
+            --control-background-light: #ffffff;
+            --control-border-light: #ddd;
+            --hover-background-light: #f1f1f1;
+            --hyperlink-color: #00aaff;
+
+            --background-color-dark: #2b2b2b;
+            --text-color-dark: #f1f1f1;
+            --control-background-dark: #333;
+            --control-border-dark: #555;
+            --hover-background-dark: #444;
+
+            --primary-color: #007bff;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --danger-color: #dc3545;
         }
 
         body, html {
-            height: 100%;
             margin: 0;
-        }
-
-        #map {
+            padding: 0;
             height: 100%;
-            width: 100%;
-            transition: opacity 0.5s ease-in-out;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color-light);
+            color: var(--text-color-light);
+            transition: background-color 0.3s, color 0.3s;
         }
-
-        #map.hidden {
-            opacity: 0;
-        }
-
-        #filters {
-            display: block; /* Afficher les filtres par défaut */
+    
+        #map { height: 100%; width: 100%; }
+    
+        .controls {
             position: absolute;
             top: 10px;
             left: 60px;
             z-index: 1000;
-            background: #fff;
-            color: var(--text-color);
-            padding: 10px;
+            background: var(--control-background-light);
+            color: var(--text-color-light);
+            padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-            max-width: 250px;
-            border: 1px solid var(--primary-color);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+            width: 220px;
+            border: 1px solid var(--control-border-light);
         }
 
-        #toggleFilters {
-            position: absolute;
-            top: 90px;
-            left: 10px;
+        .controls select, .controls input {
+            margin-bottom: 10px;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid var(--control-border-light);
+            background-color: var(--control-background-light);
+            color: var(--text-color-light);
+            font-size: 14px;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+
+        .controls select:focus, .controls input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+            accent-color: #007bff;
+        }
+
+        .checkbox-group span {
+            font-size: 14px;
+            line-height: 1.2;
+            flex-grow: 1;
+        }
+
+        #hamburger, #legend-toggle, #theme-toggle {
+            position: fixed;
             z-index: 1000;
-            background: #fff;
-            color: var(--text-color);
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            width: 40px;
+            height: 40px;
+            background: var(--control-background-light);
+            color: var(--text-color-light);
+            border: 1px solid var(--control-border-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            display: block;
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
         }
 
-        #legend {
-            position: absolute;
+        #hamburger {
+                top: 85px;
+                left: 8px;
+        }
+
+        #legend-toggle {
             bottom: 10px;
             left: 10px;
-            z-index: 1000;
-            background: #fff;
-            color: var(--text-color);
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--primary-color);
         }
 
-        #chartContainer {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            z-index: 1000;
-            background: #fff;
-            color: var(--text-color);
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--primary-color);
-        }
-
-        /* Icône pour basculer entre modes clair/sombre */
-        #themeToggle {
-            position: absolute;
+        #theme-toggle {
             top: 10px;
             right: 10px;
+        }
+
+        .legend-container {
+            position: fixed;
+            bottom: 10px;
+            left: 60px;
             z-index: 1001;
-            background: var(--primary-color);
-            color: #fff;
+            background: var(--control-background-light);
+            color: var(--text-color-light);
             padding: 10px;
-            border-radius: 50%;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #themeToggle i {
-            font-size: 20px;
-        }   
-
-        /* Cacher le logo Leaflet */
-        .leaflet-control-attribution {
-            display: none !important;
-        }
-
-        /* Réduire la taille du donuts et de sa légende sur mobile */
-        @media (max-width: 768px) {
-            #filters {
-                display: none; /* Masquer les filtres par défaut sur mobile */
-                position: absolute;
-                top: 60px;
-                left: 10px;
-                width: 90%;
-                max-width: none;
-            }
-
-            #toggleFilters {
-                display: block; /* Afficher le bouton de bascule */
-            }
-
-            #chartContainer {
-                width: 150px;
-                height: 150px;
-            }
-
-            #legend {
-                padding: 5px;
-            }
-
-            canvas {
-                width: 100px;
-                height: 100px;
-            }
-
-            /* Ajuster le thème pour éviter la superposition sur mobile */
-            #themeToggle {
-                top: 10px;
-                right: 10px;
-            }
-        }
-
-        /* Styles pour cacher l'interface de filtre avec transition */
-        .hidden-filters {
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             display: none;
         }
 
-        /* Amélioration du thème sombre */
-        body.dark-mode input, 
-        body.dark-mode select,
-        #filters.dark-mode, 
-        #legend.dark-mode, 
-        #chartContainer.dark-mode, 
-        #themeToggle.dark-mode,
-        #toggleFilters.dark-mode {
-            background: #2c2c2c;
-            color: #e0e0e0;
-            border-color: #444;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        .legend-container.open {
+            display: block;
         }
 
-        /* Placeholder */
-        body.dark-mode input::placeholder {
-            color: #b3b3b3;
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
         }
 
-        /* Bordures plus visibles */
-        body.dark-mode input, 
-        body.dark-mode select {
-            border: 1px solid #555;
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
         }
 
-        /* Amélioration des légendes */
-        #legend.dark-mode p,
-        #chartContainer.dark-mode p {
-            color: #f1f1f1;
-            font-size: 1rem;
-        }
-
-        /* Checkboxs */
-        #filters.dark-mode label input[type="checkbox"]:checked + span {
-            color: #ffffff;
-        }
-
-        /* Styles pour le contrôle de zoom en mode sombre */
-        body.dark-mode .leaflet-control-zoom a {
-            background-color: #333; /* Couleur de fond sombre */
-            color: #f1f1f1; /* Couleur du texte plus clair */
-            border: 1px solid #666; /* Bordure contrastée */
-        }
-
-        /* Styles lorsque le contrôle de zoom est survolé en mode sombre */
-        body.dark-mode .leaflet-control-zoom a:hover {
-            background-color: #555; /* Légère différence de couleur lors du survol */
-            color: #ffffff; /* Couleur du texte encore plus claire pour le survol */
-        }
-
-        /* Styles pour les popups en mode sombre */
-        body.dark-mode .leaflet-popup-content-wrapper {
-            background-color: #2c2c2c; /* Fond plus sombre pour le popup */
-            color: #e0e0e0; /* Texte plus clair pour le mode sombre */
+        .chart-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--control-background-light);
+            color: var(--text-color-light);
+            padding: 10px;
             border-radius: 8px;
-            border: 1px solid #444; /* Bordure légèrement contrastée */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
         }
 
+        .gauge-wrapper {
+            text-align: center;
+            margin: 0 10px;
+        }
+
+        .gauge {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .gauge-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .gauge-percentage {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .gauge-label {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        /* Styles pour les tags de statut */
+        .status-tag {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 5px;
+            font-size: 12px;
+            text-transform: uppercase;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer; /* Ajouter un curseur pointer pour indiquer que c'est cliquable */
+        }
+
+        /* Couleurs des tags */
+        .status-deployed {
+            background-color: #28a745;
+        }
+
+        .status-in-progress {
+            background-color: #ffc107;
+            color: #856404;
+        }
+
+        .status-signed {
+            background-color: #007bff;
+        }
+
+        /* Styles des tags actifs */
+        .status-tag.active {
+            opacity: 0.7;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .status-deployed.active {
+            background-color: #b0e2b5;
+            color: #1e7b34;
+        }
+
+        .status-in-progress.active {
+            background-color: #ffe5a0;
+            color: #6e5002;
+        }
+
+        .status-signed.active {
+            background-color: #9ecbff;
+            color: #0056b3;
+        }
+
+        body.dark-mode {
+            background-color: var(--background-color-dark);
+            color: var(--text-color-dark);
+        }
+
+        body.dark-mode .controls,
+        body.dark-mode .controls select,
+        body.dark-mode .controls input,
+        body.dark-mode #hamburger,
+        body.dark-mode #legend-toggle,
+        body.dark-mode #theme-toggle,
+        body.dark-mode .legend-container,
+        body.dark-mode .chart-container,
+        body.dark-mode .leaflet-control-zoom-in, 
+        body.dark-mode .leaflet-control-zoom-out {
+            background-color: var(--control-background-dark);
+            color: var(--text-color-dark);
+            border-color: var(--control-border-dark);
+        }
+
+        body.dark-mode #theme-toggle {
+            color: yellow;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background-color: var(--control-background-light);
+            color: var(--text-color-light);
+            border-radius: 8px;
+            padding: 0;
+            border: none;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.2);
+            max-width: 250px;
+            width: 300px;
+        }
+
+        .leaflet-popup-content {
+            margin: 0;
+            padding: 15px;
+            width: auto !important;
+        }
+
+        .leaflet-popup-tip-container {
+            display: none;
+        }
+
+        /* Styles du contenu du popup */
+        .popup-content {
+            text-align: center;
+        }
+
+        .popup-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+
+        .popup-image {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .popup-content p {
+            margin: 5px 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            font-size: 14px;
+        }
+
+        .popup-content a {
+            color: var(--primary-color);
+            text-decoration: none;
+            word-break: break-all;
+            font-size: 14px;
+        }
+
+        .popup-content a:hover {
+            text-decoration: underline;
+        }
+
+        .leaflet-control-attribution {
+            display: none;
+        }
+
+        /* Styles des popups pour le thème sombre */
+        body.dark-mode .leaflet-popup-content,
+        body.dark-mode .leaflet-popup-content-wrapper,
         body.dark-mode .leaflet-popup-tip {
-            background-color: #2c2c2c; /* Ajuster la couleur du tip */
+            border: none !important;
+            background-color: var(--control-background-dark);
+            color: var(--text-color-dark);
+            border: 1px solid var(--control-border-dark);
         }
 
-        body.dark-mode a {
-            color: #1e90ff; /* Couleur des liens en mode sombre */
+        /* Ajuster pour mobile */
+        @media (max-width: 768px) {
+            .leaflet-popup-content-wrapper {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                max-width: 220px;
+                padding: 5px;
+                width: 300px;
+            }
+            .leaflet-popup-content h3 {
+                font-size: 14px;
+            }
+            .leaflet-popup-content img {
+                width: 100px;
+            }
+            .leaflet-popup-content p, .leaflet-popup-content a {
+                font-size: 12px;
+            }
+
+            .leaflet-popup-tip {
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .gauge {
+                width: 60px;
+                height: 60px;
+            }
+            .legend-container {
+                bottom: 150px;
+                left: 10px;
+            }
+            .chart-container {
+                position: fixed;
+                bottom: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 1000;
+                background: var(--control-background-light);
+                color: var(--text-color-light);
+                padding: 10px;
+                border-radius: 8px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 280px;
+            }
+            #legend-toggle {
+                top: 140px;
+                left: 9px;
+            }
+            .controls {
+                width: 180px;
+                padding: 10px;
+                font-size: 12px;
+            }
+
+            /* Style pour le statut */
+            .status-tag {
+                display: inline-block;
+                padding: 2px 6px;
+                border-radius: 4px;
+                margin: 3px;
+                font-size: 10px;
+                text-transform: uppercase;
+            }
+
+            .status-deployed {
+                background-color: #28a745;
+                color: white;
+            }
+
+            .controls select, .controls input {
+                font-size: 13px;
+                padding: 5px;
+            }
+            .legend-item {
+                margin-bottom: 3px;
+            }
+            .legend-color {
+                width: 15px;
+                height: 15px;
+                margin-right: 5px;
+            }
         }
 
-        body.dark-mode .leaflet-popup-content-wrapper img {
-            border: 1px solid #444; /* Bordure autour des images en mode sombre */
-        }
-
-        /* Styles pour le nom de l'hôpital dans les popups en mode sombre */
-        body.dark-mode .leaflet-popup-content-wrapper h1 {
-            color: #00aaff; /* Utiliser une couleur vive comme le bleu clair */
-            font-size: 1.4em; /* Agrandir un peu la taille de la police */
-            font-weight: bold; /* Rendre le texte en gras pour le faire ressortir */
-            margin-bottom: 10px; /* Ajouter un espacement en dessous */
-        }
-
-        /* Améliorer la lisibilité des labels de checkbox en mode sombre */
-        body.dark-mode label span {
-            color: #ffffff !important; /* Blanc pour une meilleure lisibilité */
-        }
-
-        /* Changer la couleur des textes lorsque les cases sont cochées */
-        body.dark-mode label input[type="checkbox"]:checked + span[data-i18n="deployed"] {
-            color: #60d829d3 !important; /* Vert vif pour déployé */
-        }
-
-        body.dark-mode label input[type="checkbox"]:checked + span[data-i18n="inProgress"] {
-            color: #ffcc00 !important; /* Jaune/orange vif pour en cours */
-        }
-
-        body.dark-mode label input[type="checkbox"]:checked + span[data-i18n="signed"] {
-            color: #4887fa !important; /* Bleu vif pour signé */
-        }
-
-        /* Bordure claire pour les checkboxs */
-        body.dark-mode label input[type="checkbox"] {
-            outline: 1px solid #ffffff !important; /* Bordure blanche pour les checkbox */
-            background-color: #333333 !important; /* Fond de la case en gris foncé */
+        /* Supprimer les bordures et ombres non souhaitées */
+        .leaflet-popup-content-wrapper::before, 
+        .leaflet-popup-content-wrapper::after {
+            content: none;
         }
     </style>
-
-    <!-- Ajout de Font Awesome pour l'icône -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
-    <div id="toggleFilters">☰</div>
-
-    <div id="filters" class="hidden-filters">
-        <label for="languageSelect" data-i18n="language">Language:</label>
-        <select id="languageSelect">
+    <div id="map"></div>
+    <button id="hamburger">☰</button>
+    <button id="legend-toggle"><i class="fas fa-info"></i></button>
+    <div class="legend-container">
+        <div class="legend-item"><span class="legend-color" style="background-color: green;"></span>Deployed</div>
+        <div class="legend-item"><span class="legend-color" style="background-color: orange;"></span>In Progress</div>
+        <div class="legend-item"><span class="legend-color" style="background-color: rgb(0, 140, 255);"></span>Signed</div>
+    </div>
+    <div class="controls">
+        <select id="language-select">
             <option value="en">English</option>
-            <option value="zh">Chinese (Mandarin)</option>
+            <option value="fr">French</option>
             <option value="es">Spanish</option>
-            <option value="hi">Hindi</option>
+            <option value="zh">Chinese</option>
             <option value="ar">Arabic</option>
-            <option value="pt">Portuguese</option>
+            <option value="hi">Hindi</option>
             <option value="bn">Bengali</option>
+            <option value="pt">Portuguese</option>
             <option value="ru">Russian</option>
             <option value="ja">Japanese</option>
-            <option value="pa">Punjabi</option>
             <option value="de">German</option>
             <option value="ko">Korean</option>
-            <option value="fr">French</option>
-            <option value="te">Telugu</option>
-            <option value="mr">Marathi</option>
-            <option value="ta">Tamil</option>
-            <option value="tr">Turkish</option>
             <option value="vi">Vietnamese</option>
+            <option value="vi">Vietnamese</option>
+            <option value="tr">Turkish</option>
+            <option value="fa">Persian</option>
+            <option value="ur">Urdu</option>
             <option value="it">Italian</option>
-            <option value="th">Thai</option>
+            <option value="ta">Tamil</option>
+            <option value="pl">Polish</option>
+            <option value="nl">Dutch</option>
         </select>
-        <br><br>
-
-        <!-- Ajout du filtrage par continent -->
-        <label for="continentSelect" data-i18n="continent">Continent:</label>
-        <select id="continentSelect">
-            <option value="all" data-i18n="all">All</option>
+        <select id="continent-select">
+            <option value="">All</option>
             <option value="Europe">Europe</option>
-            <option value="Asia">Asia</option>
-            <option value="Africa">Africa</option>
             <option value="North America">North America</option>
             <option value="South America">South America</option>
+            <option value="Asia">Asia</option>
+            <option value="Africa">Africa</option>
             <option value="Oceania">Oceania</option>
         </select>
-        <br><br>
-
-        <!-- Filtrage par pays et ville avec champ texte -->
-        <label for="countryFilter" data-i18n="country">Country:</label>
-        <input type="text" id="countryFilter" placeholder="" data-placeholder="enterCountry">
-        <br><br>
-        <label for="cityFilter" data-i18n="city">City:</label>
-        <input type="text" id="cityFilter" placeholder="" data-placeholder="enterCity">
-        <br><br>
-
-        <!-- Remplacer les boutons de filtrage par des checkboxs -->
-        <label><input type="checkbox" id="deployedFilter" checked> <span data-i18n="deployed" style="color:green;">Deployed</span></label><br>
-        <label><input type="checkbox" id="inProgressFilter" checked> <span data-i18n="inProgress" style="color:orange;">In Progress</span></label><br>
-        <label><input type="checkbox" id="signedFilter" checked> <span data-i18n="signed" style="color:blue;">Signed</span></label><br>
+        <input type="text" id="country-filter" placeholder="Enter country...">
+        <input type="text" id="city-filter" placeholder="Enter city...">
+        <div class="status-filters">
+            <span class="status-tag status-deployed" data-status="Deployed">Deployed</span>
+            <span class="status-tag status-in-progress" data-status="In Progress">In Progress</span>
+            <span class="status-tag status-signed" data-status="Signed">Signed</span>
+        </div>
     </div>
-
-    <div id="legend">
-        <p><span style="color:green;">●</span> <span data-i18n="deployed">Deployed</span></p>
-        <p><span style="color:orange;">●</span> <span data-i18n="inProgress">In Progress</span></p>
-        <p><span style="color:blue;">●</span> <span data-i18n="signed">Signed</span></p>
+    <div class="chart-container">
+        <div class="gauge-wrapper">
+            <div id="deployed-progress" class="gauge">
+                <div class="gauge-value"></div>
+            </div>
+            <div class="gauge-percentage"></div>
+            <div class="gauge-label">Deployed</div>
+        </div>
+        <div class="gauge-wrapper">
+            <div id="in-progress-progress" class="gauge">
+                <div class="gauge-value"></div>
+            </div>
+            <div class="gauge-percentage"></div>
+            <div class="gauge-label">In Progress</div>
+        </div>
+        <div class="gauge-wrapper">
+            <div id="signed-progress" class="gauge">
+                <div class="gauge-value"></div>
+            </div>
+            <div class="gauge-percentage"></div>
+            <div class="gauge-label">Signed</div>
+        </div>
     </div>
-
-    <div id="chartContainer">
-        <canvas id="statsChart" width="200" height="200"></canvas>
-    </div>
-
-    <!-- Remplacement du bouton texte par une icône -->
-    <div id="themeToggle">
-        <i class="fas fa-adjust"></i> <!-- Icône pour Dark/Light mode -->
-    </div>
-
-    <div id="map"></div>
-
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <!-- MarkerCluster JS -->
-    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+    <button id="theme-toggle"><i class="fas fa-moon"></i></button>
 
     <script>
-        var hospitals = [
+        let map, markers = [], activeStatus = [], language = "en";
+        let darkMode = false;
+        let isMapInitialized = false;
+        let isChartInitialized = false;
+        const gauges = {};
+        const colors = {
+            'Deployed': '#4CAF50',
+            'In Progress': '#FFA500',
+            'Signed': '#2196F3'
+        };
+
+        const translations = {
+            en: {
+                deployed: "Deployed",
+                inProgress: "In Progress",
+                signed: "Signed",
+                enterCountry: "Enter country...",
+                enterCity: "Enter city...",
+                visitWebsite: "Visit Website",
+                address: "Address",
+                status: "Status",
+                legendDeployed: "Deployed",
+                legendInProgress: "In Progress",
+                legendSigned: "Signed",
+                noHospitals: "No hospitals available",
+                gaugesDeployed: "Deployed",
+                gaugesInProgress: "In Progress",
+                gaugesSigned: "Signed"
+            },
+            fr: {
+                deployed: "Déployé",
+                inProgress: "En cours",
+                signed: "Signé",
+                enterCountry: "Entrer un pays...",
+                enterCity: "Entrer une ville...",
+                visitWebsite: "Visiter le site Web",
+                address: "Adresse",
+                status: "Statut",
+                legendDeployed: "Déployé",
+                legendInProgress: "En cours",
+                legendSigned: "Signé",
+                noHospitals: "Aucun hôpital disponible",
+                gaugesDeployed: "Déployé",
+                gaugesInProgress: "En cours",
+                gaugesSigned: "Signé"
+            },
+            es: {
+                deployed: "Desplegado",
+                inProgress: "En progreso",
+                signed: "Firmado",
+                enterCountry: "Ingresar país...",
+                enterCity: "Ingresar ciudad...",
+                visitWebsite: "Visitar sitio web",
+                address: "Dirección",
+                status: "Estado",
+                legendDeployed: "Desplegado",
+                legendInProgress: "En progreso",
+                legendSigned: "Firmado",
+                noHospitals: "No hay hospitales disponibles",
+                gaugesDeployed: "Desplegado",
+                gaugesInProgress: "En progreso",
+                gaugesSigned: "Firmado"
+            },
+            zh: {
+                deployed: "部署",
+                inProgress: "进行中",
+                signed: "已签署",
+                enterCountry: "输入国家...",
+                enterCity: "输入城市...",
+                visitWebsite: "访问网站",
+                address: "地址",
+                status: "状态",
+                legendDeployed: "部署",
+                legendInProgress: "进行中",
+                legendSigned: "已签署",
+                noHospitals: "没有可用的医院",
+                gaugesDeployed: "部署",
+                gaugesInProgress: "进行中",
+                gaugesSigned: "已签署"
+            },
+            ar: {
+                deployed: "تم النشر",
+                inProgress: "قيد التنفيذ",
+                signed: "موقع",
+                enterCountry: "أدخل الدولة...",
+                enterCity: "أدخل المدينة...",
+                visitWebsite: "زيارة الموقع",
+                address: "العنوان",
+                status: "الحالة",
+                legendDeployed: "تم النشر",
+                legendInProgress: "قيد التنفيذ",
+                legendSigned: "موقع",
+                noHospitals: "لا توجد مستشفيات متاحة",
+                gaugesDeployed: "تم النشر",
+                gaugesInProgress: "قيد التنفيذ",
+                gaugesSigned: "موقع"
+            },
+            hi: {
+                deployed: "तैनात",
+                inProgress: "प्रगति में",
+                signed: "हस्ताक्षरित",
+                enterCountry: "देश दर्ज करें...",
+                enterCity: "शहर दर्ज करें...",
+                visitWebsite: "वेबसाइट पर जाएं",
+                address: "पता",
+                status: "स्थिति",
+                legendDeployed: "तैनात",
+                legendInProgress: "प्रगति में",
+                legendSigned: "हस्ताक्षरित",
+                noHospitals: "कोई अस्पताल उपलब्ध नहीं है",
+                gaugesDeployed: "तैनात",
+                gaugesInProgress: "प्रगति में",
+                gaugesSigned: "हस्ताक्षरित"
+            },
+            bn: {
+                deployed: "মোতায়েন",
+                inProgress: "প্রগতি",
+                signed: "স্বাক্ষরিত",
+                enterCountry: "দেশ প্রবেশ করুন...",
+                enterCity: "শহর প্রবেশ করুন...",
+                visitWebsite: "ওয়েবসাইট দেখুন",
+                address: "ঠিকানা",
+                status: "স্থিতি",
+                legendDeployed: "মোতায়েন",
+                legendInProgress: "প্রগতি",
+                legendSigned: "স্বাক্ষরিত",
+                noHospitals: "কোনও হাসপাতাল উপলব্ধ নেই",
+                gaugesDeployed: "মোতায়েন",
+                gaugesInProgress: "প্রগতি",
+                gaugesSigned: "স্বাক্ষরিত"
+            },
+            pt: {
+                deployed: "Implantado",
+                inProgress: "Em progresso",
+                signed: "Assinado",
+                enterCountry: "Insira o país...",
+                enterCity: "Insira a cidade...",
+                visitWebsite: "Visitar site",
+                address: "Endereço",
+                status: "Status",
+                legendDeployed: "Implantado",
+                legendInProgress: "Em progresso",
+                legendSigned: "Assinado",
+                noHospitals: "Nenhum hospital disponível",
+                gaugesDeployed: "Implantado",
+                gaugesInProgress: "Em progresso",
+                gaugesSigned: "Assinado"
+            },
+            ru: {
+                deployed: "Развернутый",
+                inProgress: "В процессе",
+                signed: "Подписанный",
+                enterCountry: "Введите страну...",
+                enterCity: "Введите город...",
+                visitWebsite: "Посетить сайт",
+                address: "Адрес",
+                status: "Статус",
+                legendDeployed: "Развернутый",
+                legendInProgress: "В процессе",
+                legendSigned: "Подписанный",
+                noHospitals: "Нет доступных больниц",
+                gaugesDeployed: "Развернутый",
+                gaugesInProgress: "В процессе",
+                gaugesSigned: "Подписанный"
+            },
+            ja: {
+                deployed: "展開済み",
+                inProgress: "進行中",
+                signed: "署名済み",
+                enterCountry: "国を入力してください...",
+                enterCity: "都市を入力してください...",
+                visitWebsite: "ウェブサイトを訪問",
+                address: "住所",
+                status: "ステータス",
+                legendDeployed: "展開済み",
+                legendInProgress: "進行中",
+                legendSigned: "署名済み",
+                noHospitals: "利用可能な病院はありません",
+                gaugesDeployed: "展開済み",
+                gaugesInProgress: "進行中",
+                gaugesSigned: "署名済み"
+            },
+            de: {
+                deployed: "Eingesetzt",
+                inProgress: "In Bearbeitung",
+                signed: "Unterzeichnet",
+                enterCountry: "Land eingeben...",
+                enterCity: "Stadt eingeben...",
+                visitWebsite: "Website besuchen",
+                address: "Adresse",
+                status: "Status",
+                legendDeployed: "Eingesetzt",
+                legendInProgress: "In Bearbeitung",
+                legendSigned: "Unterzeichnet",
+                noHospitals: "Keine Krankenhäuser verfügbar",
+                gaugesDeployed: "Eingesetzt",
+                gaugesInProgress: "In Bearbeitung",
+                gaugesSigned: "Unterzeichnet"
+            },
+            ko: {
+                deployed: "배포됨",
+                inProgress: "진행 중",
+                signed: "서명됨",
+                enterCountry: "국가 입력...",
+                enterCity: "도시 입력...",
+                visitWebsite: "웹사이트 방문",
+                address: "주소",
+                status: "상태",
+                legendDeployed: "배포됨",
+                legendInProgress: "진행 중",
+                legendSigned: "서명됨",
+                noHospitals: "이용 가능한 병원이 없습니다",
+                gaugesDeployed: "배포됨",
+                gaugesInProgress: "진행 중",
+                gaugesSigned: "서명됨"
+            },
+            vi: {
+                deployed: "Đã triển khai",
+                inProgress: "Đang tiến hành",
+                signed: "Đã ký",
+                enterCountry: "Nhập quốc gia...",
+                enterCity: "Nhập thành phố...",
+                visitWebsite: "Truy cập website",
+                address: "Địa chỉ",
+                status: "Trạng thái",
+                legendDeployed: "Đã triển khai",
+                legendInProgress: "Đang tiến hành",
+                legendSigned: "Đã ký",
+                noHospitals: "Không có bệnh viện nào",
+                gaugesDeployed: "Đã triển khai",
+                gaugesInProgress: "Đang tiến hành",
+                gaugesSigned: "Đã ký"
+            },
+            tr: {
+                deployed: "Yerleştirildi",
+                inProgress: "Devam ediyor",
+                signed: "İmzalandı",
+                enterCountry: "Ülke girin...",
+                enterCity: "Şehir girin...",
+                visitWebsite: "Web sitesini ziyaret edin",
+                address: "Adres",
+                status: "Durum",
+                legendDeployed: "Yerleştirildi",
+                legendInProgress: "Devam ediyor",
+                legendSigned: "İmzalandı",
+                noHospitals: "Mevcut hastane yok",
+                gaugesDeployed: "Yerleştirildi",
+                gaugesInProgress: "Devam ediyor",
+                gaugesSigned: "İmzalandı"
+            },
+            fa: {
+                deployed: "مستقر",
+                inProgress: "در حال پیشرفت",
+                signed: "امضا شده",
+                enterCountry: "کشور را وارد کنید...",
+                enterCity: "شهر را وارد کنید...",
+                visitWebsite: "بازدید از وب سایت",
+                address: "نشانی",
+                status: "وضعیت",
+                legendDeployed: "مستقر",
+                legendInProgress: "در حال پیشرفت",
+                legendSigned: "امضا شده",
+                noHospitals: "هیچ بیمارستانی در دسترس نیست",
+                gaugesDeployed: "مستقر",
+                gaugesInProgress: "در حال پیشرفت",
+                gaugesSigned: "امضا شده"
+            },
+            ur: {
+                deployed: "تعینات",
+                inProgress: "جاری ہے",
+                signed: "دستخط شدہ",
+                enterCountry: "ملک درج کریں...",
+                enterCity: "شہر درج کریں...",
+                visitWebsite: "ویب سائٹ دیکھیں",
+                address: "پتہ",
+                status: "حالت",
+                legendDeployed: "تعینات",
+                legendInProgress: "جاری ہے",
+                legendSigned: "دستخط شدہ",
+                noHospitals: "کوئی ہسپتال دستیاب نہیں ہے",
+                gaugesDeployed: "تعینات",
+                gaugesInProgress: "جاری ہے",
+                gaugesSigned: "دستخط شدہ"
+            },
+            it: {
+                deployed: "Distribuito",
+                inProgress: "In corso",
+                signed: "Firmato",
+                enterCountry: "Inserisci il paese...",
+                enterCity: "Inserisci la città...",
+                visitWebsite: "Visita il sito",
+                address: "Indirizzo",
+                status: "Stato",
+                legendDeployed: "Distribuito",
+                legendInProgress: "In corso",
+                legendSigned: "Firmato",
+                noHospitals: "Nessun ospedale disponibile",
+                gaugesDeployed: "Distribuito",
+                gaugesInProgress: "In corso",
+                gaugesSigned: "Firmato"
+            },
+            ta: {
+                deployed: "பயன்படுத்தப்பட்டது",
+                inProgress: "முன்னேற்றத்தில்",
+                signed: "கையெழுத்திடப்பட்டது",
+                enterCountry: "நாட்டை உள்ளிடவும்...",
+                enterCity: "நகரத்தை உள்ளிடவும்...",
+                visitWebsite: "வலைத்தளத்தைப் பார்வையிடுங்கள்",
+                address: "முகவரி",
+                status: "நிலை",
+                legendDeployed: "பயன்படுத்தப்பட்டது",
+                legendInProgress: "முன்னேற்றத்தில்",
+                legendSigned: "கையெழுத்திடப்பட்டது",
+                noHospitals: "முகாமிடக்கூடிய மருத்துவமனைகள் இல்லை",
+                gaugesDeployed: "பயன்படுத்தப்பட்டது",
+                gaugesInProgress: "முன்னேற்றத்தில்",
+                gaugesSigned: "கையெழுத்திடப்பட்டது"
+            },
+            pl: {
+                deployed: "Wdrożone",
+                inProgress: "W toku",
+                signed: "Podpisany",
+                enterCountry: "Wpisz kraj...",
+                enterCity: "Wpisz miasto...",
+                visitWebsite: "Odwiedź stronę",
+                address: "Adres",
+                status: "Status",
+                legendDeployed: "Wdrożone",
+                legendInProgress: "W toku",
+                legendSigned: "Podpisany",
+                noHospitals: "Brak dostępnych szpitali",
+                gaugesDeployed: "Wdrożone",
+                gaugesInProgress: "W toku",
+                gaugesSigned: "Podpisany"
+            },
+            nl: {
+                deployed: "Ingezet",
+                inProgress: "In uitvoering",
+                signed: "Ondertekend",
+                enterCountry: "Voer land in...",
+                enterCity: "Voer stad in...",
+                visitWebsite: "Bezoek website",
+                address: "Adres",
+                status: "Status",
+                legendDeployed: "Ingezet",
+                legendInProgress: "In uitvoering",
+                legendSigned: "Ondertekend",
+                noHospitals: "Geen beschikbare ziekenhuizen",
+                gaugesDeployed: "Ingezet",
+                gaugesInProgress: "In uitvoering",
+                gaugesSigned: "Ondertekend"
+            }
+        };
+
+        const hospitals = [
             {
-                "name": "Hospital 1",
-                "city": "Paris",
-                "country": "France",
-                "continent": "Europe",
-                "lat": 48.8566,
-                "lon": 2.3522,
-                "status": "deployed",
-                "address": "1 Rue de l'Hôpital, Paris",
-                "website": "http://hospital1.com",
-                "photo": "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+                name: "Centre Hospitalier de Châlon-sur-Saone",
+                lat: 46.7795,
+                lon: 4.8527,
+                status: "Deployed",
+                address: "4 Rue Capitaine Drillien, 71100 Chalon-sur-Saône, France",
+                website: "http://www.ch-chalon71.fr",
+                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
             },
             {
-                "name": "Hospital 2",
-                "city": "Lyon",
-                "country": "France",
-                "continent": "Europe",
-                "lat": 45.764,
-                "lon": 4.8357,
-                "status": "in-progress",
-                "address": "2 Rue de l'Hôpital, Lyon",
-                "website": "http://hospital2.com",
-                "photo": "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+                name: "Centre Hospitalier de Toulon",
+                lat: 43.1242,
+                lon: 5.928,
+                status: "Deployed",
+                address: "Avenue du 1er Bataillon des Fusiliers Marins, 83000 Toulon, France",
+                website: "http://www.ch-toulon.fr",
+                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
             },
             {
-                "name": "Hospital 3",
-                "city": "Berlin",
-                "country": "Germany",
-                "continent": "Europe",
-                "lat": 52.52,
-                "lon": 13.405,
-                "status": "signed",
-                "address": "3 Straße Krankenhaus, Berlin",
-                "website": "http://hospital3.com",
-                "photo": "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+                name: "Centre Hospitalier de Hyères",
+                lat: 43.1175,
+                lon: 6.1284,
+                status: "Deployed",
+                address: "3 Avenue du Dr Jean-Jacques Perron, 83400 Hyères, France",
+                website: "http://www.ch-hyeres.fr",
+                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+            },
+            {
+                name: "Centre Hospitalier Universitaire de Caen Normandie",
+                lat: 49.1829,
+                lon: -0.3707,
+                status: "Deployed",
+                address: "Avenue de la Côte de Nacre, 14033 Caen, France",
+                website: "http://www.chu-caen.fr",
+                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+            },
+            {
+                name: "Centre Hospitalier Sud Francilien, Corbeil-Essonnes",
+                lat: 48.6139,
+                lon: 2.4749,
+                status: "Deployed",
+                address: "40 Avenue Serge Dassault, 91100 Corbeil-Essonnes, France",
+                website: "http://www.chsf.fr",
+                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+            },
+            {
+                name: "Groupe Hospitalier Nord-Essonne, Longjumeau",
+                lat: 48.6953,
+                lon: 2.2999,
+                status: "Deployed",
+                address: "159 Rue du Président François Mitterrand, 91160 Longjumeau, France",
+                website: "http://www.ch-nord-essonne.fr",
+                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+            },
+            {
+                name: "Groupe Hospitalier Nord-Essonne, Orsay",
+                lat: 48.697,
+                lon: 2.1873,
+                status: "Deployed",
+                address: "4 Place du Général Leclerc, 91400 Orsay, France",
+                website: "http://www.ch-nord-essonne.fr",
+                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+            },
+            {
+                name: "Centre Hospitalier Jean Leclaire Sarlat, Sarlat-la-Canéda",
+                lat: 44.8904,
+                lon: 1.2161,
+                status: "Deployed",
+                address: "13 Avenue de la Gare, 24200 Sarlat-la-Canéda, France",
+                website: "http://www.ch-sarlat.fr",
+                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+            },
+            {
+                name: "Centre Hospitalier Samuel Pozzi, Bergerac",
+                lat: 44.8532,
+                lon: 0.4845,
+                status: "Deployed",
+                address: "21 Rue du Professeur Pozzi, 24100 Bergerac, France",
+                website: "http://www.ch-bergerac.fr",
+                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+            },
+            {
+                name: "Centre Hospitalier de Périgueux",
+                lat: 45.1853,
+                lon: 0.7186,
+                status: "Deployed",
+                address: "80 Avenue Georges Pompidou, 24000 Périgueux, France",
+                website: "http://www.ch-perigueux.fr",
+                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+            },
+            {
+                name: "Les Bluets, Paris",
+                lat: 48.8499,
+                lon: 2.3912,
+                status: "Deployed",
+                address: "4 Rue Lasson, 75012 Paris, France",
+                website: "http://www.lesbluets.fr",
+                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+            },
+            {
+                name: "Centre Hospitalier Universitaire de Rouen Normandie",
+                lat: 49.4432,
+                lon: 1.0993,
+                status: "Signed",
+                address: "1 Rue de Germont, 76000 Rouen, France",
+                website: "http://www.chu-rouen.fr",
+                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+            },
+            {
+                name: "Centre Hospitalier d'Arpajon",
+                lat: 48.5913,
+                lon: 2.2423,
+                status: "Signed",
+                address: "18 Avenue Paul Vaillant Couturier, 91290 Arpajon, France",
+                website: "http://www.ch-arpajon.fr",
+                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
             }
         ];
 
-        // Fonction pour vérifier si le mode sombre est activé
-        function isDarkMode() {
-            return document.body.classList.contains('dark-mode');
+        function initApplication() {
+            console.log("Initializing application...");
+            initMap();
+            initGauges();
+            addMarkers();
+            updateGauges();
         }
 
-        // Initialisation de la carte Leaflet
-        var map = L.map('map').setView([48.8566, 2.3522], 5);
-        var markersCluster = L.markerClusterGroup();
-
-        var lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png');
-        var darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
-        lightTiles.addTo(map);
-
-        // Générer les marqueurs pour chaque hôpital et les ajouter au cluster
-        hospitals.forEach(function(hospital) {
-            var marker = L.circleMarker([hospital.lat, hospital.lon], {
-                radius: 8,
-                fillColor: getStatusColor(hospital.status),
-                color: getStatusColor(hospital.status),
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.8
-            }).bindPopup(generatePopupContent(hospital));
-            markersCluster.addLayer(marker);
-        });
-
-        map.addLayer(markersCluster);
-
-        // Génération du graphique avec Chart.js
-        var ctx = document.getElementById('statsChart').getContext('2d');
-        var chart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: [
-                    i18next.t('deployed') || 'Deployed',
-                    i18next.t('inProgress') || 'In Progress',
-                    i18next.t('signed') || 'Signed'
-                ],
-                datasets: [{
-                    label: i18next.t('status') || 'Status',
-                    data: [
-                        hospitals.filter(h => h.status === 'deployed').length,
-                        hospitals.filter(h => h.status === 'in-progress').length,
-                        hospitals.filter(h => h.status === 'signed').length
-                    ],
-                    backgroundColor: ['green', 'orange', 'blue']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: {
-                            font: {
-                                size: 13 // Taille de la police pour la légende
-                            },
-                            color: function(context) {
-                                return isDarkMode() ? '#ffffff' : '#333333'; // Couleur de la police en fonction du mode sombre
-                            }
-                        }
-                    },
-                    tooltip: {
-                        bodyFont: {
-                            size: 13
-                        },
-                        titleFont: {
-                            size: 13
-                        },
-                        backgroundColor: function(context) {
-                            return isDarkMode() ? '#2c2c2c' : '#ffffff'; // Couleur de fond du tooltip
-                        },
-                        titleColor: function(context) {
-                            return isDarkMode() ? '#ffffff' : '#333'; // Couleur du titre du tooltip
-                        },
-                        bodyColor: function(context) {
-                            return isDarkMode() ? '#ffffff' : '#333'; // Couleur du texte du tooltip
-                        },
-                        borderColor: function(context) {
-                            return isDarkMode() ? '#444' : '#ddd'; // Couleur de la bordure du tooltip
-                        },
-                        borderWidth: 1
-                    }
-                }
-            }
-        });
-
-        // Génère le contenu de la popup
-        function generatePopupContent(hospital) {
-            return `
-                <div style="text-align: center;">
-                    <h2 style="color: #00aaff; font-size: 1.5em; font-weight: bold; margin-bottom: 10px;">${hospital.name}</h2>
-                    <img src="${hospital.photo}" style="width:150px; height:auto; border-radius: 5px; margin-bottom: 10px;" alt="Photo of ${hospital.name}"><br>
-                    <a href="${hospital.website}" target="_blank" style="color: var(--secondary-color); font-size: 1.2em; font-weight: bold;">
-                        ${i18next.t('visitWebsite') || 'Visit Website'}
-                    </a><br>
-                    <p style="margin-top: 10px; font-size: 1.2em;">${i18next.t('status') || 'Status'}: <span style="color: ${getStatusColor(hospital.status)};">
-                        ${i18next.t(hospital.status) || hospital.status}
-                    </span></p>
-                    <p style="font-size: 1.1em;">${i18next.t('address') || 'Address'}: ${hospital.address}</p>
-                </div>
-            `;
-        }
-
-        // Retourne la couleur en fonction du statut
-        function getStatusColor(status) {
-            if (status === 'deployed') return 'green';
-            if (status === 'in-progress') return 'orange';
-            return 'blue';
-        }
-
-        // Basculer entre mode clair et mode sombre
-        document.getElementById('themeToggle').addEventListener('click', function() {
-            document.body.classList.toggle('dark-mode');
-            document.getElementById('filters').classList.toggle('dark-mode');
-            document.getElementById('legend').classList.toggle('dark-mode');
-            document.getElementById('chartContainer').classList.toggle('dark-mode');
-            document.getElementById('themeToggle').classList.toggle('dark-mode');
-            document.getElementById('toggleFilters').classList.toggle('dark-mode');
-
-            // Changer la carte entre les tuiles claires et sombres
-            if (map.hasLayer(lightTiles)) {
-                map.removeLayer(lightTiles);
-                map.addLayer(darkTiles);
+        function initMap() {
+            console.log("Initializing map...");
+            if (!isMapInitialized) {
+                map = L.map('map').setView([50, 10], 4);
+                isMapInitialized = true;
+                updateTileLayer();
             } else {
-                map.removeLayer(darkTiles);
-                map.addLayer(lightTiles);
+                console.log("Map already initialized, skipping...");
             }
-
-            // Mettre à jour le graphique pour appliquer les nouvelles couleurs
-            chart.update();
-        });
-
-        // Fonction pour actualiser les traductions et les éléments visuels
-        function updateUI() {
-            document.querySelectorAll('[data-i18n]').forEach(function(element) {
-                element.textContent = i18next.t(element.getAttribute('data-i18n'));
-            });
-
-            // Mettre à jour les placeholders
-            document.querySelectorAll('[data-placeholder]').forEach(function(element) {
-                element.placeholder = i18next.t(element.getAttribute('data-placeholder'));
-            });
-
-            chart.data.labels = [
-                i18next.t('deployed') || 'Deployed',
-                i18next.t('inProgress') || 'In Progress',
-                i18next.t('signed') || 'Signed'
-            ];
-            chart.update();
-
-            refreshPopups();  // Mettre à jour les popups avec les nouvelles traductions
         }
 
-        document.getElementById('languageSelect').addEventListener('change', function() {
-            var selectedLanguage = this.value;
-            i18next.changeLanguage(selectedLanguage, function(err, t) {
-                if (err) return console.error('Something went wrong:', err);
-                updateUI();
+        function initGauges() {
+            console.log("Initializing gauges...");
+            ['Deployed', 'In Progress', 'Signed'].forEach(status => {
+                const element = document.getElementById(`${status.toLowerCase().replace(' ', '-')}-progress`);
+                if (element) {
+                    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    svg.setAttribute("viewBox", "0 0 36 36");
+                    svg.innerHTML = `
+                        <path d="M18 2.0845
+                            a 15.9155 15.9155 0 0 1 0 31.831
+                            a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#eee"
+                            stroke-width="3"
+                        />
+                        <path d="M18 2.0845
+                            a 15.9155 15.9155 0 0 1 0 31.831
+                            a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="${colors[status]}"
+                            stroke-width="3"
+                            stroke-dasharray="0, 100"
+                        />
+                    `;
+                    element.innerHTML = '';
+                    element.appendChild(svg);
+
+                    const valueContainer = document.createElement('div');
+                    valueContainer.classList.add('gauge-value');
+                    valueContainer.textContent = '0';
+                    element.appendChild(valueContainer);
+
+                    gauges[status] = {
+                        path: svg.querySelector(`path[stroke="${colors[status]}"]`),
+                        element: element
+                    };
+                }
             });
-        });
+            isChartInitialized = true;
+        }
 
-        // Fonction pour basculer l'affichage des filtres avec le bouton hamburger
-        document.getElementById('toggleFilters').addEventListener('click', function() {
-            document.getElementById('filters').classList.toggle('hidden-filters');
-        });
+        function updateGauges() {
+            if (!isChartInitialized) {
+                console.warn("Charts not initialized, skipping gauge update");
+                return;
+            }
 
-        // Initialisation de i18next avec toutes les traductions
-        i18next.init({
-            lng: 'en',
-            fallbackLng: 'en',
-            resources: {
-                en: {
-                    translation: {
-                        "language": "Language",
-                        "continent": "Continent",
-                        "country": "Country",
-                        "city": "City",
-                        "enterCountry": "Enter country...",
-                        "enterCity": "Enter city...",
-                        "deployed": "Deployed",
-                        "inProgress": "In Progress",
-                        "signed": "Signed",
-                        "status": "Status",
-                        "visitWebsite": "Visit Website",
-                        "address": "Address",
-                        "all": "All",
-                        "toggleTheme": "Dark/Light Mode"
+            const statusCounts = hospitals.reduce((acc, hospital) => {
+                acc[hospital.status] = (acc[hospital.status] || 0) + 1;
+                return acc;
+            }, {});
+
+            const totalHospitals = hospitals.length;
+
+            ['Deployed', 'In Progress', 'Signed'].forEach(status => {
+                const count = statusCounts[status] || 0;
+                const percentage = (count / totalHospitals) * 100 || 0;
+
+                if (gauges[status]) {
+                    gauges[status].path.setAttribute("stroke-dasharray", `${percentage}, 100`);
+
+                    const valueElement = gauges[status].element.querySelector('.gauge-value');
+                    if (valueElement) {
+                        valueElement.textContent = count;
                     }
-                },
-                fr: {
-                    translation: {
-                        "language": "Langue",
-                        "continent": "Continent",
-                        "country": "Pays",
-                        "city": "Ville",
-                        "enterCountry": "Entrez le pays...",
-                        "enterCity": "Entrez la ville...",
-                        "deployed": "Déployé",
-                        "inProgress": "En cours",
-                        "signed": "Signé",
-                        "status": "Statut",
-                        "visitWebsite": "Visitez le site",
-                        "address": "Adresse",
-                        "all": "Tous",
-                        "toggleTheme": "Mode Sombre/Clair"
-                    }
-                },
-                es: {
-                    translation: {
-                        "language": "Idioma",
-                        "continent": "Continente",
-                        "country": "País",
-                        "city": "Ciudad",
-                        "enterCountry": "Ingrese el país...",
-                        "enterCity": "Ingrese la ciudad...",
-                        "deployed": "Desplegado",
-                        "inProgress": "En Progreso",
-                        "signed": "Firmado",
-                        "status": "Estado",
-                        "visitWebsite": "Visitar Sitio Web",
-                        "address": "Dirección",
-                        "all": "Todos",
-                        "toggleTheme": "Modo Oscuro/Claro"
-                    }
-                },
-                de: {
-                    translation: {
-                        "language": "Sprache",
-                        "continent": "Kontinent",
-                        "country": "Land",
-                        "city": "Stadt",
-                        "enterCountry": "Geben Sie das Land ein...",
-                        "enterCity": "Geben Sie die Stadt ein...",
-                        "deployed": "Bereitgestellt",
-                        "inProgress": "In Bearbeitung",
-                        "signed": "Unterzeichnet",
-                        "status": "Status",
-                        "visitWebsite": "Website besuchen",
-                        "address": "Adresse",
-                        "all": "Alle",
-                        "toggleTheme": "Dunkler/Heller Modus"
-                    }
-                },
-                it: {
-                    translation: {
-                        "language": "Lingua",
-                        "continent": "Continente",
-                        "country": "Paese",
-                        "city": "Città",
-                        "enterCountry": "Inserisci il paese...",
-                        "enterCity": "Inserisci la città...",
-                        "deployed": "Distribuito",
-                        "inProgress": "In Corso",
-                        "signed": "Firmato",
-                        "status": "Stato",
-                        "visitWebsite": "Visita il Sito",
-                        "address": "Indirizzo",
-                        "all": "Tutti",
-                        "toggleTheme": "Modalità Scura/Chiara"
-                    }
-                },
-                pt: {
-                    translation: {
-                        "language": "Língua",
-                        "continent": "Continente",
-                        "country": "País",
-                        "city": "Cidade",
-                        "enterCountry": "Digite o país...",
-                        "enterCity": "Digite a cidade...",
-                        "deployed": "Implantado",
-                        "inProgress": "Em Progresso",
-                        "signed": "Assinado",
-                        "status": "Status",
-                        "visitWebsite": "Visitar Site",
-                        "address": "Endereço",
-                        "all": "Todos",
-                        "toggleTheme": "Modo Escuro/Claro"
-                    }
-                },
-                ru: {
-                    translation: {
-                        "language": "Язык",
-                        "continent": "Континент",
-                        "country": "Страна",
-                        "city": "Город",
-                        "enterCountry": "Введите страну...",
-                        "enterCity": "Введите город...",
-                        "deployed": "Развернуто",
-                        "inProgress": "В процессе",
-                        "signed": "Подписано",
-                        "status": "Статус",
-                        "visitWebsite": "Посетить сайт",
-                        "address": "Адрес",
-                        "all": "Все",
-                        "toggleTheme": "Тёмный/Светлый режим"
-                    }
-                },
-                zh: {
-                    translation: {
-                        "language": "语言",
-                        "continent": "大陆",
-                        "country": "国家",
-                        "city": "城市",
-                        "enterCountry": "输入国家...",
-                        "enterCity": "输入城市...",
-                        "deployed": "已部署",
-                        "inProgress": "进行中",
-                        "signed": "已签署",
-                        "status": "状态",
-                        "visitWebsite": "访问网站",
-                        "address": "地址",
-                        "all": "所有",
-                        "toggleTheme": "深色/浅色模式"
-                    }
-                },
-                hi: {
-                    translation: {
-                        "language": "भाषा",
-                        "continent": "महाद्वीप",
-                        "country": "देश",
-                        "city": "शहर",
-                        "enterCountry": "देश दर्ज करें...",
-                        "enterCity": "शहर दर्ज करें...",
-                        "deployed": "तैनात",
-                        "inProgress": "प्रगति पर",
-                        "signed": "हस्ताक्षरित",
-                        "status": "स्थिति",
-                        "visitWebsite": "वेबसाइट देखें",
-                        "address": "पता",
-                        "all": "सभी",
-                        "toggleTheme": "डार्क/लाइट मोड"
-                    }
-                },
-                ar: {
-                    translation: {
-                        "language": "لغة",
-                        "continent": "قارة",
-                        "country": "بلد",
-                        "city": "مدينة",
-                        "enterCountry": "أدخل البلد...",
-                        "enterCity": "أدخل المدينة...",
-                        "deployed": "تم النشر",
-                        "inProgress": "قيد التقدم",
-                        "signed": "تم التوقيع",
-                        "status": "الحالة",
-                        "visitWebsite": "زيارة الموقع",
-                        "address": "العنوان",
-                        "all": "الكل",
-                        "toggleTheme": "الوضع الداكن/السطوع"
-                    }
-                },
-                ko: {
-                    translation: {
-                        "language": "언어",
-                        "continent": "대륙",
-                        "country": "국가",
-                        "city": "도시",
-                        "enterCountry": "국가 입력...",
-                        "enterCity": "도시 입력...",
-                        "deployed": "배치됨",
-                        "inProgress": "진행 중",
-                        "signed": "서명됨",
-                        "status": "상태",
-                        "visitWebsite": "웹사이트 방문",
-                        "address": "주소",
-                        "all": "모두",
-                        "toggleTheme": "다크/라이트 모드"
-                    }
-                },
-                ja: {
-                    translation: {
-                        "language": "言語",
-                        "continent": "大陸",
-                        "country": "国",
-                        "city": "市",
-                        "enterCountry": "国を入力...",
-                        "enterCity": "都市を入力...",
-                        "deployed": "展開済み",
-                        "inProgress": "進行中",
-                        "signed": "署名済み",
-                        "status": "ステータス",
-                        "visitWebsite": "ウェブサイトを訪問",
-                        "address": "住所",
-                        "all": "すべて",
-                        "toggleTheme": "ダーク/ライトモード"
-                    }
-                },
-                pa: {
-                    translation: {
-                        "language": "ਭਾਸ਼ਾ",
-                        "continent": "ਮਹਾਦੀਪ",
-                        "country": "ਦੇਸ਼",
-                        "city": "ਸ਼ਹਿਰ",
-                        "enterCountry": "ਦੇਸ਼ ਦਰਜ ਕਰੋ...",
-                        "enterCity": "ਸ਼ਹਿਰ ਦਰਜ ਕਰੋ...",
-                        "deployed": "ਤੈਨਾਤ",
-                        "inProgress": "ਚਲ ਰਿਹਾ ਹੈ",
-                        "signed": "ਦਸਤਖ਼ਤ ਕੀਤੇ",
-                        "status": "ਸਥਿਤੀ",
-                        "visitWebsite": "ਵੈਬਸਾਈਟ ਵੇਖੋ",
-                        "address": "ਪਤਾ",
-                        "all": "ਸਾਰੇ",
-                        "toggleTheme": "ਡਾਰਕ/ਲਾਈਟ ਮੋਡ"
-                    }
-                },
-                bn: {
-                    translation: {
-                        "language": "ভাষা",
-                        "continent": "মহাদেশ",
-                        "country": "দেশ",
-                        "city": "শহর",
-                        "enterCountry": "দেশ লিখুন...",
-                        "enterCity": "শহর লিখুন...",
-                        "deployed": "মোতায়েন",
-                        "inProgress": "চলমান",
-                        "signed": "স্বাক্ষরিত",
-                        "status": "অবস্থা",
-                        "visitWebsite": "ওয়েবসাইট দেখুন",
-                        "address": "ঠিকানা",
-                        "all": "সব",
-                        "toggleTheme": "ডার্ক/লাইট মোড"
-                    }
-                },
-                vi: {
-                    translation: {
-                        "language": "Ngôn ngữ",
-                        "continent": "Châu lục",
-                        "country": "Quốc gia",
-                        "city": "Thành phố",
-                        "enterCountry": "Nhập quốc gia...",
-                        "enterCity": "Nhập thành phố...",
-                        "deployed": "Đã triển khai",
-                        "inProgress": "Đang thực hiện",
-                        "signed": "Đã ký",
-                        "status": "Trạng thái",
-                        "visitWebsite": "Truy cập trang web",
-                        "address": "Địa chỉ",
-                        "all": "Tất cả",
-                        "toggleTheme": "Chế độ Tối/Sáng"
-                    }
-                },
-                th: {
-                    translation: {
-                        "language": "ภาษา",
-                        "continent": "ทวีป",
-                        "country": "ประเทศ",
-                        "city": "เมือง",
-                        "enterCountry": "ป้อนประเทศ...",
-                        "enterCity": "ป้อนเมือง...",
-                        "deployed": "ปรับใช้แล้ว",
-                        "inProgress": "อยู่ในระหว่างดำเนินการ",
-                        "signed": "ลงนามแล้ว",
-                        "status": "สถานะ",
-                        "visitWebsite": "เยี่ยมชมเว็บไซต์",
-                        "address": "ที่อยู่",
-                        "all": "ทั้งหมด",
-                        "toggleTheme": "โหมดมืด/โหมดสว่าง"
+
+                    const percentageElement = gauges[status].element.nextElementSibling;
+                    if (percentageElement) {
+                        percentageElement.textContent = `(${percentage.toFixed(1)}%)`;
                     }
                 }
+            });
+        }
+
+        function toggleTheme() {
+            darkMode = !darkMode;
+            document.body.classList.toggle('dark-mode');
+            updateTileLayer();
+        }
+
+        function updateTileLayer() {
+            if (map.hasLayer(window.currentTileLayer)) {
+                map.removeLayer(window.currentTileLayer);
             }
-        }, function(err, t) {
-            if (err) return console.error('Something went wrong:', err);
-            updateUI();
+            window.currentTileLayer = L.tileLayer(
+                darkMode
+                    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                {
+                    maxZoom: 19
+                }
+            ).addTo(map);
+        }
+
+        function filterHospitals(status) {
+            if (!status) return; // Ajout d'une vérification de sécurité
+            const tagElement = document.querySelector(`.status-tag[data-status="${status}"]`);
+            if (!tagElement) return; // Ajout d'une autre vérification de sécurité
+
+            if (activeStatus.includes(status)) {
+                activeStatus = activeStatus.filter(s => s !== status);
+                tagElement.classList.remove('active');
+            } else {
+                activeStatus.push(status);
+                tagElement.classList.add('active');
+            }
+
+            addMarkers();
+        }
+
+        function extractLocationInfo(address) {
+            const parts = address.split(',').map(part => part.trim());
+            return {
+                city: parts[parts.length - 2] || '',
+                country: parts[parts.length - 1] || ''
+            };
+        }
+
+        function normalizeString(str) {
+            return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
+        function addMarkers() {
+            console.log("Adding markers...");
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            const selectedContinent = document.getElementById('continent-select').value;
+            const selectedCountry = document.getElementById('country-filter').value.toLowerCase();
+            const selectedCity = document.getElementById('city-filter').value.toLowerCase();
+
+            hospitals.forEach(hospital => {
+                const { city, country } = extractLocationInfo(hospital.address);
+                
+                const statusMatch = activeStatus.length === 0 || activeStatus.includes(hospital.status);
+                const continentMatch = !selectedContinent || getContinent(hospital.lat, hospital.lon) === selectedContinent;
+                const countryMatch = !selectedCountry || country.toLowerCase().includes(selectedCountry);
+                const cityMatch = !selectedCity || city.toLowerCase().includes(selectedCity);
+
+                if (statusMatch && continentMatch && countryMatch && cityMatch) {
+                    const selectedLanguage = document.getElementById('language-select').value;
+                    const currentTranslations = translations[selectedLanguage] || translations['en'];
+
+                    const statusTag = getStatusTag(hospital.status, currentTranslations);
+
+                    const popupContent = `
+                        <div class="popup-content">
+                            <h3 class="popup-title" style="color: #00aaff;">${hospital.name}</h3>
+                            <img class="popup-image" src="${hospital.imageUrl}" alt="${hospital.name}">
+                            <p><strong>${currentTranslations.address}:</strong><br>${hospital.address}</p>
+                            <p><a href="${hospital.website}" target="_blank" style="color: var(--hyperlink-color); font-size: 1.2em;">${currentTranslations.visitWebsite}</a></p>
+                            <p><strong>${currentTranslations.status}:</strong> ${statusTag}</p>
+                        </div>
+                    `;
+
+                    const marker = L.circleMarker([hospital.lat, hospital.lon], {
+                        radius: 8,
+                        fillColor: getColor(hospital.status),
+                        color: "#fff",
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    }).addTo(map);
+                    
+                    marker.hospitalData = hospital;
+                    marker.bindPopup(popupContent);
+                    markers.push(marker);
+                }
+            });
+
+            console.log(`${markers.length} markers added`);
+            updateGauges();
+        }
+
+        function getContinent(lat, lon) {
+            if (lat >= 40 && lon >= -10 && lon <= 60) return "Europe";
+            if (lat <= 40 && lat >= -40 && lon >= -10 && lon <= 60) return "Africa";
+            // Ajoutez ici la logique pour les autres continents
+            return "Unknown";
+        }
+
+        function getColor(status) {
+            switch (status) {
+                case 'Deployed':
+                    return '#28a745';
+                case 'In Progress':
+                    return '#ffc107';
+                case 'Signed':
+                    return '#007bff';
+                default:
+                    return '#6c757d';
+            }
+        }
+
+        function getStatusTag(status, translations) {
+            const statusKey = status.toLowerCase().replace(" ", "");
+            const statusText = translations[statusKey] || status;
+            switch (status) {
+                case 'Signed':
+                    return `<span class="status-tag status-signed">${statusText}</span>`;
+                case 'Deployed':
+                    return `<span class="status-tag status-deployed">${statusText}</span>`;
+                case 'In Progress':
+                    return `<span class="status-tag status-in-progress">${statusText}</span>`;
+                default:
+                    return `<span class="status-tag">Unknown</span>`;
+            }
+        }
+
+        function toggleLegend() {
+            const legendContainer = document.querySelector('.legend-container');
+            const isVisible = legendContainer.style.display !== 'none';
+            legendContainer.style.display = isVisible ? 'none' : 'block';
+        }
+
+        function toggleMenu() {
+            const controls = document.querySelector('.controls');
+            controls.style.display = controls.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function adjustForMobile() {
+            const isMobile = window.innerWidth <= 767;
+            const isPortrait = window.innerHeight > window.innerWidth;
+            const legendContainer = document.querySelector('.legend-container');
+            const chartContainer = document.querySelector('.chart-container');
+
+            if (isMobile && isPortrait) {
+                legendContainer.style.display = 'none';
+                chartContainer.style.flexDirection = 'row';
+            } else {
+                legendContainer.style.display = 'block';
+                chartContainer.style.flexDirection = 'row';
+            }
+        }
+
+        function applyTranslations(language) {
+            const t = translations[language] || translations['en'];
+
+            document.querySelector('.status-deployed').textContent = t.deployed || 'Deployed';
+            document.querySelector('.status-in-progress').textContent = t.inProgress || 'In Progress';
+            document.querySelector('.status-signed').textContent = t.signed || 'Signed';
+
+            document.getElementById('country-filter').setAttribute('placeholder', t.enterCountry);
+            document.getElementById('city-filter').setAttribute('placeholder', t.enterCity);
+
+            document.querySelector('.legend-item:nth-child(1) .legend-color').nextSibling.textContent = t.legendDeployed;
+            document.querySelector('.legend-item:nth-child(2) .legend-color').nextSibling.textContent = t.legendInProgress;
+            document.querySelector('.legend-item:nth-child(3) .legend-color').nextSibling.textContent = t.legendSigned;
+
+            document.querySelectorAll('.gauge-label').forEach((label, index) => {
+                if (index === 0) label.textContent = t.gaugesDeployed;
+                if (index === 1) label.textContent = t.gaugesInProgress;
+                if (index === 2) label.textContent = t.gaugesSigned;
+           });
+
+            addMarkers();
+        }
+
+        document.getElementById('language-select').addEventListener('change', function() {
+            const selectedLanguage = this.value;
+            applyTranslations(selectedLanguage);
+            addMarkers();
         });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM content loaded");
+            initApplication();
+
+            const filterInputs = document.querySelectorAll('#country-filter, #city-filter');
+            filterInputs.forEach(input => {
+                input.addEventListener('input', debounce(addMarkers, 300));
+            });
+
+            document.getElementById('language-select').addEventListener('change', addMarkers);
+            document.getElementById('continent-select').addEventListener('change', addMarkers);
+            document.getElementById('country-filter').addEventListener('input', addMarkers);
+            document.getElementById('city-filter').addEventListener('input', addMarkers);
+            document.querySelectorAll('.status-tag').forEach(tag => {
+                tag.addEventListener('click', (e) => {
+                    const status = e.target.dataset.status;
+                    if (status) {
+                        filterHospitals(status);
+                    }
+                });
+            });
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+            document.getElementById('hamburger').addEventListener('click', toggleMenu);
+            document.getElementById('legend-toggle').addEventListener('click', toggleLegend);
+
+            adjustForMobile();
+        });
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        window.addEventListener('load', adjustForMobile);
+        window.addEventListener('resize', adjustForMobile);
     </script>
 </body>
 </html>
