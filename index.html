@@ -6,7 +6,8 @@
     <title>Galeon Hospitals Map</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
     <style>
         :root {
             --background-color-light: #f9f9f9;
@@ -218,37 +219,38 @@
 
         /* Couleurs des tags */
         .status-deployed {
-            background-color: #28a745;
-        }
-
-        .status-in-progress {
-            background-color: #ffc107;
-            color: #856404;
-        }
-
-        .status-signed {
-            background-color: #007bff;
-        }
-
-        /* Styles des tags actifs */
-        .status-tag.active {
-            opacity: 0.7;
-            border: 2px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .status-deployed.active {
             background-color: #b0e2b5;
             color: #1e7b34;
         }
 
-        .status-in-progress.active {
+        .status-in-progress {
             background-color: #ffe5a0;
             color: #6e5002;
         }
 
-        .status-signed.active {
+        .status-signed {
             background-color: #9ecbff;
             color: #0056b3;
+        }
+
+        /* Styles des tags actifs */
+        .status-tag.active {
+            color: white;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            opacity: 1;
+        }
+
+        .status-deployed.active {
+            background-color: #28a745;
+        }
+
+        .status-in-progress.active {
+            background-color: #ffc107;
+            color: #856404;
+        }
+
+        .status-signed.active {
+            background-color: #007bff;
         }
 
         body.dark-mode {
@@ -296,9 +298,18 @@
             display: none;
         }
 
+        .leaflet-tile-container img {
+            box-shadow: none !important;
+        }
+
         /* Styles du contenu du popup */
         .popup-content {
             text-align: center;
+        }
+
+        .popup-content .status-tag.active {
+            opacity: 1;
+            border: 2px solid rgba(0, 0, 0, 0.1);
         }
 
         .popup-title {
@@ -337,13 +348,26 @@
         }
 
         /* Styles des popups pour le thème sombre */
-        body.dark-mode .leaflet-popup-content,
-        body.dark-mode .leaflet-popup-content-wrapper,
-        body.dark-mode .leaflet-popup-tip {
-            border: none !important;
+        body.dark-mode .leaflet-popup-content-wrapper {
             background-color: var(--control-background-dark);
             color: var(--text-color-dark);
-            border: 1px solid var(--control-border-dark);
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+        }
+
+        body.dark-mode .leaflet-popup-content {
+            margin: 0;
+            padding: 15px;
+            width: auto !important;
+        }
+
+        body.dark-mode .leaflet-popup-tip-container {
+            display: none;
+        }
+
+        body.dark-mode .leaflet-popup-close-button {
+            color: var(--text-color-dark);
         }
 
         /* Ajuster pour mobile */
@@ -392,7 +416,7 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                width: 280px;
+                width: 300px;
             }
             #legend-toggle {
                 top: 140px;
@@ -409,14 +433,9 @@
                 display: inline-block;
                 padding: 2px 6px;
                 border-radius: 4px;
-                margin: 3px;
-                font-size: 10px;
+                margin: 5px;
+                font-size: 12px;
                 text-transform: uppercase;
-            }
-
-            .status-deployed {
-                background-color: #28a745;
-                color: white;
             }
 
             .controls select, .controls input {
@@ -445,36 +464,35 @@
     <button id="hamburger">☰</button>
     <button id="legend-toggle"><i class="fas fa-info"></i></button>
     <div class="legend-container">
-        <div class="legend-item"><span class="legend-color" style="background-color: green;"></span>Deployed</div>
-        <div class="legend-item"><span class="legend-color" style="background-color: orange;"></span>In Progress</div>
-        <div class="legend-item"><span class="legend-color" style="background-color: rgb(0, 140, 255);"></span>Signed</div>
+        <div class="legend-item"><span class="legend-color" style="background-color: green;"></span><span class="legend-text">Deployed</span></div>
+        <div class="legend-item"><span class="legend-color" style="background-color: orange;"></span><span class="legend-text">In Progress</span></div>
+        <div class="legend-item"><span class="legend-color" style="background-color: rgb(0, 140, 255);"></span><span class="legend-text">Signed</span></div>
     </div>
     <div class="controls">
         <select id="language-select">
             <option value="en">English</option>
-            <option value="fr">French</option>
-            <option value="es">Spanish</option>
-            <option value="zh">Chinese</option>
-            <option value="ar">Arabic</option>
-            <option value="hi">Hindi</option>
-            <option value="bn">Bengali</option>
-            <option value="pt">Portuguese</option>
-            <option value="ru">Russian</option>
-            <option value="ja">Japanese</option>
-            <option value="de">German</option>
-            <option value="ko">Korean</option>
-            <option value="vi">Vietnamese</option>
-            <option value="vi">Vietnamese</option>
-            <option value="tr">Turkish</option>
-            <option value="fa">Persian</option>
-            <option value="ur">Urdu</option>
-            <option value="it">Italian</option>
-            <option value="ta">Tamil</option>
-            <option value="pl">Polish</option>
-            <option value="nl">Dutch</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+            <option value="zh">中文</option>
+            <option value="ar">العربية</option>
+            <option value="hi">हिन्दी</option>
+            <option value="bn">বাংলা</option>
+            <option value="pt">Português</option>
+            <option value="ru">Русский</option>
+            <option value="ja">日本語</option>
+            <option value="de">Deutsch</option>
+            <option value="ko">한국어</option>
+            <option value="vi">Tiếng Việt</option>
+            <option value="tr">Türkçe</option>
+            <option value="fa">فارسی</option>
+            <option value="ur">اردو</option>
+            <option value="it">Italiano</option>
+            <option value="ta">தமிழ்</option>
+            <option value="pl">Polski</option>
+            <option value="nl">Nederlands</option>
         </select>
         <select id="continent-select">
-            <option value="">All</option>
+            <option value="">Continent</option>
             <option value="Europe">Europe</option>
             <option value="North America">North America</option>
             <option value="South America">South America</option>
@@ -485,10 +503,10 @@
         <input type="text" id="country-filter" placeholder="Enter country...">
         <input type="text" id="city-filter" placeholder="Enter city...">
         <div class="status-filters">
-            <span class="status-tag status-deployed" data-status="Deployed">Deployed</span>
-            <span class="status-tag status-in-progress" data-status="In Progress">In Progress</span>
-            <span class="status-tag status-signed" data-status="Signed">Signed</span>
-        </div>
+            <span class="status-tag status-deployed" data-status="deployed">Deployed</span>
+            <span class="status-tag status-in-progress" data-status="in progress">In Progress</span>
+            <span class="status-tag status-signed" data-status="signed">Signed</span>
+        </div>        
     </div>
     <div class="chart-container">
         <div class="gauge-wrapper">
@@ -515,11 +533,24 @@
     </div>
     <button id="theme-toggle"><i class="fas fa-moon"></i></button>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+    <script src="translations.js"></script>
+    <script src="hospitals.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initApplication();
+        });
+    </script>
     <script>
         let map, markers = [], activeStatus = [], language = "en";
         let darkMode = false;
         let isMapInitialized = false;
         let isChartInitialized = false;
+        let markerClusterGroup;
+        let t = {}; // translations
+        let isApplicationInitialized = false;
+
         const gauges = {};
         const colors = {
             'Deployed': '#4CAF50',
@@ -527,481 +558,127 @@
             'Signed': '#2196F3'
         };
 
-        const translations = {
-            en: {
-                deployed: "Deployed",
-                inProgress: "In Progress",
-                signed: "Signed",
-                enterCountry: "Enter country...",
-                enterCity: "Enter city...",
-                visitWebsite: "Visit Website",
-                address: "Address",
-                status: "Status",
-                legendDeployed: "Deployed",
-                legendInProgress: "In Progress",
-                legendSigned: "Signed",
-                noHospitals: "No hospitals available",
-                gaugesDeployed: "Deployed",
-                gaugesInProgress: "In Progress",
-                gaugesSigned: "Signed"
-            },
-            fr: {
-                deployed: "Déployé",
-                inProgress: "En cours",
-                signed: "Signé",
-                enterCountry: "Entrer un pays...",
-                enterCity: "Entrer une ville...",
-                visitWebsite: "Visiter le site Web",
-                address: "Adresse",
-                status: "Statut",
-                legendDeployed: "Déployé",
-                legendInProgress: "En cours",
-                legendSigned: "Signé",
-                noHospitals: "Aucun hôpital disponible",
-                gaugesDeployed: "Déployé",
-                gaugesInProgress: "En cours",
-                gaugesSigned: "Signé"
-            },
-            es: {
-                deployed: "Desplegado",
-                inProgress: "En progreso",
-                signed: "Firmado",
-                enterCountry: "Ingresar país...",
-                enterCity: "Ingresar ciudad...",
-                visitWebsite: "Visitar sitio web",
-                address: "Dirección",
-                status: "Estado",
-                legendDeployed: "Desplegado",
-                legendInProgress: "En progreso",
-                legendSigned: "Firmado",
-                noHospitals: "No hay hospitales disponibles",
-                gaugesDeployed: "Desplegado",
-                gaugesInProgress: "En progreso",
-                gaugesSigned: "Firmado"
-            },
-            zh: {
-                deployed: "部署",
-                inProgress: "进行中",
-                signed: "已签署",
-                enterCountry: "输入国家...",
-                enterCity: "输入城市...",
-                visitWebsite: "访问网站",
-                address: "地址",
-                status: "状态",
-                legendDeployed: "部署",
-                legendInProgress: "进行中",
-                legendSigned: "已签署",
-                noHospitals: "没有可用的医院",
-                gaugesDeployed: "部署",
-                gaugesInProgress: "进行中",
-                gaugesSigned: "已签署"
-            },
-            ar: {
-                deployed: "تم النشر",
-                inProgress: "قيد التنفيذ",
-                signed: "موقع",
-                enterCountry: "أدخل الدولة...",
-                enterCity: "أدخل المدينة...",
-                visitWebsite: "زيارة الموقع",
-                address: "العنوان",
-                status: "الحالة",
-                legendDeployed: "تم النشر",
-                legendInProgress: "قيد التنفيذ",
-                legendSigned: "موقع",
-                noHospitals: "لا توجد مستشفيات متاحة",
-                gaugesDeployed: "تم النشر",
-                gaugesInProgress: "قيد التنفيذ",
-                gaugesSigned: "موقع"
-            },
-            hi: {
-                deployed: "तैनात",
-                inProgress: "प्रगति में",
-                signed: "हस्ताक्षरित",
-                enterCountry: "देश दर्ज करें...",
-                enterCity: "शहर दर्ज करें...",
-                visitWebsite: "वेबसाइट पर जाएं",
-                address: "पता",
-                status: "स्थिति",
-                legendDeployed: "तैनात",
-                legendInProgress: "प्रगति में",
-                legendSigned: "हस्ताक्षरित",
-                noHospitals: "कोई अस्पताल उपलब्ध नहीं है",
-                gaugesDeployed: "तैनात",
-                gaugesInProgress: "प्रगति में",
-                gaugesSigned: "हस्ताक्षरित"
-            },
-            bn: {
-                deployed: "মোতায়েন",
-                inProgress: "প্রগতি",
-                signed: "স্বাক্ষরিত",
-                enterCountry: "দেশ প্রবেশ করুন...",
-                enterCity: "শহর প্রবেশ করুন...",
-                visitWebsite: "ওয়েবসাইট দেখুন",
-                address: "ঠিকানা",
-                status: "স্থিতি",
-                legendDeployed: "মোতায়েন",
-                legendInProgress: "প্রগতি",
-                legendSigned: "স্বাক্ষরিত",
-                noHospitals: "কোনও হাসপাতাল উপলব্ধ নেই",
-                gaugesDeployed: "মোতায়েন",
-                gaugesInProgress: "প্রগতি",
-                gaugesSigned: "স্বাক্ষরিত"
-            },
-            pt: {
-                deployed: "Implantado",
-                inProgress: "Em progresso",
-                signed: "Assinado",
-                enterCountry: "Insira o país...",
-                enterCity: "Insira a cidade...",
-                visitWebsite: "Visitar site",
-                address: "Endereço",
-                status: "Status",
-                legendDeployed: "Implantado",
-                legendInProgress: "Em progresso",
-                legendSigned: "Assinado",
-                noHospitals: "Nenhum hospital disponível",
-                gaugesDeployed: "Implantado",
-                gaugesInProgress: "Em progresso",
-                gaugesSigned: "Assinado"
-            },
-            ru: {
-                deployed: "Развернутый",
-                inProgress: "В процессе",
-                signed: "Подписанный",
-                enterCountry: "Введите страну...",
-                enterCity: "Введите город...",
-                visitWebsite: "Посетить сайт",
-                address: "Адрес",
-                status: "Статус",
-                legendDeployed: "Развернутый",
-                legendInProgress: "В процессе",
-                legendSigned: "Подписанный",
-                noHospitals: "Нет доступных больниц",
-                gaugesDeployed: "Развернутый",
-                gaugesInProgress: "В процессе",
-                gaugesSigned: "Подписанный"
-            },
-            ja: {
-                deployed: "展開済み",
-                inProgress: "進行中",
-                signed: "署名済み",
-                enterCountry: "国を入力してください...",
-                enterCity: "都市を入力してください...",
-                visitWebsite: "ウェブサイトを訪問",
-                address: "住所",
-                status: "ステータス",
-                legendDeployed: "展開済み",
-                legendInProgress: "進行中",
-                legendSigned: "署名済み",
-                noHospitals: "利用可能な病院はありません",
-                gaugesDeployed: "展開済み",
-                gaugesInProgress: "進行中",
-                gaugesSigned: "署名済み"
-            },
-            de: {
-                deployed: "Eingesetzt",
-                inProgress: "In Bearbeitung",
-                signed: "Unterzeichnet",
-                enterCountry: "Land eingeben...",
-                enterCity: "Stadt eingeben...",
-                visitWebsite: "Website besuchen",
-                address: "Adresse",
-                status: "Status",
-                legendDeployed: "Eingesetzt",
-                legendInProgress: "In Bearbeitung",
-                legendSigned: "Unterzeichnet",
-                noHospitals: "Keine Krankenhäuser verfügbar",
-                gaugesDeployed: "Eingesetzt",
-                gaugesInProgress: "In Bearbeitung",
-                gaugesSigned: "Unterzeichnet"
-            },
-            ko: {
-                deployed: "배포됨",
-                inProgress: "진행 중",
-                signed: "서명됨",
-                enterCountry: "국가 입력...",
-                enterCity: "도시 입력...",
-                visitWebsite: "웹사이트 방문",
-                address: "주소",
-                status: "상태",
-                legendDeployed: "배포됨",
-                legendInProgress: "진행 중",
-                legendSigned: "서명됨",
-                noHospitals: "이용 가능한 병원이 없습니다",
-                gaugesDeployed: "배포됨",
-                gaugesInProgress: "진행 중",
-                gaugesSigned: "서명됨"
-            },
-            vi: {
-                deployed: "Đã triển khai",
-                inProgress: "Đang tiến hành",
-                signed: "Đã ký",
-                enterCountry: "Nhập quốc gia...",
-                enterCity: "Nhập thành phố...",
-                visitWebsite: "Truy cập website",
-                address: "Địa chỉ",
-                status: "Trạng thái",
-                legendDeployed: "Đã triển khai",
-                legendInProgress: "Đang tiến hành",
-                legendSigned: "Đã ký",
-                noHospitals: "Không có bệnh viện nào",
-                gaugesDeployed: "Đã triển khai",
-                gaugesInProgress: "Đang tiến hành",
-                gaugesSigned: "Đã ký"
-            },
-            tr: {
-                deployed: "Yerleştirildi",
-                inProgress: "Devam ediyor",
-                signed: "İmzalandı",
-                enterCountry: "Ülke girin...",
-                enterCity: "Şehir girin...",
-                visitWebsite: "Web sitesini ziyaret edin",
-                address: "Adres",
-                status: "Durum",
-                legendDeployed: "Yerleştirildi",
-                legendInProgress: "Devam ediyor",
-                legendSigned: "İmzalandı",
-                noHospitals: "Mevcut hastane yok",
-                gaugesDeployed: "Yerleştirildi",
-                gaugesInProgress: "Devam ediyor",
-                gaugesSigned: "İmzalandı"
-            },
-            fa: {
-                deployed: "مستقر",
-                inProgress: "در حال پیشرفت",
-                signed: "امضا شده",
-                enterCountry: "کشور را وارد کنید...",
-                enterCity: "شهر را وارد کنید...",
-                visitWebsite: "بازدید از وب سایت",
-                address: "نشانی",
-                status: "وضعیت",
-                legendDeployed: "مستقر",
-                legendInProgress: "در حال پیشرفت",
-                legendSigned: "امضا شده",
-                noHospitals: "هیچ بیمارستانی در دسترس نیست",
-                gaugesDeployed: "مستقر",
-                gaugesInProgress: "در حال پیشرفت",
-                gaugesSigned: "امضا شده"
-            },
-            ur: {
-                deployed: "تعینات",
-                inProgress: "جاری ہے",
-                signed: "دستخط شدہ",
-                enterCountry: "ملک درج کریں...",
-                enterCity: "شہر درج کریں...",
-                visitWebsite: "ویب سائٹ دیکھیں",
-                address: "پتہ",
-                status: "حالت",
-                legendDeployed: "تعینات",
-                legendInProgress: "جاری ہے",
-                legendSigned: "دستخط شدہ",
-                noHospitals: "کوئی ہسپتال دستیاب نہیں ہے",
-                gaugesDeployed: "تعینات",
-                gaugesInProgress: "جاری ہے",
-                gaugesSigned: "دستخط شدہ"
-            },
-            it: {
-                deployed: "Distribuito",
-                inProgress: "In corso",
-                signed: "Firmato",
-                enterCountry: "Inserisci il paese...",
-                enterCity: "Inserisci la città...",
-                visitWebsite: "Visita il sito",
-                address: "Indirizzo",
-                status: "Stato",
-                legendDeployed: "Distribuito",
-                legendInProgress: "In corso",
-                legendSigned: "Firmato",
-                noHospitals: "Nessun ospedale disponibile",
-                gaugesDeployed: "Distribuito",
-                gaugesInProgress: "In corso",
-                gaugesSigned: "Firmato"
-            },
-            ta: {
-                deployed: "பயன்படுத்தப்பட்டது",
-                inProgress: "முன்னேற்றத்தில்",
-                signed: "கையெழுத்திடப்பட்டது",
-                enterCountry: "நாட்டை உள்ளிடவும்...",
-                enterCity: "நகரத்தை உள்ளிடவும்...",
-                visitWebsite: "வலைத்தளத்தைப் பார்வையிடுங்கள்",
-                address: "முகவரி",
-                status: "நிலை",
-                legendDeployed: "பயன்படுத்தப்பட்டது",
-                legendInProgress: "முன்னேற்றத்தில்",
-                legendSigned: "கையெழுத்திடப்பட்டது",
-                noHospitals: "முகாமிடக்கூடிய மருத்துவமனைகள் இல்லை",
-                gaugesDeployed: "பயன்படுத்தப்பட்டது",
-                gaugesInProgress: "முன்னேற்றத்தில்",
-                gaugesSigned: "கையெழுத்திடப்பட்டது"
-            },
-            pl: {
-                deployed: "Wdrożone",
-                inProgress: "W toku",
-                signed: "Podpisany",
-                enterCountry: "Wpisz kraj...",
-                enterCity: "Wpisz miasto...",
-                visitWebsite: "Odwiedź stronę",
-                address: "Adres",
-                status: "Status",
-                legendDeployed: "Wdrożone",
-                legendInProgress: "W toku",
-                legendSigned: "Podpisany",
-                noHospitals: "Brak dostępnych szpitali",
-                gaugesDeployed: "Wdrożone",
-                gaugesInProgress: "W toku",
-                gaugesSigned: "Podpisany"
-            },
-            nl: {
-                deployed: "Ingezet",
-                inProgress: "In uitvoering",
-                signed: "Ondertekend",
-                enterCountry: "Voer land in...",
-                enterCity: "Voer stad in...",
-                visitWebsite: "Bezoek website",
-                address: "Adres",
-                status: "Status",
-                legendDeployed: "Ingezet",
-                legendInProgress: "In uitvoering",
-                legendSigned: "Ondertekend",
-                noHospitals: "Geen beschikbare ziekenhuizen",
-                gaugesDeployed: "Ingezet",
-                gaugesInProgress: "In uitvoering",
-                gaugesSigned: "Ondertekend"
-            }
-        };
 
-        const hospitals = [
-            {
-                name: "Centre Hospitalier de Châlon-sur-Saone",
-                lat: 46.7795,
-                lon: 4.8527,
-                status: "Deployed",
-                address: "4 Rue Capitaine Drillien, 71100 Chalon-sur-Saône, France",
-                website: "http://www.ch-chalon71.fr",
-                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
-            },
-            {
-                name: "Centre Hospitalier de Toulon",
-                lat: 43.1242,
-                lon: 5.928,
-                status: "Deployed",
-                address: "Avenue du 1er Bataillon des Fusiliers Marins, 83000 Toulon, France",
-                website: "http://www.ch-toulon.fr",
-                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
-            },
-            {
-                name: "Centre Hospitalier de Hyères",
-                lat: 43.1175,
-                lon: 6.1284,
-                status: "Deployed",
-                address: "3 Avenue du Dr Jean-Jacques Perron, 83400 Hyères, France",
-                website: "http://www.ch-hyeres.fr",
-                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
-            },
-            {
-                name: "Centre Hospitalier Universitaire de Caen Normandie",
-                lat: 49.1829,
-                lon: -0.3707,
-                status: "Deployed",
-                address: "Avenue de la Côte de Nacre, 14033 Caen, France",
-                website: "http://www.chu-caen.fr",
-                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
-            },
-            {
-                name: "Centre Hospitalier Sud Francilien, Corbeil-Essonnes",
-                lat: 48.6139,
-                lon: 2.4749,
-                status: "Deployed",
-                address: "40 Avenue Serge Dassault, 91100 Corbeil-Essonnes, France",
-                website: "http://www.chsf.fr",
-                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
-            },
-            {
-                name: "Groupe Hospitalier Nord-Essonne, Longjumeau",
-                lat: 48.6953,
-                lon: 2.2999,
-                status: "Deployed",
-                address: "159 Rue du Président François Mitterrand, 91160 Longjumeau, France",
-                website: "http://www.ch-nord-essonne.fr",
-                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
-            },
-            {
-                name: "Groupe Hospitalier Nord-Essonne, Orsay",
-                lat: 48.697,
-                lon: 2.1873,
-                status: "Deployed",
-                address: "4 Place du Général Leclerc, 91400 Orsay, France",
-                website: "http://www.ch-nord-essonne.fr",
-                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
-            },
-            {
-                name: "Centre Hospitalier Jean Leclaire Sarlat, Sarlat-la-Canéda",
-                lat: 44.8904,
-                lon: 1.2161,
-                status: "Deployed",
-                address: "13 Avenue de la Gare, 24200 Sarlat-la-Canéda, France",
-                website: "http://www.ch-sarlat.fr",
-                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
-            },
-            {
-                name: "Centre Hospitalier Samuel Pozzi, Bergerac",
-                lat: 44.8532,
-                lon: 0.4845,
-                status: "Deployed",
-                address: "21 Rue du Professeur Pozzi, 24100 Bergerac, France",
-                website: "http://www.ch-bergerac.fr",
-                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
-            },
-            {
-                name: "Centre Hospitalier de Périgueux",
-                lat: 45.1853,
-                lon: 0.7186,
-                status: "Deployed",
-                address: "80 Avenue Georges Pompidou, 24000 Périgueux, France",
-                website: "http://www.ch-perigueux.fr",
-                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
-            },
-            {
-                name: "Les Bluets, Paris",
-                lat: 48.8499,
-                lon: 2.3912,
-                status: "Deployed",
-                address: "4 Rue Lasson, 75012 Paris, France",
-                website: "http://www.lesbluets.fr",
-                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
-            },
-            {
-                name: "Centre Hospitalier Universitaire de Rouen Normandie",
-                lat: 49.4432,
-                lon: 1.0993,
-                status: "Signed",
-                address: "1 Rue de Germont, 76000 Rouen, France",
-                website: "http://www.chu-rouen.fr",
-                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
-            },
-            {
-                name: "Centre Hospitalier d'Arpajon",
-                lat: 48.5913,
-                lon: 2.2423,
-                status: "Signed",
-                address: "18 Avenue Paul Vaillant Couturier, 91290 Arpajon, France",
-                website: "http://www.ch-arpajon.fr",
-                imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+        function savePreferences() {
+            const preferences = {
+                theme: darkMode ? 'dark' : 'light',
+                language: document.getElementById('language-select').value,
+                continent: document.getElementById('continent-select').value,
+                country: document.getElementById('country-filter').value,
+                city: document.getElementById('city-filter').value,
+                activeStatus: activeStatus
+            };
+            localStorage.setItem('galeonMapPreferences', JSON.stringify(preferences));
+        }
+
+        function loadPreferences() {
+            const savedPreferences = localStorage.getItem('galeonMapPreferences');
+            if (savedPreferences) {
+                const preferences = JSON.parse(savedPreferences);
+                const language = preferences.language || 'en';
+                document.getElementById('language-select').value = language;
+                
+                darkMode = preferences.theme === 'dark';
+                document.body.classList.toggle('dark-mode', darkMode);
+                updateTileLayer();
+
+                document.getElementById('continent-select').value = preferences.continent || '';
+                document.getElementById('country-filter').value = preferences.country || '';
+                document.getElementById('city-filter').value = preferences.city || '';
+
+                // Réinitialiser l'état actif des tags de statut
+                activeStatus = preferences.activeStatus || [];
+                
+                // Appliquer les traductions après avoir chargé les préférences
+                applyTranslations(language);
+            } else {
+                // Si aucune préférence n'est sauvegardée, appliquer les traductions par défaut
+                const defaultLanguage = document.getElementById('language-select').value;
+                applyTranslations(defaultLanguage);
             }
-        ];
+        }
+
+        function updateStatusTags(translations) {
+            console.log("Updating status tags with translations:", translations);
+            if (!translations || typeof translations !== 'object' || Object.keys(translations).length === 0) {
+                console.error("Invalid translations object");
+                return;
+            }
+            const statusTags = document.querySelectorAll('.status-tag');
+            console.log(`Found ${statusTags.length} status tags`);
+            statusTags.forEach(tag => {
+                let status = tag.dataset.status ? tag.dataset.status.toLowerCase() : null;
+
+                // Si le statut n'est pas défini, essayez de le déduire à partir du texte ou des classes
+                if (!status) {
+                    if (tag.classList.contains('status-deployed')) status = 'deployed';
+                    else if (tag.classList.contains('status-in-progress')) status = 'in progress';
+                    else if (tag.classList.contains('status-signed')) status = 'signed';
+                    else status = tag.textContent.toLowerCase();
+
+                    // Mettre à jour l'attribut data-status
+                    tag.dataset.status = status;
+                }
+
+                // Mise à jour des traductions
+                let translatedText;
+                switch (status) {
+                    case 'deployed':
+                        translatedText = translations.deployed || translations.statusDeployed || 'Deployed';
+                        break;
+                    case 'in progress':
+                        translatedText = translations.inProgress || translations.statusInProgress || 'In Progress';
+                        break;
+                    case 'signed':
+                        translatedText = translations.signed || translations.statusSigned || 'Signed';
+                        break;
+                    default:
+                        translatedText = status;
+                }
+                
+                console.log(`Translating status '${status}' to '${translatedText}'`);
+                tag.textContent = translatedText;
+
+                // Vérification de l'état actif ou inactif
+                if (activeStatus.includes(status)) {
+                    tag.classList.add('active');
+                } else {
+                    tag.classList.remove('active');
+                }
+            });
+        }
 
         function initApplication() {
+            if (isApplicationInitialized) {
+                console.log("Application already initialized, skipping...");
+                return;
+            }
+
             console.log("Initializing application...");
             initMap();
             initGauges();
-            addMarkers();
-            updateGauges();
+            loadPreferences();
+
+            isApplicationInitialized = true;
         }
 
         function initMap() {
             console.log("Initializing map...");
             if (!isMapInitialized) {
-                map = L.map('map').setView([50, 10], 4);
+                map = L.map('map', {
+                    center: [50, 10],
+                    zoom: 4,
+                    maxZoom: 18
+                });
+
+                markerClusterGroup = L.markerClusterGroup({
+                    maxClusterRadius: 50,
+                    spiderfyOnMaxZoom: true,
+                    showCoverageOnHover: false,
+                    zoomToBoundsOnClick: true
+                });
+
+                map.addLayer(markerClusterGroup);
                 isMapInitialized = true;
                 updateTileLayer();
             } else {
@@ -1087,12 +764,14 @@
             darkMode = !darkMode;
             document.body.classList.toggle('dark-mode');
             updateTileLayer();
+            savePreferences();
         }
 
         function updateTileLayer() {
-            if (map.hasLayer(window.currentTileLayer)) {
+            if (window.currentTileLayer && map.hasLayer(window.currentTileLayer)) {
                 map.removeLayer(window.currentTileLayer);
             }
+
             window.currentTileLayer = L.tileLayer(
                 darkMode
                     ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
@@ -1104,9 +783,14 @@
         }
 
         function filterHospitals(status) {
-            if (!status) return; // Ajout d'une vérification de sécurité
+            if (!status) return;
             const tagElement = document.querySelector(`.status-tag[data-status="${status}"]`);
-            if (!tagElement) return; // Ajout d'une autre vérification de sécurité
+            if (!tagElement) return;
+
+            // Mettre à jour l'attribut data-status si nécessaire
+            if (!tagElement.dataset.status) {
+                tagElement.dataset.status = status.toLowerCase();
+            }
 
             if (activeStatus.includes(status)) {
                 activeStatus = activeStatus.filter(s => s !== status);
@@ -1117,6 +801,7 @@
             }
 
             addMarkers();
+            savePreferences();
         }
 
         function extractLocationInfo(address) {
@@ -1132,38 +817,37 @@
         }
 
         function addMarkers() {
-            console.log("Adding markers...");
-            markers.forEach(marker => map.removeLayer(marker));
-            markers = [];
+            console.log("Updating markers...");
 
             const selectedContinent = document.getElementById('continent-select').value;
             const selectedCountry = document.getElementById('country-filter').value.toLowerCase();
             const selectedCity = document.getElementById('city-filter').value.toLowerCase();
+            const selectedLanguage = document.getElementById('language-select').value;
+            const currentTranslations = translations[selectedLanguage] || translations['en'];
 
-            hospitals.forEach(hospital => {
+            // Sauvegarder la position de la popup active, s'il y en a une
+            let openPopupLatLng = null;
+            let openPopupContent = null;
+
+            if (map && map._popup && map._popup._latlng) {
+                openPopupLatLng = map._popup._latlng;
+                openPopupContent = map._popup.getContent();
+            }
+
+            markerClusterGroup.clearLayers();
+            markers = [];
+
+            let filteredCount = 0;
+
+            hospitals.forEach((hospital) => {
                 const { city, country } = extractLocationInfo(hospital.address);
-                
-                const statusMatch = activeStatus.length === 0 || activeStatus.includes(hospital.status);
+
+                const statusMatch = activeStatus.length === 0 || activeStatus.includes(hospital.status.toLowerCase());
                 const continentMatch = !selectedContinent || getContinent(hospital.lat, hospital.lon) === selectedContinent;
                 const countryMatch = !selectedCountry || country.toLowerCase().includes(selectedCountry);
                 const cityMatch = !selectedCity || city.toLowerCase().includes(selectedCity);
 
                 if (statusMatch && continentMatch && countryMatch && cityMatch) {
-                    const selectedLanguage = document.getElementById('language-select').value;
-                    const currentTranslations = translations[selectedLanguage] || translations['en'];
-
-                    const statusTag = getStatusTag(hospital.status, currentTranslations);
-
-                    const popupContent = `
-                        <div class="popup-content">
-                            <h3 class="popup-title" style="color: #00aaff;">${hospital.name}</h3>
-                            <img class="popup-image" src="${hospital.imageUrl}" alt="${hospital.name}">
-                            <p><strong>${currentTranslations.address}:</strong><br>${hospital.address}</p>
-                            <p><a href="${hospital.website}" target="_blank" style="color: var(--hyperlink-color); font-size: 1.2em;">${currentTranslations.visitWebsite}</a></p>
-                            <p><strong>${currentTranslations.status}:</strong> ${statusTag}</p>
-                        </div>
-                    `;
-
                     const marker = L.circleMarker([hospital.lat, hospital.lon], {
                         radius: 8,
                         fillColor: getColor(hospital.status),
@@ -1171,16 +855,56 @@
                         weight: 1,
                         opacity: 1,
                         fillOpacity: 0.8
-                    }).addTo(map);
-                    
+                    });
+
                     marker.hospitalData = hospital;
-                    marker.bindPopup(popupContent);
+                    updateMarkerContent(marker, hospital, currentTranslations);
+                    markerClusterGroup.addLayer(marker);
                     markers.push(marker);
+                    filteredCount++;
                 }
             });
 
-            console.log(`${markers.length} markers added`);
+            // Restaurer la popup si elle était ouverte
+            if (openPopupLatLng) {
+                markers.forEach(marker => {
+                    if (marker.getLatLng().equals(openPopupLatLng)) {
+                        marker.bindPopup(openPopupContent).openPopup();
+                    }
+                });
+            }
+
+            logFilterStatus(selectedContinent, selectedCountry, selectedCity, activeStatus, filteredCount, hospitals.length);
             updateGauges();
+        }
+
+        function logFilterStatus(continent, country, city, activeStatuses, filteredCount, totalCount) {
+            console.log(`Filter Status:
+            Continent: ${continent || 'All'}
+            Country: ${country || 'All'}
+            City: ${city || 'All'}
+            Active Statuses: ${activeStatuses.length > 0 ? activeStatuses.join(', ') : 'All'}
+            Markers Displayed: ${filteredCount} out of ${totalCount}
+            `);
+        }
+
+        function updateMarkerContent(marker, hospital, translations) {
+            const statusTag = getStatusTag(hospital.status, translations, true);
+            const popupContent = `
+                <div class="popup-content">
+                    <h3 class="popup-title" style="color: #00aaff;">${hospital.name}</h3>
+                    <img class="popup-image" src="${hospital.imageUrl}" alt="${hospital.name}">
+                    <p><strong>${translations.address}:</strong><br>${hospital.address}</p>
+                    <p><a href="${hospital.website}" target="_blank" style="color: var(--hyperlink-color); font-size: 1.2em;">${translations.visitWebsite}</a></p>
+                    <p><strong>${translations.status}:</strong> ${statusTag}</p>
+                </div>
+            `;
+
+            if (marker.getPopup()) {
+                marker.getPopup().setContent(popupContent);
+            } else {
+                marker.bindPopup(popupContent);
+            }
         }
 
         function getContinent(lat, lon) {
@@ -1203,20 +927,22 @@
             }
         }
 
-        function getStatusTag(status, translations) {
+        function getStatusTag(status, translations, isActive = false) {
             const statusKey = status.toLowerCase().replace(" ", "");
             const statusText = translations[statusKey] || status;
+            const activeClass = isActive ? ' active' : '';
+            
             switch (status) {
                 case 'Signed':
-                    return `<span class="status-tag status-signed">${statusText}</span>`;
+                    return `<span class="status-tag status-signed${activeClass}">${statusText}</span>`;
                 case 'Deployed':
-                    return `<span class="status-tag status-deployed">${statusText}</span>`;
+                    return `<span class="status-tag status-deployed${activeClass}">${statusText}</span>`;
                 case 'In Progress':
-                    return `<span class="status-tag status-in-progress">${statusText}</span>`;
+                    return `<span class="status-tag status-in-progress${activeClass}">${statusText}</span>`;
                 default:
-                    return `<span class="status-tag">Unknown</span>`;
+                    return `<span class="status-tag${activeClass}">Unknown</span>`;
             }
-        }
+        };
 
         function toggleLegend() {
             const legendContainer = document.querySelector('.legend-container');
@@ -1245,33 +971,104 @@
         }
 
         function applyTranslations(language) {
+            console.log(`Applying translations for language: ${language}`);
             const t = translations[language] || translations['en'];
+            console.log("Translation object:", t);
 
-            document.querySelector('.status-deployed').textContent = t.deployed || 'Deployed';
-            document.querySelector('.status-in-progress').textContent = t.inProgress || 'In Progress';
-            document.querySelector('.status-signed').textContent = t.signed || 'Signed';
+            if (!t || typeof t !== 'object' || Object.keys(t).length === 0) {
+                console.error(`Invalid translations found for language: ${language}`);
+                return;
+            }
 
-            document.getElementById('country-filter').setAttribute('placeholder', t.enterCountry);
-            document.getElementById('city-filter').setAttribute('placeholder', t.enterCity);
+            // Mise à jour des placeholders
+            const countryFilter = document.getElementById('country-filter');
+            const cityFilter = document.getElementById('city-filter');
+            if (countryFilter) countryFilter.setAttribute('placeholder', t.enterCountry || 'Enter country...');
+            if (cityFilter) cityFilter.setAttribute('placeholder', t.enterCity || 'Enter city...');
 
-            document.querySelector('.legend-item:nth-child(1) .legend-color').nextSibling.textContent = t.legendDeployed;
-            document.querySelector('.legend-item:nth-child(2) .legend-color').nextSibling.textContent = t.legendInProgress;
-            document.querySelector('.legend-item:nth-child(3) .legend-color').nextSibling.textContent = t.legendSigned;
+            // Mise à jour de la légende
+            const legendItems = document.querySelectorAll('.legend-item .legend-text');
+            console.log(`Found ${legendItems.length} legend items`);
+            if (legendItems.length >= 3) {
+                legendItems[0].textContent = t.legendDeployed || 'Deployed';
+                legendItems[1].textContent = t.legendInProgress || 'In Progress';
+                legendItems[2].textContent = t.legendSigned || 'Signed';
+            } else {
+                console.warn("Not enough legend items found");
+            }
 
-            document.querySelectorAll('.gauge-label').forEach((label, index) => {
-                if (index === 0) label.textContent = t.gaugesDeployed;
-                if (index === 1) label.textContent = t.gaugesInProgress;
-                if (index === 2) label.textContent = t.gaugesSigned;
-           });
+            // Mise à jour du select pour le continent
+            const continentSelect = document.getElementById('continent-select');
+            if (continentSelect) {
+                continentSelect.options[0].text = t.continent || 'Continent';
+                // Mise à jour des options des continents
+                const continentOptions = {
+                    'Europe': t.europe || 'Europe',
+                    'North America': t.northAmerica || 'North America',
+                    'South America': t.southAmerica || 'South America',
+                    'Asia': t.asia || 'Asia',
+                    'Africa': t.africa || 'Africa',
+                    'Oceania': t.oceania || 'Oceania'
+                };
+                for (let i = 1; i < continentSelect.options.length; i++) {
+                    const option = continentSelect.options[i];
+                    option.text = continentOptions[option.value] || option.value;
+                }
+            } else {
+                console.warn("Continent select not found");
+            }
 
+            // Mise à jour des jauges
+            const gaugeLabels = document.querySelectorAll('.gauge-label');
+            console.log(`Found ${gaugeLabels.length} gauge labels`);
+            if (gaugeLabels.length >= 3) {
+                gaugeLabels[0].textContent = t.gaugesDeployed || 'Deployed';
+                gaugeLabels[1].textContent = t.gaugesInProgress || 'In Progress';
+                gaugeLabels[2].textContent = t.gaugesSigned || 'Signed';
+            } else {
+                console.warn("Not enough gauge labels found");
+            }
+
+            // Mise à jour des balises de statut (tags) de la page
+            updateStatusTags(t);
+
+            // Mise à jour des marqueurs
+            if (markerClusterGroup) {
+                updateMarkersContent(t);
+            } else {
+                console.warn("markerClusterGroup is not initialized yet.");
+            }
+
+            // Ajouter les marqueurs après avoir appliqué les traductions
             addMarkers();
         }
 
-        document.getElementById('language-select').addEventListener('change', function() {
-            const selectedLanguage = this.value;
-            applyTranslations(selectedLanguage);
-            addMarkers();
-        });
+        function updateMarkersContent(translations) {
+            markerClusterGroup.eachLayer((layer) => {
+                if (layer instanceof L.CircleMarker && layer.hospitalData) {
+                    const popupContent = createPopupContent(layer.hospitalData, translations);
+                    if (layer.getPopup()) {
+                        layer.getPopup().setContent(popupContent);
+                    } else {
+                        layer.bindPopup(popupContent);
+                    }
+                }
+            });
+        }
+    
+
+        function createPopupContent(hospital, translations) {
+            const statusTag = getStatusTag(hospital.status, translations, true);
+            return `
+                <div class="popup-content">
+                    <h3 class="popup-title" style="color: #00aaff;">${hospital.name}</h3>
+                    <img class="popup-image" src="${hospital.imageUrl}" alt="${hospital.name}">
+                    <p><strong>${translations.address}:</strong><br>${hospital.address}</p>
+                    <p><a href="${hospital.website}" target="_blank" style="color: var(--hyperlink-color); font-size: 1.2em;">${translations.visitWebsite}</a></p>
+                    <p><strong>${translations.status}:</strong> ${statusTag}</p>
+                </div>
+            `;
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             console.log("DOM content loaded");
@@ -1279,13 +1076,24 @@
 
             const filterInputs = document.querySelectorAll('#country-filter, #city-filter');
             filterInputs.forEach(input => {
-                input.addEventListener('input', debounce(addMarkers, 300));
+                input.addEventListener('input', debounce(() => {
+                    addMarkers();
+                    savePreferences();
+                }, 300));
             });
 
-            document.getElementById('language-select').addEventListener('change', addMarkers);
-            document.getElementById('continent-select').addEventListener('change', addMarkers);
-            document.getElementById('country-filter').addEventListener('input', addMarkers);
-            document.getElementById('city-filter').addEventListener('input', addMarkers);
+            document.getElementById('language-select').addEventListener('change', function() {
+                const selectedLanguage = this.value;
+                console.log(`Language changed to: ${selectedLanguage}`);
+                applyTranslations(selectedLanguage);
+                savePreferences();
+            });
+
+            document.getElementById('continent-select').addEventListener('change', function() {
+                addMarkers();
+                savePreferences();
+            });
+
             document.querySelectorAll('.status-tag').forEach(tag => {
                 tag.addEventListener('click', (e) => {
                     const status = e.target.dataset.status;
@@ -1294,11 +1102,13 @@
                     }
                 });
             });
+
             document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
             document.getElementById('hamburger').addEventListener('click', toggleMenu);
             document.getElementById('legend-toggle').addEventListener('click', toggleLegend);
-
-            adjustForMobile();
+            
+            window.addEventListener('load', adjustForMobile);
+            window.addEventListener('resize', adjustForMobile);
         });
 
         function debounce(func, wait) {
@@ -1313,8 +1123,15 @@
             };
         }
 
-        window.addEventListener('load', adjustForMobile);
-        window.addEventListener('resize', adjustForMobile);
+        function checkTranslations() {
+            console.log("Checking translations structure:");
+            for (const lang in translations) {
+                console.log(`Language: ${lang}`);
+                console.log(translations[lang]);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkTranslations);
     </script>
 </body>
 </html>
