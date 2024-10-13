@@ -19,3 +19,10 @@ This map is freely available for general informational purposes. **Galeon does n
 ---
 
 By using this map, you acknowledge and agree that Galeon is not responsible for the information provided by third parties or for its maintenance. For any questions regarding the deployment of Galeon software, please contact the support team directly via his [website](https://galeon.com/contact).
+
+---
+
+## 🚀 About Me
+I'm an IT engineer, specializing in infrastructure. My development skills being what they are, I mainly use ChatGPT and Claude AI to move forward quickly. The idea of creating this project is to shed more light on a project I'm very fond of, and to have a clear representation of Galeon's presence in hospitals around the world.
+
+The development and maintenance of this repository is done voluntarily, as community member and Galeon investor.
