@@ -42,7 +42,13 @@
             transition: background-color 0.3s, color 0.3s;
         }
     
-        #map { height: 100%; width: 100%; }
+        #map {
+            height: 100vh;
+            width: 100vw;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
 
         /* Styles communs pour les contrôles */
         .controls, #hamburger, #legend-toggle, #theme-toggle, .legend-container, .chart-container {
@@ -304,7 +310,12 @@
 
         @media (max-width: 1024px) and (orientation: landscape) {
             .gauge-wrapper { padding: 0px; }
-            #map { height: 100%; width: 100%; }
+            #map { height: 100vh; width: 100vw; }
+            body, html {
+                margin: 0;
+                padding: 0;
+                overflow: hidden; /* Empêche le scroll */
+            }
             .chart-container {
                 right: 10px;
                 left: auto;
