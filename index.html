@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Galeon Hospitals Map</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -132,7 +132,7 @@
         .legend-container {
             position: fixed;
             bottom: 10px;
-            left: 60px;
+            left: 10px;
             z-index: 1001;
             background: var(--control-background-light);
             color: var(--text-color-light);
@@ -161,8 +161,9 @@
 
         .chart-container {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 10px;
+            right: 10px;
+            left: 100%;
             z-index: 1000;
             background: var(--control-background-light);
             color: var(--text-color-light);
@@ -170,13 +171,20 @@
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             display: flex;
-            justify-content: space-around;
+            flex-direction: row;
+            justify-content: space-between;
             align-items: center;
+            width: auto;
+            min-width: 350px;
+            max-width: 380px;
         }
 
         .gauge-wrapper {
-            text-align: center;
-            margin: 0 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 33%;
+            min-width: 80px;
         }
 
         .gauge {
@@ -185,22 +193,32 @@
             position: relative;
         }
 
+        .gauge svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .gauge-value, .gauge-percentage, .gauge-label {
+            text-align: center;
+            width: 100%;
+        } 
+
         .gauge-value {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
         }
 
         .gauge-percentage {
-            font-size: 14px;
+            font-size: 16px;
             margin-top: 5px;
         }
 
         .gauge-label {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
             margin-top: 5px;
         }
@@ -371,7 +389,7 @@
         }
 
         /* Ajuster pour mobile */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .leaflet-popup-content-wrapper {
                 border: none !important;
                 box-shadow: none !important;
@@ -398,6 +416,11 @@
                 width: 60px;
                 height: 60px;
             }
+
+            .gauge-value, .gauge-percentage, .gauge-label {
+                font-size: 12px;
+            }
+
             .legend-container {
                 bottom: 150px;
                 left: 10px;
@@ -414,9 +437,11 @@
                 border-radius: 8px;
                 box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
                 display: flex;
+                flex-direction: row;
                 justify-content: center;
                 align-items: center;
-                width: 300px;
+                width: auto;
+                max-width: 350px;
             }
             #legend-toggle {
                 top: 140px;
@@ -439,16 +464,79 @@
             }
 
             .controls select, .controls input {
-                font-size: 13px;
+                font-size: 12px;
                 padding: 5px;
             }
             .legend-item {
+                font-size: 13px;
                 margin-bottom: 3px;
             }
             .legend-color {
                 width: 15px;
                 height: 15px;
                 margin-right: 5px;
+            }
+        }
+
+        /* Ajuster pour mobile en mode paysage */
+        @media (max-width: 1024px) and (orientation: landscape) {
+            .leaflet-popup-content-wrapper {
+                border: none;
+                box-shadow: none;
+                padding: 5px;
+                max-width: 220px;
+                width: 300px;
+            }
+            .leaflet-popup-content h3 {
+                font-size: 14px;
+            }
+            .leaflet-popup-content img {
+                width: 100px;
+            }
+            .leaflet-popup-content p, 
+            .leaflet-popup-content a {
+                font-size: 12px;
+            }
+            .leaflet-popup-tip {
+                border: none;
+                box-shadow: none;
+            }
+            .gauge {
+                width: 60px;
+                height: 60px;
+            }
+            .gauge-value, 
+            .gauge-percentage, 
+            .gauge-label {
+                font-size: 12px;
+            }
+            #map {
+                height: 100%;
+                width: 100%;
+            }
+            .chart-container {
+                position: fixed;
+                bottom: 10px;
+                right: 10px;
+                left: auto;
+                transform: none;
+                max-width: 300px;
+                display: flex;
+                flex-direction: row;
+                width: auto;
+                max-width: 350px;
+            }
+            .legend-container {
+                bottom: 10px;
+                left: 10px;
+            }
+            .legend-item {
+                font-size: 13px;
+                margin-bottom: 3px;
+            }
+            #legend-toggle {
+                top: 140px;
+                left: 9px;
             }
         }
 
@@ -511,6 +599,23 @@
     <div class="chart-container">
         <div class="gauge-wrapper">
             <div id="deployed-progress" class="gauge">
+                <svg viewBox="0 0 36 36">
+                    <path d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#eee"
+                        stroke-width="3"
+                    />
+                    <path d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#4CAF50"
+                        stroke-width="3"
+                        stroke-dasharray="0, 100"
+                    />
+                </svg>
                 <div class="gauge-value"></div>
             </div>
             <div class="gauge-percentage"></div>
@@ -518,6 +623,23 @@
         </div>
         <div class="gauge-wrapper">
             <div id="in-progress-progress" class="gauge">
+                <svg viewBox="0 0 36 36">
+                    <path d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#eee"
+                        stroke-width="3"
+                    />
+                    <path d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#FFA500"
+                        stroke-width="3"
+                        stroke-dasharray="0, 100"
+                    />
+                </svg>
                 <div class="gauge-value"></div>
             </div>
             <div class="gauge-percentage"></div>
@@ -525,6 +647,23 @@
         </div>
         <div class="gauge-wrapper">
             <div id="signed-progress" class="gauge">
+                <svg viewBox="0 0 36 36">
+                    <path d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#eee"
+                        stroke-width="3"
+                    />
+                    <path d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#2196F3"
+                        stroke-width="3"
+                        stroke-dasharray="0, 100"
+                    />
+                </svg>
                 <div class="gauge-value"></div>
             </div>
             <div class="gauge-percentage"></div>
@@ -687,40 +826,25 @@
         }
 
         function initGauges() {
-            console.log("Initializing gauges...");
             ['Deployed', 'In Progress', 'Signed'].forEach(status => {
                 const element = document.getElementById(`${status.toLowerCase().replace(' ', '-')}-progress`);
                 if (element) {
-                    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                    svg.setAttribute("viewBox", "0 0 36 36");
-                    svg.innerHTML = `
-                        <path d="M18 2.0845
-                            a 15.9155 15.9155 0 0 1 0 31.831
-                            a 15.9155 15.9155 0 0 1 0 -31.831"
-                            fill="none"
-                            stroke="#eee"
-                            stroke-width="3"
-                        />
-                        <path d="M18 2.0845
-                            a 15.9155 15.9155 0 0 1 0 31.831
-                            a 15.9155 15.9155 0 0 1 0 -31.831"
-                            fill="none"
-                            stroke="${colors[status]}"
-                            stroke-width="3"
-                            stroke-dasharray="0, 100"
-                        />
-                    `;
-                    element.innerHTML = '';
-                    element.appendChild(svg);
-
-                    const valueContainer = document.createElement('div');
-                    valueContainer.classList.add('gauge-value');
-                    valueContainer.textContent = '0';
-                    element.appendChild(valueContainer);
+                    const svg = element.querySelector('svg');
+                    if (!svg) {
+                        console.error(`SVG not found for ${status}`);
+                        return;
+                    }
+                    
+                    const valueContainer = element.querySelector('.gauge-value');
+                    if (!valueContainer) {
+                        console.error(`Value container not found for ${status}`);
+                        return;
+                    }
 
                     gauges[status] = {
                         path: svg.querySelector(`path[stroke="${colors[status]}"]`),
-                        element: element
+                        element: element,
+                        valueContainer: valueContainer
                     };
                 }
             });
@@ -746,11 +870,7 @@
 
                 if (gauges[status]) {
                     gauges[status].path.setAttribute("stroke-dasharray", `${percentage}, 100`);
-
-                    const valueElement = gauges[status].element.querySelector('.gauge-value');
-                    if (valueElement) {
-                        valueElement.textContent = count;
-                    }
+                    gauges[status].valueContainer.textContent = count;
 
                     const percentageElement = gauges[status].element.nextElementSibling;
                     if (percentageElement) {
@@ -956,17 +1076,82 @@
         }
 
         function adjustForMobile() {
-            const isMobile = window.innerWidth <= 767;
-            const isPortrait = window.innerHeight > window.innerWidth;
-            const legendContainer = document.querySelector('.legend-container');
+            const isMobile = window.innerWidth <= 1024;
+            const isLandscape = window.innerWidth > window.innerHeight;
             const chartContainer = document.querySelector('.chart-container');
+            const mapContainer = document.getElementById('map');
+            const legendContainer = document.querySelector('.legend-container');
+            const legendToggle = document.getElementById('legend-toggle');
 
-            if (isMobile && isPortrait) {
-                legendContainer.style.display = 'none';
-                chartContainer.style.flexDirection = 'row';
+            if (isMobile) {
+                if (isLandscape) {
+                    // Styles pour mobile en mode paysage
+                    chartContainer.style.flexDirection = 'row';
+                    chartContainer.style.maxWidth = '350px';
+                    chartContainer.style.width = 'auto';
+                    chartContainer.style.right = '10px';
+                    chartContainer.style.left = 'auto';
+                    chartContainer.style.bottom = '10px';
+                    chartContainer.style.transform = 'none';
+                    mapContainer.style.height = '100%';
+                    mapContainer.style.width = '100%';
+                    legendContainer.style.display = 'block';
+                    legendToggle.style.top = '140px';
+                    legendToggle.style.left = '9px';
+                    legendToggle.style.bottom = 'auto';
+
+                    // Ajuster la taille des jauges et du texte
+                    const gauges = document.querySelectorAll('.gauge');
+                    const gaugeTexts = document.querySelectorAll('.gauge-value, .gauge-percentage, .gauge-label');
+                    gauges.forEach(gauge => {
+                        gauge.style.width = '60px';
+                        gauge.style.height = '60px';
+                    });
+                    gaugeTexts.forEach(text => {
+                        text.style.fontSize = '12px';
+                    });
+                } else {
+                    // Styles pour mobile en mode portrait
+                    chartContainer.style.flexDirection = 'row';
+                    chartContainer.style.maxWidth = '350px';
+                    chartContainer.style.width = 'auto';
+                    chartContainer.style.right = 'auto';
+                    chartContainer.style.left = '50%';
+                    chartContainer.style.transform = 'translateX(-50%)';
+                    chartContainer.style.bottom = '10px';
+                    mapContainer.style.height = '';
+                    mapContainer.style.width = '';
+                    legendContainer.style.display = 'block';
+                    legendToggle.style.top = '140px';
+                    legendToggle.style.left = '9px';
+                    legendToggle.style.bottom = 'auto';
+                }
             } else {
-                legendContainer.style.display = 'block';
+                // Réinitialiser les styles pour desktop
                 chartContainer.style.flexDirection = 'row';
+                chartContainer.style.maxWidth = '350px';
+                chartContainer.style.width = 'auto';
+                chartContainer.style.right = '10px';
+                chartContainer.style.left = 'auto';
+                chartContainer.style.transform = 'none';
+                chartContainer.style.bottom = '10px';
+                mapContainer.style.height = '';
+                mapContainer.style.width = '';
+                legendContainer.style.display = 'block';
+
+                const gauges = document.querySelectorAll('.gauge');
+                const gaugeTexts = document.querySelectorAll('.gauge-value, .gauge-percentage, .gauge-label');
+                gauges.forEach(gauge => {
+                    gauge.style.width = '';
+                    gauge.style.height = '';
+                });
+                gaugeTexts.forEach(text => {
+                    text.style.fontSize = '';
+                });
+            }
+            
+            if (map) {
+                map.invalidateSize();
             }
         }
 
@@ -1109,6 +1294,9 @@
             
             window.addEventListener('load', adjustForMobile);
             window.addEventListener('resize', adjustForMobile);
+            window.addEventListener('orientationchange', () => {
+                setTimeout(adjustForMobile, 100);
+            });
         });
 
         function debounce(func, wait) {
