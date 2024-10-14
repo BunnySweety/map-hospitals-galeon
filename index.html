@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
     <style>
+        /* Variables CSS */
         :root {
             --background-color-light: #f9f9f9;
             --text-color-light: #1f1f1f;
@@ -30,6 +31,7 @@
             --danger-color: #dc3545;
         }
 
+        /* Styles de base */
         body, html {
             margin: 0;
             padding: 0;
@@ -41,22 +43,29 @@
         }
     
         #map { height: 100%; width: 100%; }
-    
+
+        /* Styles communs pour les contrôles */
+        .controls, #hamburger, #legend-toggle, #theme-toggle, .legend-container, .chart-container {
+            background: var(--control-background-light);
+            color: var(--text-color-light);
+            border: 1px solid var(--control-border-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+
+        /* Styles spécifiques */
         .controls {
             position: absolute;
             top: 10px;
             left: 60px;
             z-index: 1000;
-            background: var(--control-background-light);
-            color: var(--text-color-light);
             padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
             width: 220px;
-            border: 1px solid var(--control-border-light);
         }
 
-        .controls select, .controls input {
+        .controls select,
+        .controls input {
             margin-bottom: 10px;
             padding: 6px;
             border-radius: 4px;
@@ -64,86 +73,32 @@
             background-color: var(--control-background-light);
             color: var(--text-color-light);
             font-size: 14px;
-            transition: border-color 0.3s ease, background-color 0.3s ease;
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s ease;
+            width: auto;
         }
 
-        .controls select:focus, .controls input:focus {
-            border-color: #007bff;
-            outline: none;
-        }
-
-        .checkbox-group {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            font-size: 14px;
-            width: 100%;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            margin-right: 8px;
-            transform: scale(1.2);
-            accent-color: #007bff;
-        }
-
-        .checkbox-group span {
-            font-size: 14px;
-            line-height: 1.2;
-            flex-grow: 1;
-        }
-
+        /* Styles pour les boutons circulaires */
         #hamburger, #legend-toggle, #theme-toggle {
             position: fixed;
             z-index: 1000;
             width: 40px;
             height: 40px;
-            background: var(--control-background-light);
-            color: var(--text-color-light);
-            border: 1px solid var(--control-border-light);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
         }
 
-        #hamburger {
-                top: 85px;
-                left: 8px;
-        }
+        #hamburger { top: 85px; left: 8px; }
+        #legend-toggle { bottom: 10px; left: 10px; }
+        #theme-toggle { top: 10px; right: 10px; }
 
-        #legend-toggle {
-            bottom: 10px;
-            left: 10px;
-        }
-
-        #theme-toggle {
-            top: 10px;
-            right: 10px;
-        }
-
-        .legend-container {
+        /* Styles pour la légende et les graphiques */
+        .legend-container, .chart-container {
             position: fixed;
-            bottom: 10px;
-            left: 10px;
-            z-index: 1001;
-            background: var(--control-background-light);
-            color: var(--text-color-light);
             padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            display: none;
-        }
-
-        .legend-container.open {
-            display: block;
+            z-index: 1000;
         }
 
         .legend-item {
@@ -159,32 +114,28 @@
             margin-right: 10px;
         }
 
+        .legend-container { bottom: 10px; left: 60px; display: none; }
         .chart-container {
-            position: fixed;
             bottom: 10px;
             right: 10px;
-            left: 100%;
-            z-index: 1000;
-            background: var(--control-background-light);
-            color: var(--text-color-light);
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             display: flex;
-            flex-direction: row;
             justify-content: space-between;
             align-items: center;
             width: auto;
-            min-width: 350px;
+            min-width: 0;
             max-width: 380px;
         }
 
+        /* Styles pour les jauges */
         .gauge-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 33%;
             min-width: 80px;
+            position: relative;
+            text-align: center;
+            padding: 0 10px;
         }
 
         .gauge {
@@ -192,16 +143,6 @@
             height: 80px;
             position: relative;
         }
-
-        .gauge svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .gauge-value, .gauge-percentage, .gauge-label {
-            text-align: center;
-            width: 100%;
-        } 
 
         .gauge-value {
             position: absolute;
@@ -213,14 +154,20 @@
         }
 
         .gauge-percentage {
-            font-size: 16px;
             margin-top: 5px;
+            font-size: 16px;
         }
 
         .gauge-label {
+            margin-top: 5px;
             font-size: 16px;
             font-weight: bold;
-            margin-top: 5px;
+            white-space: nowrap;
+        }
+
+        .gauge-value, .gauge-percentage, .gauge-label {
+            text-align: center;
+            width: 100%;
         }
 
         /* Styles pour les tags de statut */
@@ -228,28 +175,17 @@
             display: inline-block;
             padding: 4px 8px;
             margin: 5px;
-            font-size: 12px;
+            font-size: 14px;
             text-transform: uppercase;
             border-radius: 5px;
             color: white;
-            cursor: pointer; /* Ajouter un curseur pointer pour indiquer que c'est cliquable */
+            cursor: pointer;
         }
 
         /* Couleurs des tags */
-        .status-deployed {
-            background-color: #b0e2b5;
-            color: #1e7b34;
-        }
-
-        .status-in-progress {
-            background-color: #ffe5a0;
-            color: #6e5002;
-        }
-
-        .status-signed {
-            background-color: #9ecbff;
-            color: #0056b3;
-        }
+        .status-deployed { background-color: #b0e2b5; color: #1e7b34; }
+        .status-in-progress { background-color: #ffe5a0; color: #6e5002; }
+        .status-signed { background-color: #9ecbff; color: #0056b3; }
 
         /* Styles des tags actifs */
         .status-tag.active {
@@ -258,19 +194,11 @@
             opacity: 1;
         }
 
-        .status-deployed.active {
-            background-color: #28a745;
-        }
+        .status-deployed.active { background-color: #28a745; }
+        .status-in-progress.active { background-color: #ffc107; color: #856404; }
+        .status-signed.active { background-color: #007bff; }
 
-        .status-in-progress.active {
-            background-color: #ffc107;
-            color: #856404;
-        }
-
-        .status-signed.active {
-            background-color: #007bff;
-        }
-
+        /* Mode sombre */
         body.dark-mode {
             background-color: var(--background-color-dark);
             color: var(--text-color-dark);
@@ -284,6 +212,7 @@
         body.dark-mode #theme-toggle,
         body.dark-mode .legend-container,
         body.dark-mode .chart-container,
+        body.dark-mode .leaflet-popup-content-wrapper,
         body.dark-mode .leaflet-control-zoom-in, 
         body.dark-mode .leaflet-control-zoom-out {
             background-color: var(--control-background-dark);
@@ -291,10 +220,9 @@
             border-color: var(--control-border-dark);
         }
 
-        body.dark-mode #theme-toggle {
-            color: yellow;
-        }
+        body.dark-mode #theme-toggle { color: yellow; }
 
+        /* Styles des popups */
         .leaflet-popup-content-wrapper {
             background-color: var(--control-background-light);
             color: var(--text-color-light);
@@ -312,245 +240,86 @@
             width: auto !important;
         }
 
-        .leaflet-popup-tip-container {
-            display: none;
-        }
-
-        .leaflet-tile-container img {
-            box-shadow: none !important;
-        }
+        .leaflet-popup-tip-container { display: none; }
 
         /* Styles du contenu du popup */
-        .popup-content {
-            text-align: center;
-        }
-
-        .popup-content .status-tag.active {
-            opacity: 1;
-            border: 2px solid rgba(0, 0, 0, 0.1);
-        }
-
+        .popup-content { text-align: center; }
         .popup-title {
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 10px;
             word-wrap: break-word;
         }
-
         .popup-image {
             max-width: 100%;
             height: auto;
             margin-bottom: 10px;
         }
-
         .popup-content p {
             margin: 5px 0;
             word-wrap: break-word;
             overflow-wrap: break-word;
             font-size: 14px;
         }
-
         .popup-content a {
             color: var(--primary-color);
             text-decoration: none;
             word-break: break-all;
             font-size: 14px;
         }
+        .popup-content a:hover { text-decoration: underline; }
 
-        .popup-content a:hover {
-            text-decoration: underline;
-        }
+        .leaflet-control-attribution { display: none; }
 
-        .leaflet-control-attribution {
-            display: none;
-        }
-
-        /* Styles des popups pour le thème sombre */
-        body.dark-mode .leaflet-popup-content-wrapper {
-            background-color: var(--control-background-dark);
-            color: var(--text-color-dark);
-            border: none;
-            border-radius: 8px;
-            box-shadow: 0 3px 14px rgba(0,0,0,0.4);
-        }
-
-        body.dark-mode .leaflet-popup-content {
-            margin: 0;
-            padding: 15px;
-            width: auto !important;
-        }
-
-        body.dark-mode .leaflet-popup-tip-container {
-            display: none;
-        }
-
-        body.dark-mode .leaflet-popup-close-button {
-            color: var(--text-color-dark);
-        }
-
-        /* Ajuster pour mobile */
+        /* Media queries pour le responsive */
         @media (max-width: 1024px) {
             .leaflet-popup-content-wrapper {
-                border: none !important;
-                box-shadow: none !important;
-                padding: 0 !important;
                 max-width: 220px;
                 padding: 5px;
-                width: 300px;
             }
-            .leaflet-popup-content h3 {
-                font-size: 14px;
-            }
-            .leaflet-popup-content img {
-                width: 100px;
-            }
-            .leaflet-popup-content p, .leaflet-popup-content a {
-                font-size: 12px;
-            }
-
-            .leaflet-popup-tip {
-                border: none !important;
-                box-shadow: none !important;
-            }
-            .gauge {
-                width: 60px;
-                height: 60px;
-            }
-
-            .gauge-value, .gauge-percentage, .gauge-label {
-                font-size: 12px;
-            }
-
-            .legend-container {
-                bottom: 150px;
-                left: 10px;
-            }
+            .leaflet-popup-content h3 { font-size: 14px; }
+            .leaflet-popup-content img { width: 100px; }
+            .leaflet-popup-content p, .leaflet-popup-content a { font-size: 12px; }
+            .gauge { width: 60px; height: 60px; }
+            .gauge-value, .gauge-percentage, .gauge-label { font-size: 12px; }
+            .gauge-wrapper { padding: 0px; }
+            .legend-container { bottom: 150px; left: 10px; }
             .chart-container {
-                position: fixed;
-                bottom: 10px;
                 left: 50%;
                 transform: translateX(-50%);
-                z-index: 1000;
-                background: var(--control-background-light);
-                color: var(--text-color-light);
-                padding: 10px;
-                border-radius: 8px;
-                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-                display: flex;
-                flex-direction: row;
-                justify-content: center;
-                align-items: center;
                 width: auto;
                 max-width: 350px;
             }
-            #legend-toggle {
-                top: 140px;
-                left: 9px;
-            }
-            .controls {
-                width: 180px;
-                padding: 10px;
-                font-size: 12px;
-            }
-
-            /* Style pour le statut */
+            #legend-toggle { top: 140px; left: 9px; display: block; }
+            .controls { width: 180px; padding: 10px; font-size: 12px; }
             .status-tag {
-                display: inline-block;
                 padding: 2px 6px;
-                border-radius: 4px;
                 margin: 5px;
                 font-size: 12px;
-                text-transform: uppercase;
             }
-
-            .controls select, .controls input {
-                font-size: 12px;
-                padding: 5px;
-            }
-            .legend-item {
-                font-size: 13px;
-                margin-bottom: 3px;
-            }
-            .legend-color {
-                width: 15px;
-                height: 15px;
-                margin-right: 5px;
-            }
+            .controls select, .controls input { font-size: 12px; padding: 5px; }
+            .legend-item { font-size: 13px; margin-bottom: 3px; }
+            .legend-color { width: 15px; height: 15px; margin-right: 5px; }
         }
 
-        /* Ajuster pour mobile en mode paysage */
         @media (max-width: 1024px) and (orientation: landscape) {
-            .leaflet-popup-content-wrapper {
-                border: none;
-                box-shadow: none;
-                padding: 5px;
-                max-width: 220px;
-                width: 300px;
-            }
-            .leaflet-popup-content h3 {
-                font-size: 14px;
-            }
-            .leaflet-popup-content img {
-                width: 100px;
-            }
-            .leaflet-popup-content p, 
-            .leaflet-popup-content a {
-                font-size: 12px;
-            }
-            .leaflet-popup-tip {
-                border: none;
-                box-shadow: none;
-            }
-            .gauge {
-                width: 60px;
-                height: 60px;
-            }
-            .gauge-value, 
-            .gauge-percentage, 
-            .gauge-label {
-                font-size: 12px;
-            }
-            #map {
-                height: 100%;
-                width: 100%;
-            }
+            .gauge-wrapper { padding: 0px; }
+            #map { height: 100%; width: 100%; }
             .chart-container {
-                position: fixed;
-                bottom: 10px;
                 right: 10px;
                 left: auto;
                 transform: none;
-                max-width: 300px;
-                display: flex;
-                flex-direction: row;
-                width: auto;
                 max-width: 350px;
             }
-            .legend-container {
-                bottom: 10px;
-                left: 10px;
-            }
-            .legend-item {
-                font-size: 13px;
-                margin-bottom: 3px;
-            }
-            #legend-toggle {
-                top: 140px;
-                left: 9px;
-            }
-        }
-
-        /* Supprimer les bordures et ombres non souhaitées */
-        .leaflet-popup-content-wrapper::before, 
-        .leaflet-popup-content-wrapper::after {
-            content: none;
+            .legend-container { bottom: 10px; left: 10px; }
+            #legend-toggle { top: 140px; left: 10px; display: block; }
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
-    <button id="hamburger">☰</button>
-    <button id="legend-toggle"><i class="fas fa-info"></i></button>
+    <button id="hamburger" aria-label="Toggle menu">☰</button>
+    <button id="legend-toggle" aria-label="Toggle legend"><i class="fas fa-info"></i></button>
     <div class="legend-container">
         <div class="legend-item"><span class="legend-color" style="background-color: green;"></span><span class="legend-text">Deployed</span></div>
         <div class="legend-item"><span class="legend-color" style="background-color: orange;"></span><span class="legend-text">In Progress</span></div>
@@ -625,261 +394,510 @@
             <div id="in-progress-progress" class="gauge">
                 <svg viewBox="0 0 36 36">
                     <path d="M18 2.0845
-                        a 15.9155 15.9155 0 0 1 0 31.831
-                        a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#eee"
-                        stroke-width="3"
-                    />
-                    <path d="M18 2.0845
-                        a 15.9155 15.9155 0 0 1 0 31.831
-                        a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#FFA500"
-                        stroke-width="3"
-                        stroke-dasharray="0, 100"
-                    />
-                </svg>
-                <div class="gauge-value"></div>
-            </div>
-            <div class="gauge-percentage"></div>
-            <div class="gauge-label">In Progress</div>
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="#eee"
+                    stroke-width="3"
+                />
+                <path d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="#FFA500"
+                    stroke-width="3"
+                    stroke-dasharray="0, 100"
+                />
+            </svg>
+            <div class="gauge-value"></div>
         </div>
-        <div class="gauge-wrapper">
-            <div id="signed-progress" class="gauge">
-                <svg viewBox="0 0 36 36">
-                    <path d="M18 2.0845
-                        a 15.9155 15.9155 0 0 1 0 31.831
-                        a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#eee"
-                        stroke-width="3"
-                    />
-                    <path d="M18 2.0845
-                        a 15.9155 15.9155 0 0 1 0 31.831
-                        a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#2196F3"
-                        stroke-width="3"
-                        stroke-dasharray="0, 100"
-                    />
-                </svg>
-                <div class="gauge-value"></div>
-            </div>
-            <div class="gauge-percentage"></div>
-            <div class="gauge-label">Signed</div>
-        </div>
+        <div class="gauge-percentage"></div>
+        <div class="gauge-label">In Progress</div>
     </div>
-    <button id="theme-toggle"><i class="fas fa-moon"></i></button>
+    <div class="gauge-wrapper">
+        <div id="signed-progress" class="gauge">
+            <svg viewBox="0 0 36 36">
+                <path d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="#eee"
+                    stroke-width="3"
+                />
+                <path d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="#2196F3"
+                    stroke-width="3"
+                    stroke-dasharray="0, 100"
+                />
+            </svg>
+            <div class="gauge-value"></div>
+        </div>
+        <div class="gauge-percentage"></div>
+        <div class="gauge-label">Signed</div>
+    </div>
+</div>
+<button id="theme-toggle" aria-label="Toggle dark mode"><i class="fas fa-moon"></i></button>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
-    <script src="translations.js"></script>
-    <script src="hospitals.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            initApplication();
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script src="translations.js"></script>
+<script src="hospitals.js"></script>
+<script>
+    // Constantes
+    const MOBILE_BREAKPOINT = 1024;
+    const DEFAULT_LANGUAGE = 'en';
+
+    // Variables globales
+    let map, markers = [], activeStatus = [], language = DEFAULT_LANGUAGE;
+    let darkMode = false;
+    let markerClusterGroup;
+    let currentTranslations = {};
+
+    const gauges = {};
+    const colors = {
+        'Deployed': '#4CAF50',
+        'In Progress': '#FFA500',
+        'Signed': '#2196F3'
+    };
+
+    // Fonction principale d'initialisation
+    function initApplication() {
+        initMap();
+        initGauges();
+        loadPreferences();
+        addEventListeners();
+        adjustForMobile();
+    }
+
+    // Initialisation de la carte
+    function initMap() {
+        if (!map) {
+            map = L.map('map', {
+                center: [50, 10],
+                zoom: 4,
+                maxZoom: 18
+            });
+
+            markerClusterGroup = L.markerClusterGroup({
+                maxClusterRadius: 50,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true
+            });
+
+            map.addLayer(markerClusterGroup);
+            updateTileLayer();
+        }
+    }
+
+    // Initialisation des jauges
+    function initGauges() {
+        ['Deployed', 'In Progress', 'Signed'].forEach(initGauge);
+    }
+
+    function initGauge(status) {
+        const element = document.getElementById(`${status.toLowerCase().replace(' ', '-')}-progress`);
+        if (element) {
+            const svg = element.querySelector('svg');
+            const valueContainer = element.querySelector('.gauge-value');
+            
+            if (svg && valueContainer) {
+                gauges[status] = {
+                    path: svg.querySelector(`path[stroke="${colors[status]}"]`),
+                    element: element,
+                    valueContainer: valueContainer
+                };
+            }
+        }
+    }
+
+    // Mise à jour des jauges
+    function updateGauges() {
+        const statusCounts = hospitals.reduce((acc, hospital) => {
+            acc[hospital.status] = (acc[hospital.status] || 0) + 1;
+            return acc;
+        }, {});
+
+        const totalHospitals = hospitals.length;
+
+        Object.keys(gauges).forEach(status => {
+            const count = statusCounts[status] || 0;
+            const percentage = (count / totalHospitals) * 100 || 0;
+
+            if (gauges[status]) {
+                gauges[status].path.setAttribute("stroke-dasharray", `${percentage}, 100`);
+                gauges[status].valueContainer.textContent = count;
+
+                const percentageElement = gauges[status].element.nextElementSibling;
+                if (percentageElement) {
+                    percentageElement.textContent = `(${percentage.toFixed(1)}%)`;
+                }
+            }
         });
-    </script>
-    <script>
-        let map, markers = [], activeStatus = [], language = "en";
-        let darkMode = false;
-        let isMapInitialized = false;
-        let isChartInitialized = false;
-        let markerClusterGroup;
-        let t = {}; // translations
-        let isApplicationInitialized = false;
+    }
 
-        const gauges = {};
-        const colors = {
-            'Deployed': '#4CAF50',
-            'In Progress': '#FFA500',
-            'Signed': '#2196F3'
+    // Ajustement pour le mobile
+    function adjustForMobile() {
+        const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
+        const isLandscape = window.innerWidth > window.innerHeight;
+        
+        adjustChartContainer(isMobile, isLandscape);
+        adjustMapContainer(isMobile, isLandscape);
+        adjustLegendContainer(isMobile, isLandscape);
+        adjustGauges(isMobile);
+
+        if (map) {
+            map.invalidateSize();
+        }
+    }
+
+    function adjustChartContainer(isMobile, isLandscape) {
+        const chartContainer = document.querySelector('.chart-container');
+        if (isMobile) {
+            if (isLandscape) {
+                Object.assign(chartContainer.style, {
+                    flexDirection: 'row',
+                    maxWidth: '350px',
+                    width: 'auto',
+                    right: '10px',
+                    left: 'auto',
+                    bottom: '10px',
+                    transform: 'none'
+                });
+            } else {
+                Object.assign(chartContainer.style, {
+                    flexDirection: 'row',
+                    maxWidth: '350px',
+                    width: 'auto',
+                    right: 'auto',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    bottom: '10px'
+                });
+            }
+        } else {
+            Object.assign(chartContainer.style, {
+                flexDirection: 'row',
+                maxWidth: '350px',
+                width: 'auto',
+                right: '10px',
+                left: 'auto',
+                transform: 'none',
+                bottom: '10px'
+            });
+        }
+    }
+
+    function adjustMapContainer(isMobile, isLandscape) {
+        const mapContainer = document.getElementById('map');
+        if (isMobile && isLandscape) {
+            mapContainer.style.height = '100%';
+            mapContainer.style.width = '100%';
+        } else {
+            mapContainer.style.height = '';
+            mapContainer.style.width = '';
+        }
+    }
+
+    function adjustLegendContainer(isMobile, isLandscape) {
+        const legendContainer = document.querySelector('.legend-container');
+        const legendToggle = document.getElementById('legend-toggle');
+
+        if (isMobile) {
+            if (isLandscape) {
+                legendContainer.style.display = 'block';
+                Object.assign(legendToggle.style, {
+                    top: '140px',
+                    left: '9px',
+                    bottom: 'auto'
+                });
+            } else {
+                legendContainer.style.display = 'block';
+                Object.assign(legendToggle.style, {
+                    top: '140px',
+                    left: '9px',
+                    bottom: 'auto'
+                });
+            }
+        } else {
+            legendContainer.style.display = 'block';
+            Object.assign(legendToggle.style, {
+                top: '',
+                left: '',
+                bottom: ''
+            });
+        }
+    }
+
+    function adjustGauges(isMobile) {
+        const gauges = document.querySelectorAll('.gauge');
+        const gaugeTexts = document.querySelectorAll('.gauge-value, .gauge-percentage, .gauge-label');
+
+        if (isMobile) {
+            gauges.forEach(gauge => {
+                gauge.style.width = '60px';
+                gauge.style.height = '60px';
+            });
+            gaugeTexts.forEach(text => {
+                text.style.fontSize = '12px';
+            });
+        } else {
+            gauges.forEach(gauge => {
+                gauge.style.width = '';
+                gauge.style.height = '';
+            });
+            gaugeTexts.forEach(text => {
+                text.style.fontSize = '';
+            });
+        }
+    }
+
+    // Gestion des préférences utilisateur
+    function savePreferences() {
+        const preferences = {
+            theme: darkMode ? 'dark' : 'light',
+            language: document.getElementById('language-select').value,
+            continent: document.getElementById('continent-select').value,
+            country: document.getElementById('country-filter').value,
+            city: document.getElementById('city-filter').value,
+            activeStatus: activeStatus
         };
+        localStorage.setItem('galeonMapPreferences', JSON.stringify(preferences));
+    }
 
+    function loadPreferences() {
+        const savedPreferences = localStorage.getItem('galeonMapPreferences');
+        if (savedPreferences) {
+            const preferences = JSON.parse(savedPreferences);
+            language = preferences.language || DEFAULT_LANGUAGE;
+            document.getElementById('language-select').value = language;
+            
+            darkMode = preferences.theme === 'dark';
+            document.body.classList.toggle('dark-mode', darkMode);
+            updateTileLayer();
 
-        function savePreferences() {
-            const preferences = {
-                theme: darkMode ? 'dark' : 'light',
-                language: document.getElementById('language-select').value,
-                continent: document.getElementById('continent-select').value,
-                country: document.getElementById('country-filter').value,
-                city: document.getElementById('city-filter').value,
-                activeStatus: activeStatus
+            document.getElementById('continent-select').value = preferences.continent || '';
+            document.getElementById('country-filter').value = preferences.country || '';
+            document.getElementById('city-filter').value = preferences.city || '';
+
+            activeStatus = preferences.activeStatus || [];
+            
+            applyTranslations(language);
+        } else {
+            applyTranslations(DEFAULT_LANGUAGE);
+        }
+    }
+
+    // Gestion des traductions
+    function applyTranslations(language) {
+        currentTranslations = translations[language] || translations[DEFAULT_LANGUAGE];
+        
+        updatePlaceholders();
+        updateLegend();
+        updateContinentSelect();
+        updateGaugeLabels();
+        updateStatusTags();
+        updateMarkers();
+        
+        addMarkers();
+    }
+
+    function updatePlaceholders() {
+        const countryFilter = document.getElementById('country-filter');
+        const cityFilter = document.getElementById('city-filter');
+        if (countryFilter) countryFilter.setAttribute('placeholder', currentTranslations.enterCountry || 'Enter country...');
+        if (cityFilter) cityFilter.setAttribute('placeholder', currentTranslations.enterCity || 'Enter city...');
+    }
+
+    function updateLegend() {
+        const legendItems = document.querySelectorAll('.legend-item .legend-text');
+        if (legendItems.length >= 3) {
+            legendItems[0].textContent = currentTranslations.legendDeployed || 'Deployed';
+            legendItems[1].textContent = currentTranslations.legendInProgress || 'In Progress';
+            legendItems[2].textContent = currentTranslations.legendSigned || 'Signed';
+        }
+    }
+
+    function updateContinentSelect() {
+        const continentSelect = document.getElementById('continent-select');
+        if (continentSelect) {
+            continentSelect.options[0].text = currentTranslations.continent || 'Continent';
+            const continentOptions = {
+                'Europe': currentTranslations.europe || 'Europe',
+                'North America': currentTranslations.northAmerica || 'North America',
+                'South America': currentTranslations.southAmerica || 'South America',
+                'Asia': currentTranslations.asia || 'Asia',
+                'Africa': currentTranslations.africa || 'Africa',
+                'Oceania': currentTranslations.oceania || 'Oceania'
             };
-            localStorage.setItem('galeonMapPreferences', JSON.stringify(preferences));
-        }
-
-        function loadPreferences() {
-            const savedPreferences = localStorage.getItem('galeonMapPreferences');
-            if (savedPreferences) {
-                const preferences = JSON.parse(savedPreferences);
-                const language = preferences.language || 'en';
-                document.getElementById('language-select').value = language;
-                
-                darkMode = preferences.theme === 'dark';
-                document.body.classList.toggle('dark-mode', darkMode);
-                updateTileLayer();
-
-                document.getElementById('continent-select').value = preferences.continent || '';
-                document.getElementById('country-filter').value = preferences.country || '';
-                document.getElementById('city-filter').value = preferences.city || '';
-
-                // Réinitialiser l'état actif des tags de statut
-                activeStatus = preferences.activeStatus || [];
-                
-                // Appliquer les traductions après avoir chargé les préférences
-                applyTranslations(language);
-            } else {
-                // Si aucune préférence n'est sauvegardée, appliquer les traductions par défaut
-                const defaultLanguage = document.getElementById('language-select').value;
-                applyTranslations(defaultLanguage);
+            for (let i = 1; i < continentSelect.options.length; i++) {
+                const option = continentSelect.options[i];
+                option.text = continentOptions[option.value] || option.value;
             }
         }
+    }
 
-        function updateStatusTags(translations) {
-            console.log("Updating status tags with translations:", translations);
-            if (!translations || typeof translations !== 'object' || Object.keys(translations).length === 0) {
-                console.error("Invalid translations object");
-                return;
-            }
-            const statusTags = document.querySelectorAll('.status-tag');
-            console.log(`Found ${statusTags.length} status tags`);
-            statusTags.forEach(tag => {
-                let status = tag.dataset.status ? tag.dataset.status.toLowerCase() : null;
-
-                // Si le statut n'est pas défini, essayez de le déduire à partir du texte ou des classes
-                if (!status) {
-                    if (tag.classList.contains('status-deployed')) status = 'deployed';
-                    else if (tag.classList.contains('status-in-progress')) status = 'in progress';
-                    else if (tag.classList.contains('status-signed')) status = 'signed';
-                    else status = tag.textContent.toLowerCase();
-
-                    // Mettre à jour l'attribut data-status
-                    tag.dataset.status = status;
-                }
-
-                // Mise à jour des traductions
-                let translatedText;
-                switch (status) {
-                    case 'deployed':
-                        translatedText = translations.deployed || translations.statusDeployed || 'Deployed';
-                        break;
-                    case 'in progress':
-                        translatedText = translations.inProgress || translations.statusInProgress || 'In Progress';
-                        break;
-                    case 'signed':
-                        translatedText = translations.signed || translations.statusSigned || 'Signed';
-                        break;
-                    default:
-                        translatedText = status;
-                }
-                
-                console.log(`Translating status '${status}' to '${translatedText}'`);
-                tag.textContent = translatedText;
-
-                // Vérification de l'état actif ou inactif
-                if (activeStatus.includes(status)) {
-                    tag.classList.add('active');
-                } else {
-                    tag.classList.remove('active');
-                }
-            });
+    function updateGaugeLabels() {
+        const gaugeLabels = document.querySelectorAll('.gauge-label');
+        if (gaugeLabels.length >= 3) {
+            gaugeLabels[0].textContent = currentTranslations.gaugesDeployed || 'Deployed';
+            gaugeLabels[1].textContent = currentTranslations.gaugesInProgress || 'In Progress';
+            gaugeLabels[2].textContent = currentTranslations.gaugesSigned || 'Signed';
         }
+    }
 
-        function initApplication() {
-            if (isApplicationInitialized) {
-                console.log("Application already initialized, skipping...");
-                return;
+    function updateStatusTags() {
+        const statusTags = document.querySelectorAll('.status-tag');
+        statusTags.forEach(tag => {
+            const status = tag.dataset.status;
+            let translatedText;
+            switch (status) {
+                case 'deployed':
+                    translatedText = currentTranslations.deployed || currentTranslations.statusDeployed || 'Deployed';
+                    break;
+                case 'in progress':
+                    translatedText = currentTranslations.inProgress || currentTranslations.statusInProgress || 'In Progress';
+                    break;
+                case 'signed':
+                    translatedText = currentTranslations.signed || currentTranslations.statusSigned || 'Signed';
+                    break;
+                default:
+                    translatedText = status;
             }
+            tag.textContent = translatedText;
+        });
+    }
 
-            console.log("Initializing application...");
-            initMap();
-            initGauges();
-            loadPreferences();
-
-            isApplicationInitialized = true;
-        }
-
-        function initMap() {
-            console.log("Initializing map...");
-            if (!isMapInitialized) {
-                map = L.map('map', {
-                    center: [50, 10],
-                    zoom: 4,
-                    maxZoom: 18
-                });
-
-                markerClusterGroup = L.markerClusterGroup({
-                    maxClusterRadius: 50,
-                    spiderfyOnMaxZoom: true,
-                    showCoverageOnHover: false,
-                    zoomToBoundsOnClick: true
-                });
-
-                map.addLayer(markerClusterGroup);
-                isMapInitialized = true;
-                updateTileLayer();
-            } else {
-                console.log("Map already initialized, skipping...");
-            }
-        }
-
-        function initGauges() {
-            ['Deployed', 'In Progress', 'Signed'].forEach(status => {
-                const element = document.getElementById(`${status.toLowerCase().replace(' ', '-')}-progress`);
-                if (element) {
-                    const svg = element.querySelector('svg');
-                    if (!svg) {
-                        console.error(`SVG not found for ${status}`);
-                        return;
-                    }
-                    
-                    const valueContainer = element.querySelector('.gauge-value');
-                    if (!valueContainer) {
-                        console.error(`Value container not found for ${status}`);
-                        return;
-                    }
-
-                    gauges[status] = {
-                        path: svg.querySelector(`path[stroke="${colors[status]}"]`),
-                        element: element,
-                        valueContainer: valueContainer
-                    };
-                }
-            });
-            isChartInitialized = true;
-        }
-
-        function updateGauges() {
-            if (!isChartInitialized) {
-                console.warn("Charts not initialized, skipping gauge update");
-                return;
-            }
-
-            const statusCounts = hospitals.reduce((acc, hospital) => {
-                acc[hospital.status] = (acc[hospital.status] || 0) + 1;
-                return acc;
-            }, {});
-
-            const totalHospitals = hospitals.length;
-
-            ['Deployed', 'In Progress', 'Signed'].forEach(status => {
-                const count = statusCounts[status] || 0;
-                const percentage = (count / totalHospitals) * 100 || 0;
-
-                if (gauges[status]) {
-                    gauges[status].path.setAttribute("stroke-dasharray", `${percentage}, 100`);
-                    gauges[status].valueContainer.textContent = count;
-
-                    const percentageElement = gauges[status].element.nextElementSibling;
-                    if (percentageElement) {
-                        percentageElement.textContent = `(${percentage.toFixed(1)}%)`;
+    function updateMarkers() {
+        if (markerClusterGroup) {
+            markerClusterGroup.eachLayer((layer) => {
+                if (layer instanceof L.CircleMarker && layer.hospitalData) {
+                    const popupContent = createPopupContent(layer.hospitalData);
+                    if (layer.getPopup()) {
+                        layer.getPopup().setContent(popupContent);
+                    } else {
+                        layer.bindPopup(popupContent);
                     }
                 }
             });
         }
+    }
 
+    // Gestion des marqueurs
+    function addMarkers() {
+        const selectedContinent = document.getElementById('continent-select').value;
+        const selectedCountry = document.getElementById('country-filter').value.toLowerCase();
+        const selectedCity = document.getElementById('city-filter').value.toLowerCase();
+
+        markerClusterGroup.clearLayers();
+        markers = [];
+
+        hospitals.forEach((hospital) => {
+            const { city, country } = extractLocationInfo(hospital.address);
+
+            const statusMatch = activeStatus.length === 0 || activeStatus.includes(hospital.status.toLowerCase());
+            const continentMatch = !selectedContinent || getContinent(hospital.lat, hospital.lon) === selectedContinent;
+                const countryMatch = !selectedCountry || country.toLowerCase().includes(selectedCountry);
+                const cityMatch = !selectedCity || city.toLowerCase().includes(selectedCity);
+
+                if (statusMatch && continentMatch && countryMatch && cityMatch) {
+                    const marker = L.circleMarker([hospital.lat, hospital.lon], {
+                        radius: 8,
+                        fillColor: getColor(hospital.status),
+                        color: "#fff",
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+
+                    marker.hospitalData = hospital;  // Stockez les données de l'hôpital dans le marqueur
+                    const popupContent = createPopupContent(hospital);
+                    marker.bindPopup(popupContent);
+                    markerClusterGroup.addLayer(marker);
+                    markers.push(marker);
+                }
+            });
+
+            updateGauges();
+        }
+
+        function extractLocationInfo(address) {
+            const parts = address.split(',').map(part => part.trim());
+            return {
+                city: parts[parts.length - 2] || '',
+                country: parts[parts.length - 1] || ''
+            };
+        }
+
+        function getContinent(lat, lon) {
+            // Europe
+            if (lat > 36 && lat < 70 && lon > -10 && lon < 40) return "Europe";
+            
+            // Afrique
+            if (lat > -35 && lat < 37 && lon > -20 && lon < 50) return "Africa";
+            
+            // Asie
+            if (lat > -10 && lat < 80 && lon > 40 && lon < 180) return "Asia";
+            
+            // Océanie (incluant l'Australie)
+            if (lat > -50 && lat < 0 && lon > 110 && lon < 180) return "Oceania";
+            
+            // Amérique du Nord
+            if (lat > 15 && lat < 90 && lon > -180 && lon < -30) return "North America";
+            
+            // Amérique du Sud
+            if (lat > -60 && lat < 15 && lon > -90 && lon < -30) return "South America";
+            
+            // Antarctique
+            if (lat < -60) return "Antarctica";
+            
+            // Si aucune correspondance n'est trouvée
+            return "Unknown";
+        }
+
+        function getColor(status) {
+            switch (status) {
+                case 'Deployed': return '#28a745';
+                case 'In Progress': return '#ffc107';
+                case 'Signed': return '#007bff';
+                default: return '#6c757d';
+            }
+        }
+
+        function createPopupContent(hospital) {
+            const statusTag = getStatusTag(hospital.status, true);
+            return `
+                <div class="popup-content">
+                    <h3 class="popup-title" style="color: #00aaff;">${hospital.name}</h3>
+                    <img class="popup-image" src="${hospital.imageUrl}" alt="${hospital.name}">
+                    <p><strong>${currentTranslations.address || 'Address'}:</strong><br>${hospital.address}</p>
+                    <p><a href="${hospital.website}" target="_blank" style="color: var(--hyperlink-color); font-size: 1.2em;">${currentTranslations.visitWebsite || 'Visit Website'}</a></p>
+                    <p><strong>${currentTranslations.status || 'Status'}:</strong> ${statusTag}</p>
+                </div>
+            `;
+        }
+
+        function getStatusTag(status, isActive = false) {
+            const statusKey = status.toLowerCase().replace(" ", "");
+            const statusText = currentTranslations[statusKey] || status;
+            const activeClass = isActive ? ' active' : '';
+            
+            switch (status) {
+                case 'Signed':
+                    return `<span class="status-tag status-signed${activeClass}">${statusText}</span>`;
+                case 'Deployed':
+                    return `<span class="status-tag status-deployed${activeClass}">${statusText}</span>`;
+                case 'In Progress':
+                    return `<span class="status-tag status-in-progress${activeClass}">${statusText}</span>`;
+                default:
+                    return `<span class="status-tag${activeClass}">Unknown</span>`;
+            }
+        }
+
+        // Gestion des interactions utilisateur
         function toggleTheme() {
             darkMode = !darkMode;
             document.body.classList.toggle('dark-mode');
@@ -902,172 +920,9 @@
             ).addTo(map);
         }
 
-        function filterHospitals(status) {
-            if (!status) return;
-            const tagElement = document.querySelector(`.status-tag[data-status="${status}"]`);
-            if (!tagElement) return;
-
-            // Mettre à jour l'attribut data-status si nécessaire
-            if (!tagElement.dataset.status) {
-                tagElement.dataset.status = status.toLowerCase();
-            }
-
-            if (activeStatus.includes(status)) {
-                activeStatus = activeStatus.filter(s => s !== status);
-                tagElement.classList.remove('active');
-            } else {
-                activeStatus.push(status);
-                tagElement.classList.add('active');
-            }
-
-            addMarkers();
-            savePreferences();
-        }
-
-        function extractLocationInfo(address) {
-            const parts = address.split(',').map(part => part.trim());
-            return {
-                city: parts[parts.length - 2] || '',
-                country: parts[parts.length - 1] || ''
-            };
-        }
-
-        function normalizeString(str) {
-            return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        }
-
-        function addMarkers() {
-            console.log("Updating markers...");
-
-            const selectedContinent = document.getElementById('continent-select').value;
-            const selectedCountry = document.getElementById('country-filter').value.toLowerCase();
-            const selectedCity = document.getElementById('city-filter').value.toLowerCase();
-            const selectedLanguage = document.getElementById('language-select').value;
-            const currentTranslations = translations[selectedLanguage] || translations['en'];
-
-            // Sauvegarder la position de la popup active, s'il y en a une
-            let openPopupLatLng = null;
-            let openPopupContent = null;
-
-            if (map && map._popup && map._popup._latlng) {
-                openPopupLatLng = map._popup._latlng;
-                openPopupContent = map._popup.getContent();
-            }
-
-            markerClusterGroup.clearLayers();
-            markers = [];
-
-            let filteredCount = 0;
-
-            hospitals.forEach((hospital) => {
-                const { city, country } = extractLocationInfo(hospital.address);
-
-                const statusMatch = activeStatus.length === 0 || activeStatus.includes(hospital.status.toLowerCase());
-                const continentMatch = !selectedContinent || getContinent(hospital.lat, hospital.lon) === selectedContinent;
-                const countryMatch = !selectedCountry || country.toLowerCase().includes(selectedCountry);
-                const cityMatch = !selectedCity || city.toLowerCase().includes(selectedCity);
-
-                if (statusMatch && continentMatch && countryMatch && cityMatch) {
-                    const marker = L.circleMarker([hospital.lat, hospital.lon], {
-                        radius: 8,
-                        fillColor: getColor(hospital.status),
-                        color: "#fff",
-                        weight: 1,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                    });
-
-                    marker.hospitalData = hospital;
-                    updateMarkerContent(marker, hospital, currentTranslations);
-                    markerClusterGroup.addLayer(marker);
-                    markers.push(marker);
-                    filteredCount++;
-                }
-            });
-
-            // Restaurer la popup si elle était ouverte
-            if (openPopupLatLng) {
-                markers.forEach(marker => {
-                    if (marker.getLatLng().equals(openPopupLatLng)) {
-                        marker.bindPopup(openPopupContent).openPopup();
-                    }
-                });
-            }
-
-            logFilterStatus(selectedContinent, selectedCountry, selectedCity, activeStatus, filteredCount, hospitals.length);
-            updateGauges();
-        }
-
-        function logFilterStatus(continent, country, city, activeStatuses, filteredCount, totalCount) {
-            console.log(`Filter Status:
-            Continent: ${continent || 'All'}
-            Country: ${country || 'All'}
-            City: ${city || 'All'}
-            Active Statuses: ${activeStatuses.length > 0 ? activeStatuses.join(', ') : 'All'}
-            Markers Displayed: ${filteredCount} out of ${totalCount}
-            `);
-        }
-
-        function updateMarkerContent(marker, hospital, translations) {
-            const statusTag = getStatusTag(hospital.status, translations, true);
-            const popupContent = `
-                <div class="popup-content">
-                    <h3 class="popup-title" style="color: #00aaff;">${hospital.name}</h3>
-                    <img class="popup-image" src="${hospital.imageUrl}" alt="${hospital.name}">
-                    <p><strong>${translations.address}:</strong><br>${hospital.address}</p>
-                    <p><a href="${hospital.website}" target="_blank" style="color: var(--hyperlink-color); font-size: 1.2em;">${translations.visitWebsite}</a></p>
-                    <p><strong>${translations.status}:</strong> ${statusTag}</p>
-                </div>
-            `;
-
-            if (marker.getPopup()) {
-                marker.getPopup().setContent(popupContent);
-            } else {
-                marker.bindPopup(popupContent);
-            }
-        }
-
-        function getContinent(lat, lon) {
-            if (lat >= 40 && lon >= -10 && lon <= 60) return "Europe";
-            if (lat <= 40 && lat >= -40 && lon >= -10 && lon <= 60) return "Africa";
-            // Ajoutez ici la logique pour les autres continents
-            return "Unknown";
-        }
-
-        function getColor(status) {
-            switch (status) {
-                case 'Deployed':
-                    return '#28a745';
-                case 'In Progress':
-                    return '#ffc107';
-                case 'Signed':
-                    return '#007bff';
-                default:
-                    return '#6c757d';
-            }
-        }
-
-        function getStatusTag(status, translations, isActive = false) {
-            const statusKey = status.toLowerCase().replace(" ", "");
-            const statusText = translations[statusKey] || status;
-            const activeClass = isActive ? ' active' : '';
-            
-            switch (status) {
-                case 'Signed':
-                    return `<span class="status-tag status-signed${activeClass}">${statusText}</span>`;
-                case 'Deployed':
-                    return `<span class="status-tag status-deployed${activeClass}">${statusText}</span>`;
-                case 'In Progress':
-                    return `<span class="status-tag status-in-progress${activeClass}">${statusText}</span>`;
-                default:
-                    return `<span class="status-tag${activeClass}">Unknown</span>`;
-            }
-        };
-
         function toggleLegend() {
             const legendContainer = document.querySelector('.legend-container');
-            const isVisible = legendContainer.style.display !== 'none';
-            legendContainer.style.display = isVisible ? 'none' : 'block';
+            legendContainer.style.display = legendContainer.style.display === 'none' ? 'block' : 'none';
         }
 
         function toggleMenu() {
@@ -1075,251 +930,100 @@
             controls.style.display = controls.style.display === 'none' ? 'block' : 'none';
         }
 
-        function adjustForMobile() {
-            const isMobile = window.innerWidth <= 1024;
-            const isLandscape = window.innerWidth > window.innerHeight;
-            const chartContainer = document.querySelector('.chart-container');
-            const mapContainer = document.getElementById('map');
-            const legendContainer = document.querySelector('.legend-container');
-            const legendToggle = document.getElementById('legend-toggle');
-
-            if (isMobile) {
-                if (isLandscape) {
-                    // Styles pour mobile en mode paysage
-                    chartContainer.style.flexDirection = 'row';
-                    chartContainer.style.maxWidth = '350px';
-                    chartContainer.style.width = 'auto';
-                    chartContainer.style.right = '10px';
-                    chartContainer.style.left = 'auto';
-                    chartContainer.style.bottom = '10px';
-                    chartContainer.style.transform = 'none';
-                    mapContainer.style.height = '100%';
-                    mapContainer.style.width = '100%';
-                    legendContainer.style.display = 'block';
-                    legendToggle.style.top = '140px';
-                    legendToggle.style.left = '9px';
-                    legendToggle.style.bottom = 'auto';
-
-                    // Ajuster la taille des jauges et du texte
-                    const gauges = document.querySelectorAll('.gauge');
-                    const gaugeTexts = document.querySelectorAll('.gauge-value, .gauge-percentage, .gauge-label');
-                    gauges.forEach(gauge => {
-                        gauge.style.width = '60px';
-                        gauge.style.height = '60px';
-                    });
-                    gaugeTexts.forEach(text => {
-                        text.style.fontSize = '12px';
-                    });
-                } else {
-                    // Styles pour mobile en mode portrait
-                    chartContainer.style.flexDirection = 'row';
-                    chartContainer.style.maxWidth = '350px';
-                    chartContainer.style.width = 'auto';
-                    chartContainer.style.right = 'auto';
-                    chartContainer.style.left = '50%';
-                    chartContainer.style.transform = 'translateX(-50%)';
-                    chartContainer.style.bottom = '10px';
-                    mapContainer.style.height = '';
-                    mapContainer.style.width = '';
-                    legendContainer.style.display = 'block';
-                    legendToggle.style.top = '140px';
-                    legendToggle.style.left = '9px';
-                    legendToggle.style.bottom = 'auto';
-                }
+        function filterHospitals(status) {
+            if (!status) return;
+            const index = activeStatus.indexOf(status);
+            if (index > -1) {
+                activeStatus.splice(index, 1);
             } else {
-                // Réinitialiser les styles pour desktop
-                chartContainer.style.flexDirection = 'row';
-                chartContainer.style.maxWidth = '350px';
-                chartContainer.style.width = 'auto';
-                chartContainer.style.right = '10px';
-                chartContainer.style.left = 'auto';
-                chartContainer.style.transform = 'none';
-                chartContainer.style.bottom = '10px';
-                mapContainer.style.height = '';
-                mapContainer.style.width = '';
-                legendContainer.style.display = 'block';
-
-                const gauges = document.querySelectorAll('.gauge');
-                const gaugeTexts = document.querySelectorAll('.gauge-value, .gauge-percentage, .gauge-label');
-                gauges.forEach(gauge => {
-                    gauge.style.width = '';
-                    gauge.style.height = '';
-                });
-                gaugeTexts.forEach(text => {
-                    text.style.fontSize = '';
-                });
+                activeStatus.push(status);
             }
-            
-            if (map) {
-                map.invalidateSize();
-            }
-        }
-
-        function applyTranslations(language) {
-            console.log(`Applying translations for language: ${language}`);
-            const t = translations[language] || translations['en'];
-            console.log("Translation object:", t);
-
-            if (!t || typeof t !== 'object' || Object.keys(t).length === 0) {
-                console.error(`Invalid translations found for language: ${language}`);
-                return;
-            }
-
-            // Mise à jour des placeholders
-            const countryFilter = document.getElementById('country-filter');
-            const cityFilter = document.getElementById('city-filter');
-            if (countryFilter) countryFilter.setAttribute('placeholder', t.enterCountry || 'Enter country...');
-            if (cityFilter) cityFilter.setAttribute('placeholder', t.enterCity || 'Enter city...');
-
-            // Mise à jour de la légende
-            const legendItems = document.querySelectorAll('.legend-item .legend-text');
-            console.log(`Found ${legendItems.length} legend items`);
-            if (legendItems.length >= 3) {
-                legendItems[0].textContent = t.legendDeployed || 'Deployed';
-                legendItems[1].textContent = t.legendInProgress || 'In Progress';
-                legendItems[2].textContent = t.legendSigned || 'Signed';
-            } else {
-                console.warn("Not enough legend items found");
-            }
-
-            // Mise à jour du select pour le continent
-            const continentSelect = document.getElementById('continent-select');
-            if (continentSelect) {
-                continentSelect.options[0].text = t.continent || 'Continent';
-                // Mise à jour des options des continents
-                const continentOptions = {
-                    'Europe': t.europe || 'Europe',
-                    'North America': t.northAmerica || 'North America',
-                    'South America': t.southAmerica || 'South America',
-                    'Asia': t.asia || 'Asia',
-                    'Africa': t.africa || 'Africa',
-                    'Oceania': t.oceania || 'Oceania'
-                };
-                for (let i = 1; i < continentSelect.options.length; i++) {
-                    const option = continentSelect.options[i];
-                    option.text = continentOptions[option.value] || option.value;
-                }
-            } else {
-                console.warn("Continent select not found");
-            }
-
-            // Mise à jour des jauges
-            const gaugeLabels = document.querySelectorAll('.gauge-label');
-            console.log(`Found ${gaugeLabels.length} gauge labels`);
-            if (gaugeLabels.length >= 3) {
-                gaugeLabels[0].textContent = t.gaugesDeployed || 'Deployed';
-                gaugeLabels[1].textContent = t.gaugesInProgress || 'In Progress';
-                gaugeLabels[2].textContent = t.gaugesSigned || 'Signed';
-            } else {
-                console.warn("Not enough gauge labels found");
-            }
-
-            // Mise à jour des balises de statut (tags) de la page
-            updateStatusTags(t);
-
-            // Mise à jour des marqueurs
-            if (markerClusterGroup) {
-                updateMarkersContent(t);
-            } else {
-                console.warn("markerClusterGroup is not initialized yet.");
-            }
-
-            // Ajouter les marqueurs après avoir appliqué les traductions
+            updateStatusTagsVisually();
             addMarkers();
+            savePreferences();
         }
 
-        function updateMarkersContent(translations) {
-            markerClusterGroup.eachLayer((layer) => {
-                if (layer instanceof L.CircleMarker && layer.hospitalData) {
-                    const popupContent = createPopupContent(layer.hospitalData, translations);
-                    if (layer.getPopup()) {
-                        layer.getPopup().setContent(popupContent);
-                    } else {
-                        layer.bindPopup(popupContent);
-                    }
-                }
+        function updateStatusTagsVisually() {
+            document.querySelectorAll('.status-tag').forEach(tag => {
+                const status = tag.dataset.status;
+                tag.classList.toggle('active', activeStatus.includes(status));
             });
         }
-    
 
-        function createPopupContent(hospital, translations) {
-            const statusTag = getStatusTag(hospital.status, translations, true);
-            return `
-                <div class="popup-content">
-                    <h3 class="popup-title" style="color: #00aaff;">${hospital.name}</h3>
-                    <img class="popup-image" src="${hospital.imageUrl}" alt="${hospital.name}">
-                    <p><strong>${translations.address}:</strong><br>${hospital.address}</p>
-                    <p><a href="${hospital.website}" target="_blank" style="color: var(--hyperlink-color); font-size: 1.2em;">${translations.visitWebsite}</a></p>
-                    <p><strong>${translations.status}:</strong> ${statusTag}</p>
-                </div>
-            `;
-        }
+        // Gestion des événements
+        function addEventListeners() {
+            window.addEventListener('load', adjustForMobile);
+            window.addEventListener('resize', debounce(adjustForMobile, 250));
+            window.addEventListener('orientationchange', () => {
+                setTimeout(adjustForMobile, 100);
+            });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("DOM content loaded");
-            initApplication();
+            document.getElementById('language-select').addEventListener('change', function() {
+                const openPopups = [];
+                map.eachLayer(function(layer) {
+                    if (layer instanceof L.CircleMarker && layer.isPopupOpen()) {
+                        openPopups.push({
+                            latlng: layer.getLatLng(),
+                            hospitalData: layer.hospitalData
+                        });
+                    }
+                });
+                
+                applyTranslations(this.value);
+                savePreferences();
+                addMarkers();
+                
+                openPopups.forEach(popup => {
+                    const marker = findMarkerByLatLng(popup.latlng);
+                    if (marker) {
+                        const newContent = createPopupContent(popup.hospitalData);
+                        marker.bindPopup(newContent).openPopup();
+                    }
+                });
+            });
 
-            const filterInputs = document.querySelectorAll('#country-filter, #city-filter');
-            filterInputs.forEach(input => {
+            document.getElementById('continent-select').addEventListener('change', () => {
+                addMarkers();
+                savePreferences();
+            });
+
+            document.querySelectorAll('#country-filter, #city-filter').forEach(input => {
                 input.addEventListener('input', debounce(() => {
                     addMarkers();
                     savePreferences();
                 }, 300));
             });
 
-            document.getElementById('language-select').addEventListener('change', function() {
-                const selectedLanguage = this.value;
-                console.log(`Language changed to: ${selectedLanguage}`);
-                applyTranslations(selectedLanguage);
-                savePreferences();
-            });
-
-            document.getElementById('continent-select').addEventListener('change', function() {
-                addMarkers();
-                savePreferences();
-            });
-
             document.querySelectorAll('.status-tag').forEach(tag => {
-                tag.addEventListener('click', (e) => {
-                    const status = e.target.dataset.status;
-                    if (status) {
-                        filterHospitals(status);
-                    }
-                });
+                tag.addEventListener('click', () => filterHospitals(tag.dataset.status));
             });
 
             document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
             document.getElementById('hamburger').addEventListener('click', toggleMenu);
             document.getElementById('legend-toggle').addEventListener('click', toggleLegend);
-            
-            window.addEventListener('load', adjustForMobile);
-            window.addEventListener('resize', adjustForMobile);
-            window.addEventListener('orientationchange', () => {
-                setTimeout(adjustForMobile, 100);
-            });
-        });
+        }
 
+        // Fonction utilitaire
         function debounce(func, wait) {
             let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
+            return function(...args) {
                 clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
+                timeout = setTimeout(() => func.apply(this, args), wait);
             };
         }
 
-        function checkTranslations() {
-            console.log("Checking translations structure:");
-            for (const lang in translations) {
-                console.log(`Language: ${lang}`);
-                console.log(translations[lang]);
-            }
+        function findMarkerByLatLng(latlng) {
+            let foundMarker = null;
+            markerClusterGroup.eachLayer(function(layer) {
+                if (layer instanceof L.CircleMarker && layer.getLatLng().equals(latlng)) {
+                    foundMarker = layer;
+                }
+            });
+            return foundMarker;
         }
 
-        document.addEventListener('DOMContentLoaded', checkTranslations);
+        // Initialisation de l'application
+        document.addEventListener('DOMContentLoaded', initApplication);
     </script>
 </body>
 </html>
