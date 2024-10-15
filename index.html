@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Galeon Hospitals Map</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
     <style>
         /* Variables CSS */
         :root {
@@ -32,7 +36,8 @@
         }
 
         /* Styles de base */
-        body, html {
+        body,
+        html {
             margin: 0;
             padding: 0;
             height: 100%;
@@ -41,22 +46,24 @@
             color: var(--text-color-light);
             transition: background-color 0.3s, color 0.3s;
         }
-    
+
         #map {
             height: 100vh;
             width: 100vw;
-            position: absolute;
-            top: 0;
-            left: 0;
         }
 
         /* Styles communs pour les contrôles */
-        .controls, #hamburger, #legend-toggle, #theme-toggle, .legend-container, .chart-container {
+        .controls,
+        #hamburger,
+        #legend-toggle,
+        #theme-toggle,
+        .legend-container,
+        .chart-container {
             background: var(--control-background-light);
             color: var(--text-color-light);
             border: 1px solid var(--control-border-light);
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
         }
 
@@ -84,7 +91,9 @@
         }
 
         /* Styles pour les boutons circulaires */
-        #hamburger, #legend-toggle, #theme-toggle {
+        #hamburger,
+        #legend-toggle,
+        #theme-toggle {
             position: fixed;
             z-index: 1000;
             width: 40px;
@@ -96,12 +105,24 @@
             cursor: pointer;
         }
 
-        #hamburger { top: 85px; left: 8px; }
-        #legend-toggle { bottom: 10px; left: 10px; }
-        #theme-toggle { top: 10px; right: 10px; }
+        #hamburger {
+            top: 85px;
+            left: 8px;
+        }
+
+        #legend-toggle {
+            bottom: 10px;
+            left: 10px;
+        }
+
+        #theme-toggle {
+            top: 10px;
+            right: 10px;
+        }
 
         /* Styles pour la légende et les graphiques */
-        .legend-container, .chart-container {
+        .legend-container,
+        .chart-container {
             position: fixed;
             padding: 10px;
             z-index: 1000;
@@ -120,7 +141,12 @@
             margin-right: 10px;
         }
 
-        .legend-container { bottom: 10px; left: 60px; display: none; }
+        .legend-container {
+            bottom: 10px;
+            left: 60px;
+            display: none;
+        }
+
         .chart-container {
             bottom: 10px;
             right: 10px;
@@ -155,23 +181,25 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
         }
 
         .gauge-percentage {
             margin-top: 5px;
-            font-size: 16px;
+            font-size: 14px;
         }
 
         .gauge-label {
             margin-top: 5px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             white-space: nowrap;
         }
 
-        .gauge-value, .gauge-percentage, .gauge-label {
+        .gauge-value,
+        .gauge-percentage,
+        .gauge-label {
             text-align: center;
             width: 100%;
         }
@@ -189,9 +217,20 @@
         }
 
         /* Couleurs des tags */
-        .status-deployed { background-color: #b0e2b5; color: #1e7b34; }
-        .status-in-progress { background-color: #ffe5a0; color: #6e5002; }
-        .status-signed { background-color: #9ecbff; color: #0056b3; }
+        .status-deployed {
+            background-color: #b0e2b5;
+            color: #1e7b34;
+        }
+
+        .status-in-progress {
+            background-color: #ffe5a0;
+            color: #6e5002;
+        }
+
+        .status-signed {
+            background-color: #9ecbff;
+            color: #0056b3;
+        }
 
         /* Styles des tags actifs */
         .status-tag.active {
@@ -200,9 +239,18 @@
             opacity: 1;
         }
 
-        .status-deployed.active { background-color: #28a745; }
-        .status-in-progress.active { background-color: #ffc107; color: #856404; }
-        .status-signed.active { background-color: #007bff; }
+        .status-deployed.active {
+            background-color: #28a745;
+        }
+
+        .status-in-progress.active {
+            background-color: #ffc107;
+            color: #856404;
+        }
+
+        .status-signed.active {
+            background-color: #007bff;
+        }
 
         /* Mode sombre */
         body.dark-mode {
@@ -219,14 +267,16 @@
         body.dark-mode .legend-container,
         body.dark-mode .chart-container,
         body.dark-mode .leaflet-popup-content-wrapper,
-        body.dark-mode .leaflet-control-zoom-in, 
+        body.dark-mode .leaflet-control-zoom-in,
         body.dark-mode .leaflet-control-zoom-out {
             background-color: var(--control-background-dark);
             color: var(--text-color-dark);
             border-color: var(--control-border-dark);
         }
 
-        body.dark-mode #theme-toggle { color: yellow; }
+        body.dark-mode #theme-toggle {
+            color: yellow;
+        }
 
         /* Styles des popups */
         .leaflet-popup-content-wrapper {
@@ -235,7 +285,7 @@
             border-radius: 8px;
             padding: 0;
             border: none;
-            box-shadow: 0 3px 14px rgba(0,0,0,0.2);
+            box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2);
             max-width: 250px;
             width: 300px;
         }
@@ -246,36 +296,49 @@
             width: auto !important;
         }
 
-        .leaflet-popup-tip-container { display: none; }
+        .leaflet-popup-tip-container {
+            display: none;
+        }
 
         /* Styles du contenu du popup */
-        .popup-content { text-align: center; }
+        .popup-content {
+            text-align: center;
+        }
+
         .popup-title {
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 10px;
             word-wrap: break-word;
         }
+
         .popup-image {
             max-width: 100%;
             height: auto;
             margin-bottom: 10px;
         }
+
         .popup-content p {
             margin: 5px 0;
             word-wrap: break-word;
             overflow-wrap: break-word;
             font-size: 14px;
         }
+
         .popup-content a {
             color: var(--primary-color);
             text-decoration: none;
             word-break: break-all;
             font-size: 14px;
         }
-        .popup-content a:hover { text-decoration: underline; }
 
-        .leaflet-control-attribution { display: none; }
+        .popup-content a:hover {
+            text-decoration: underline;
+        }
+
+        .leaflet-control-attribution {
+            display: none;
+        }
 
         /* Media queries pour le responsive */
         @media (max-width: 1024px) {
@@ -283,58 +346,138 @@
                 max-width: 220px;
                 padding: 5px;
             }
-            .leaflet-popup-content h3 { font-size: 14px; }
-            .leaflet-popup-content img { width: 100px; }
-            .leaflet-popup-content p, .leaflet-popup-content a { font-size: 12px; }
-            .gauge { width: 60px; height: 60px; }
-            .gauge-value, .gauge-percentage, .gauge-label { font-size: 12px; }
-            .gauge-wrapper { padding: 0px; }
-            .legend-container { bottom: 150px; left: 10px; }
+
+            .leaflet-popup-content h3 {
+                font-size: 14px;
+            }
+
+            .leaflet-popup-content img {
+                width: 100px;
+            }
+
+            .leaflet-popup-content p,
+            .leaflet-popup-content a {
+                font-size: 12px;
+            }
+
+            .gauge {
+                width: 60px;
+                height: 60px;
+            }
+
+            .gauge-value,
+            .gauge-percentage,
+            .gauge-label {
+                font-size: 12px;
+            }
+
+            .gauge-wrapper {
+                padding: 0px;
+            }
+
+            .legend-container {
+                bottom: 150px;
+                left: 10px;
+            }
+
             .chart-container {
                 left: 50%;
                 transform: translateX(-50%);
                 width: auto;
                 max-width: 350px;
             }
-            #legend-toggle { top: 140px; left: 9px; display: block; }
-            .controls { width: 180px; padding: 10px; font-size: 12px; }
+
+            #legend-toggle {
+                top: 140px;
+                left: 9px;
+                display: block;
+            }
+
+            #map {
+                height: 100vh;
+                width: 100vw;
+            }
+
+            .controls {
+                width: 180px;
+                padding: 10px;
+                font-size: 12px;
+            }
+
             .status-tag {
                 padding: 2px 6px;
                 margin: 5px;
                 font-size: 12px;
             }
-            .controls select, .controls input { font-size: 12px; padding: 5px; }
-            .legend-item { font-size: 13px; margin-bottom: 3px; }
-            .legend-color { width: 15px; height: 15px; margin-right: 5px; }
+
+            .controls select,
+            .controls input {
+                font-size: 12px;
+                padding: 5px;
+            }
+
+            .legend-item {
+                font-size: 13px;
+                margin-bottom: 3px;
+            }
+
+            .legend-color {
+                width: 15px;
+                height: 15px;
+                margin-right: 5px;
+            }
         }
 
         @media (max-width: 1024px) and (orientation: landscape) {
-            .gauge-wrapper { padding: 0px; }
-            #map { height: 100vh; width: 100vw; }
-            body, html {
-                margin: 0;
-                padding: 0;
-                overflow: hidden; /* Empêche le scroll */
+            .gauge-wrapper {
+                padding: 0px;
             }
+
+            #map {
+                height: 100vw;
+            }
+
             .chart-container {
                 right: 10px;
                 left: auto;
                 transform: none;
                 max-width: 350px;
             }
-            .legend-container { bottom: 10px; left: 10px; }
-            #legend-toggle { top: 140px; left: 10px; display: block; }
+
+            .legend-container {
+                bottom: 10px;
+                left: 10px;
+            }
+
+            #legend-toggle {
+                top: 140px;
+                left: 10px;
+                display: block;
+            }
+        }
+
+        body {
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        #map {
+            height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+            width: 100vw;
         }
     </style>
 </head>
+
 <body>
     <div id="map"></div>
     <button id="hamburger" aria-label="Toggle menu">☰</button>
     <button id="legend-toggle" aria-label="Toggle legend"><i class="fas fa-info"></i></button>
     <div class="legend-container">
-        <div class="legend-item"><span class="legend-color" style="background-color: green;"></span><span class="legend-text">Deployed</span></div>
-        <div class="legend-item"><span class="legend-color" style="background-color: orange;"></span><span class="legend-text">In Progress</span></div>
-        <div class="legend-item"><span class="legend-color" style="background-color: rgb(0, 140, 255);"></span><span class="legend-text">Signed</span></div>
+        <div class="legend-item"><span class="legend-color" style="background-color: green;"></span><span
+                class="legend-text">Deployed</span></div>
+        <div class="legend-item"><span class="legend-color" style="background-color: orange;"></span><span
+                class="legend-text">In Progress</span></div>
+        <div class="legend-item"><span class="legend-color" style="background-color: rgb(0, 140, 255);"></span><span
+                class="legend-text">Signed</span></div>
     </div>
     <div class="controls">
         <select id="language-select">
@@ -374,7 +517,7 @@
             <span class="status-tag status-deployed" data-status="deployed">Deployed</span>
             <span class="status-tag status-in-progress" data-status="in progress">In Progress</span>
             <span class="status-tag status-signed" data-status="signed">Signed</span>
-        </div>        
+        </div>
     </div>
     <div class="chart-container">
         <div class="gauge-wrapper">
@@ -382,19 +525,11 @@
                 <svg viewBox="0 0 36 36">
                     <path d="M18 2.0845
                         a 15.9155 15.9155 0 0 1 0 31.831
-                        a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#eee"
-                        stroke-width="3"
-                    />
+                        a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#eee" stroke-width="3" />
                     <path d="M18 2.0845
                         a 15.9155 15.9155 0 0 1 0 31.831
-                        a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#4CAF50"
-                        stroke-width="3"
-                        stroke-dasharray="0, 100"
-                    />
+                        a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#4CAF50" stroke-width="3"
+                        stroke-dasharray="0, 100" />
                 </svg>
                 <div class="gauge-value"></div>
             </div>
@@ -406,411 +541,397 @@
                 <svg viewBox="0 0 36 36">
                     <path d="M18 2.0845
                     a 15.9155 15.9155 0 0 1 0 31.831
-                    a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#eee"
-                    stroke-width="3"
-                />
-                <path d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#eee" stroke-width="3" />
+                    <path d="M18 2.0845
                     a 15.9155 15.9155 0 0 1 0 31.831
-                    a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#FFA500"
-                    stroke-width="3"
-                    stroke-dasharray="0, 100"
-                />
-            </svg>
-            <div class="gauge-value"></div>
+                    a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#FFA500" stroke-width="3"
+                        stroke-dasharray="0, 100" />
+                </svg>
+                <div class="gauge-value"></div>
+            </div>
+            <div class="gauge-percentage"></div>
+            <div class="gauge-label">In Progress</div>
         </div>
-        <div class="gauge-percentage"></div>
-        <div class="gauge-label">In Progress</div>
-    </div>
-    <div class="gauge-wrapper">
-        <div id="signed-progress" class="gauge">
-            <svg viewBox="0 0 36 36">
-                <path d="M18 2.0845
+        <div class="gauge-wrapper">
+            <div id="signed-progress" class="gauge">
+                <svg viewBox="0 0 36 36">
+                    <path d="M18 2.0845
                     a 15.9155 15.9155 0 0 1 0 31.831
-                    a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#eee"
-                    stroke-width="3"
-                />
-                <path d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#eee" stroke-width="3" />
+                    <path d="M18 2.0845
                     a 15.9155 15.9155 0 0 1 0 31.831
-                    a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#2196F3"
-                    stroke-width="3"
-                    stroke-dasharray="0, 100"
-                />
-            </svg>
-            <div class="gauge-value"></div>
+                    a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#2196F3" stroke-width="3"
+                        stroke-dasharray="0, 100" />
+                </svg>
+                <div class="gauge-value"></div>
+            </div>
+            <div class="gauge-percentage"></div>
+            <div class="gauge-label">Signed</div>
         </div>
-        <div class="gauge-percentage"></div>
-        <div class="gauge-label">Signed</div>
     </div>
-</div>
-<button id="theme-toggle" aria-label="Toggle dark mode"><i class="fas fa-moon"></i></button>
+    <button id="theme-toggle" aria-label="Toggle dark mode"><i class="fas fa-moon"></i></button>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
-<script src="translations.js"></script>
-<script src="hospitals.js"></script>
-<script>
-    // Constantes
-    const MOBILE_BREAKPOINT = 1024;
-    const DEFAULT_LANGUAGE = 'en';
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+    <script src="translations.js"></script>
+    <script src="hospitals.js"></script>
+    <script>
+        // Constantes
+        const MOBILE_BREAKPOINT = 1024;
+        const DEFAULT_LANGUAGE = 'en';
 
-    // Variables globales
-    let map, markers = [], activeStatus = [], language = DEFAULT_LANGUAGE;
-    let darkMode = false;
-    let markerClusterGroup;
-    let currentTranslations = {};
+        // Variables globales
+        let map, markers = [], activeStatus = [], language = DEFAULT_LANGUAGE;
+        let darkMode = false;
+        let markerClusterGroup;
+        let currentTranslations = {};
 
-    const gauges = {};
-    const colors = {
-        'Deployed': '#4CAF50',
-        'In Progress': '#FFA500',
-        'Signed': '#2196F3'
-    };
+        const gauges = {};
+        const colors = {
+            'Deployed': '#4CAF50',
+            'In Progress': '#FFA500',
+            'Signed': '#2196F3'
+        };
 
-    // Fonction principale d'initialisation
-    function initApplication() {
-        initMap();
-        initGauges();
-        loadPreferences();
-        addEventListeners();
-        adjustForMobile();
-    }
-
-    // Initialisation de la carte
-    function initMap() {
-        if (!map) {
-            map = L.map('map', {
-                center: [50, 10],
-                zoom: 4,
-                maxZoom: 18
-            });
-
-            markerClusterGroup = L.markerClusterGroup({
-                maxClusterRadius: 50,
-                spiderfyOnMaxZoom: true,
-                showCoverageOnHover: false,
-                zoomToBoundsOnClick: true
-            });
-
-            map.addLayer(markerClusterGroup);
-            updateTileLayer();
+        // Fonction principale d'initialisation
+        function initApplication() {
+            initMap();
+            initGauges();
+            loadPreferences();
+            addEventListeners();
+            adjustForMobile();
         }
-    }
 
-    // Initialisation des jauges
-    function initGauges() {
-        ['Deployed', 'In Progress', 'Signed'].forEach(initGauge);
-    }
+        // Initialisation de la carte
+        function initMap() {
+            if (!map) {
+                map = L.map('map', {
+                    center: [50, 10],
+                    zoom: 4,
+                    maxZoom: 18
+                });
 
-    function initGauge(status) {
-        const element = document.getElementById(`${status.toLowerCase().replace(' ', '-')}-progress`);
-        if (element) {
-            const svg = element.querySelector('svg');
-            const valueContainer = element.querySelector('.gauge-value');
-            
-            if (svg && valueContainer) {
-                gauges[status] = {
-                    path: svg.querySelector(`path[stroke="${colors[status]}"]`),
-                    element: element,
-                    valueContainer: valueContainer
-                };
+                markerClusterGroup = L.markerClusterGroup({
+                    maxClusterRadius: 50,
+                    spiderfyOnMaxZoom: true,
+                    showCoverageOnHover: false,
+                    zoomToBoundsOnClick: true
+                });
+
+                map.addLayer(markerClusterGroup);
+                updateTileLayer();
             }
         }
-    }
 
-    // Mise à jour des jauges
-    function updateGauges() {
-        const statusCounts = hospitals.reduce((acc, hospital) => {
-            acc[hospital.status] = (acc[hospital.status] || 0) + 1;
-            return acc;
-        }, {});
+        // Initialisation des jauges
+        function initGauges() {
+            ['Deployed', 'In Progress', 'Signed'].forEach(initGauge);
+        }
 
-        const totalHospitals = hospitals.length;
+        function initGauge(status) {
+            const element = document.getElementById(`${status.toLowerCase().replace(' ', '-')}-progress`);
+            if (element) {
+                const svg = element.querySelector('svg');
+                const valueContainer = element.querySelector('.gauge-value');
 
-        Object.keys(gauges).forEach(status => {
-            const count = statusCounts[status] || 0;
-            const percentage = (count / totalHospitals) * 100 || 0;
-
-            if (gauges[status]) {
-                gauges[status].path.setAttribute("stroke-dasharray", `${percentage}, 100`);
-                gauges[status].valueContainer.textContent = count;
-
-                const percentageElement = gauges[status].element.nextElementSibling;
-                if (percentageElement) {
-                    percentageElement.textContent = `(${percentage.toFixed(1)}%)`;
+                if (svg && valueContainer) {
+                    gauges[status] = {
+                        path: svg.querySelector(`path[stroke="${colors[status]}"]`),
+                        element: element,
+                        valueContainer: valueContainer
+                    };
                 }
             }
-        });
-    }
-
-    // Ajustement pour le mobile
-    function adjustForMobile() {
-        const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
-        const isLandscape = window.innerWidth > window.innerHeight;
-        
-        adjustChartContainer(isMobile, isLandscape);
-        adjustMapContainer(isMobile, isLandscape);
-        adjustLegendContainer(isMobile, isLandscape);
-        adjustGauges(isMobile);
-
-        if (map) {
-            map.invalidateSize();
         }
-    }
 
-    function adjustChartContainer(isMobile, isLandscape) {
-        const chartContainer = document.querySelector('.chart-container');
-        if (isMobile) {
-            if (isLandscape) {
+        // Mise à jour des jauges
+        function updateGauges() {
+            const statusCounts = hospitals.reduce((acc, hospital) => {
+                acc[hospital.status] = (acc[hospital.status] || 0) + 1;
+                return acc;
+            }, {});
+
+            const totalHospitals = hospitals.length;
+
+            Object.keys(gauges).forEach(status => {
+                const count = statusCounts[status] || 0;
+                const percentage = (count / totalHospitals) * 100 || 0;
+
+                if (gauges[status]) {
+                    gauges[status].path.setAttribute("stroke-dasharray", `${percentage}, 100`);
+                    gauges[status].valueContainer.textContent = count;
+
+                    const percentageElement = gauges[status].element.nextElementSibling;
+                    if (percentageElement) {
+                        percentageElement.textContent = `(${percentage.toFixed(1)}%)`;
+                    }
+                }
+            });
+        }
+
+        // Ajustement pour le mobile
+        function adjustForMobile() {
+            const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
+            const isLandscape = window.innerWidth > window.innerHeight;
+
+            adjustChartContainer(isMobile, isLandscape);
+            adjustMapContainer(isMobile, isLandscape);
+            adjustLegendContainer(isMobile, isLandscape);
+            adjustGauges(isMobile);
+
+            if (map) {
+                map.invalidateSize();
+            }
+        }
+
+        // Fonctions d'ajustement
+        function adjustChartContainer(isMobile, isLandscape) {
+            const chartContainer = document.querySelector('.chart-container');
+            if (isMobile) {
+                if (isLandscape) {
+                    Object.assign(chartContainer.style, {
+                        flexDirection: 'row',
+                        maxWidth: '350px',
+                        width: 'auto',
+                        right: '10px',
+                        left: 'auto',
+                        bottom: '10px',
+                        transform: 'none'
+                    });
+                } else {
+                    Object.assign(chartContainer.style, {
+                        flexDirection: 'row',
+                        maxWidth: '350px',
+                        width: 'auto',
+                        right: 'auto',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        bottom: '10px'
+                    });
+                }
+            } else {
                 Object.assign(chartContainer.style, {
                     flexDirection: 'row',
                     maxWidth: '350px',
                     width: 'auto',
                     right: '10px',
                     left: 'auto',
-                    bottom: '10px',
-                    transform: 'none'
-                });
-            } else {
-                Object.assign(chartContainer.style, {
-                    flexDirection: 'row',
-                    maxWidth: '350px',
-                    width: 'auto',
-                    right: 'auto',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
+                    transform: 'none',
                     bottom: '10px'
                 });
             }
-        } else {
-            Object.assign(chartContainer.style, {
-                flexDirection: 'row',
-                maxWidth: '350px',
-                width: 'auto',
-                right: '10px',
-                left: 'auto',
-                transform: 'none',
-                bottom: '10px'
-            });
         }
-    }
 
-    function adjustMapContainer(isMobile, isLandscape) {
-        const mapContainer = document.getElementById('map');
-        if (isMobile && isLandscape) {
-            mapContainer.style.height = '100%';
-            mapContainer.style.width = '100%';
-        } else {
-            mapContainer.style.height = '';
-            mapContainer.style.width = '';
+        function adjustMapContainer(isMobile, isLandscape) {
+            const mapContainer = document.getElementById('map');
+            if (isMobile && isLandscape) {
+                mapContainer.style.height = '100%';
+                mapContainer.style.width = '100%';
+            } else {
+                mapContainer.style.height = '';
+                mapContainer.style.width = '';
+            }
         }
-    }
 
-    function adjustLegendContainer(isMobile, isLandscape) {
-        const legendContainer = document.querySelector('.legend-container');
-        const legendToggle = document.getElementById('legend-toggle');
+        function adjustLegendContainer(isMobile, isLandscape) {
+            const legendContainer = document.querySelector('.legend-container');
+            const legendToggle = document.getElementById('legend-toggle');
 
-        if (isMobile) {
-            if (isLandscape) {
-                legendContainer.style.display = 'block';
-                Object.assign(legendToggle.style, {
-                    top: '140px',
-                    left: '9px',
-                    bottom: 'auto'
-                });
+            if (isMobile) {
+                if (isLandscape) {
+                    legendContainer.style.display = 'block';
+                    Object.assign(legendToggle.style, {
+                        top: '140px',
+                        left: '9px',
+                        bottom: 'auto'
+                    });
+                } else {
+                    legendContainer.style.display = 'block';
+                    Object.assign(legendToggle.style, {
+                        top: '140px',
+                        left: '9px',
+                        bottom: 'auto'
+                    });
+                }
             } else {
                 legendContainer.style.display = 'block';
                 Object.assign(legendToggle.style, {
-                    top: '140px',
-                    left: '9px',
-                    bottom: 'auto'
+                    top: '',
+                    left: '',
+                    bottom: ''
                 });
             }
-        } else {
-            legendContainer.style.display = 'block';
-            Object.assign(legendToggle.style, {
-                top: '',
-                left: '',
-                bottom: ''
-            });
         }
-    }
 
-    function adjustGauges(isMobile) {
-        const gauges = document.querySelectorAll('.gauge');
-        const gaugeTexts = document.querySelectorAll('.gauge-value, .gauge-percentage, .gauge-label');
+        function adjustGauges(isMobile) {
+            const gauges = document.querySelectorAll('.gauge');
+            const gaugeTexts = document.querySelectorAll('.gauge-value, .gauge-percentage, .gauge-label');
 
-        if (isMobile) {
-            gauges.forEach(gauge => {
-                gauge.style.width = '60px';
-                gauge.style.height = '60px';
-            });
-            gaugeTexts.forEach(text => {
-                text.style.fontSize = '12px';
-            });
-        } else {
-            gauges.forEach(gauge => {
-                gauge.style.width = '';
-                gauge.style.height = '';
-            });
-            gaugeTexts.forEach(text => {
-                text.style.fontSize = '';
-            });
+            if (isMobile) {
+                gauges.forEach(gauge => {
+                    gauge.style.width = '60px';
+                    gauge.style.height = '60px';
+                });
+                gaugeTexts.forEach(text => {
+                    text.style.fontSize = '12px';
+                });
+            } else {
+                gauges.forEach(gauge => {
+                    gauge.style.width = '';
+                    gauge.style.height = '';
+                });
+                gaugeTexts.forEach(text => {
+                    text.style.fontSize = '';
+                });
+            }
         }
-    }
 
-    // Gestion des préférences utilisateur
-    function savePreferences() {
-        const preferences = {
-            theme: darkMode ? 'dark' : 'light',
-            language: document.getElementById('language-select').value,
-            continent: document.getElementById('continent-select').value,
-            country: document.getElementById('country-filter').value,
-            city: document.getElementById('city-filter').value,
-            activeStatus: activeStatus
-        };
-        localStorage.setItem('galeonMapPreferences', JSON.stringify(preferences));
-    }
-
-    function loadPreferences() {
-        const savedPreferences = localStorage.getItem('galeonMapPreferences');
-        if (savedPreferences) {
-            const preferences = JSON.parse(savedPreferences);
-            language = preferences.language || DEFAULT_LANGUAGE;
-            document.getElementById('language-select').value = language;
-            
-            darkMode = preferences.theme === 'dark';
-            document.body.classList.toggle('dark-mode', darkMode);
-            updateTileLayer();
-
-            document.getElementById('continent-select').value = preferences.continent || '';
-            document.getElementById('country-filter').value = preferences.country || '';
-            document.getElementById('city-filter').value = preferences.city || '';
-
-            activeStatus = preferences.activeStatus || [];
-            
-            applyTranslations(language);
-        } else {
-            applyTranslations(DEFAULT_LANGUAGE);
-        }
-    }
-
-    // Gestion des traductions
-    function applyTranslations(language) {
-        currentTranslations = translations[language] || translations[DEFAULT_LANGUAGE];
-        
-        updatePlaceholders();
-        updateLegend();
-        updateContinentSelect();
-        updateGaugeLabels();
-        updateStatusTags();
-        updateMarkers();
-        
-        addMarkers();
-    }
-
-    function updatePlaceholders() {
-        const countryFilter = document.getElementById('country-filter');
-        const cityFilter = document.getElementById('city-filter');
-        if (countryFilter) countryFilter.setAttribute('placeholder', currentTranslations.enterCountry || 'Enter country...');
-        if (cityFilter) cityFilter.setAttribute('placeholder', currentTranslations.enterCity || 'Enter city...');
-    }
-
-    function updateLegend() {
-        const legendItems = document.querySelectorAll('.legend-item .legend-text');
-        if (legendItems.length >= 3) {
-            legendItems[0].textContent = currentTranslations.legendDeployed || 'Deployed';
-            legendItems[1].textContent = currentTranslations.legendInProgress || 'In Progress';
-            legendItems[2].textContent = currentTranslations.legendSigned || 'Signed';
-        }
-    }
-
-    function updateContinentSelect() {
-        const continentSelect = document.getElementById('continent-select');
-        if (continentSelect) {
-            continentSelect.options[0].text = currentTranslations.continent || 'Continent';
-            const continentOptions = {
-                'Europe': currentTranslations.europe || 'Europe',
-                'North America': currentTranslations.northAmerica || 'North America',
-                'South America': currentTranslations.southAmerica || 'South America',
-                'Asia': currentTranslations.asia || 'Asia',
-                'Africa': currentTranslations.africa || 'Africa',
-                'Oceania': currentTranslations.oceania || 'Oceania'
+        // Gestion des préférences utilisateur
+        function savePreferences() {
+            const preferences = {
+                theme: darkMode ? 'dark' : 'light',
+                language: document.getElementById('language-select').value,
+                continent: document.getElementById('continent-select').value,
+                country: document.getElementById('country-filter').value,
+                city: document.getElementById('city-filter').value,
+                activeStatus: activeStatus
             };
-            for (let i = 1; i < continentSelect.options.length; i++) {
-                const option = continentSelect.options[i];
-                option.text = continentOptions[option.value] || option.value;
+            localStorage.setItem('galeonMapPreferences', JSON.stringify(preferences));
+        }
+
+        function loadPreferences() {
+            const savedPreferences = localStorage.getItem('galeonMapPreferences');
+            if (savedPreferences) {
+                const preferences = JSON.parse(savedPreferences);
+                language = preferences.language || DEFAULT_LANGUAGE;
+                document.getElementById('language-select').value = language;
+
+                darkMode = preferences.theme === 'dark';
+                document.body.classList.toggle('dark-mode', darkMode);
+                updateTileLayer();
+
+                document.getElementById('continent-select').value = preferences.continent || '';
+                document.getElementById('country-filter').value = preferences.country || '';
+                document.getElementById('city-filter').value = preferences.city || '';
+
+                activeStatus = preferences.activeStatus || [];
+
+                applyTranslations(language);
+            } else {
+                applyTranslations(DEFAULT_LANGUAGE);
             }
         }
-    }
 
-    function updateGaugeLabels() {
-        const gaugeLabels = document.querySelectorAll('.gauge-label');
-        if (gaugeLabels.length >= 3) {
-            gaugeLabels[0].textContent = currentTranslations.gaugesDeployed || 'Deployed';
-            gaugeLabels[1].textContent = currentTranslations.gaugesInProgress || 'In Progress';
-            gaugeLabels[2].textContent = currentTranslations.gaugesSigned || 'Signed';
+        // Gestion des traductions
+        function applyTranslations(language) {
+            currentTranslations = translations[language] || translations[DEFAULT_LANGUAGE];
+
+            updatePlaceholders();
+            updateLegend();
+            updateContinentSelect();
+            updateGaugeLabels();
+            updateStatusTags();
+            updateMarkers();
+
+            addMarkers();
         }
-    }
 
-    function updateStatusTags() {
-        const statusTags = document.querySelectorAll('.status-tag');
-        statusTags.forEach(tag => {
-            const status = tag.dataset.status;
-            let translatedText;
-            switch (status) {
-                case 'deployed':
-                    translatedText = currentTranslations.deployed || currentTranslations.statusDeployed || 'Deployed';
-                    break;
-                case 'in progress':
-                    translatedText = currentTranslations.inProgress || currentTranslations.statusInProgress || 'In Progress';
-                    break;
-                case 'signed':
-                    translatedText = currentTranslations.signed || currentTranslations.statusSigned || 'Signed';
-                    break;
-                default:
-                    translatedText = status;
+        // Fonctions de mis à jour
+        function updatePlaceholders() {
+            const countryFilter = document.getElementById('country-filter');
+            const cityFilter = document.getElementById('city-filter');
+            if (countryFilter) countryFilter.setAttribute('placeholder', currentTranslations.enterCountry || 'Enter country...');
+            if (cityFilter) cityFilter.setAttribute('placeholder', currentTranslations.enterCity || 'Enter city...');
+        }
+
+        function updateLegend() {
+            const legendItems = document.querySelectorAll('.legend-item .legend-text');
+            if (legendItems.length >= 3) {
+                legendItems[0].textContent = currentTranslations.legendDeployed || 'Deployed';
+                legendItems[1].textContent = currentTranslations.legendInProgress || 'In Progress';
+                legendItems[2].textContent = currentTranslations.legendSigned || 'Signed';
             }
-            tag.textContent = translatedText;
-        });
-    }
+        }
 
-    function updateMarkers() {
-        if (markerClusterGroup) {
-            markerClusterGroup.eachLayer((layer) => {
-                if (layer instanceof L.CircleMarker && layer.hospitalData) {
-                    const popupContent = createPopupContent(layer.hospitalData);
-                    if (layer.getPopup()) {
-                        layer.getPopup().setContent(popupContent);
-                    } else {
-                        layer.bindPopup(popupContent);
-                    }
+        function updateContinentSelect() {
+            const continentSelect = document.getElementById('continent-select');
+            if (continentSelect) {
+                continentSelect.options[0].text = currentTranslations.continent || 'Continent';
+                const continentOptions = {
+                    'Europe': currentTranslations.europe || 'Europe',
+                    'North America': currentTranslations.northAmerica || 'North America',
+                    'South America': currentTranslations.southAmerica || 'South America',
+                    'Asia': currentTranslations.asia || 'Asia',
+                    'Africa': currentTranslations.africa || 'Africa',
+                    'Oceania': currentTranslations.oceania || 'Oceania'
+                };
+                for (let i = 1; i < continentSelect.options.length; i++) {
+                    const option = continentSelect.options[i];
+                    option.text = continentOptions[option.value] || option.value;
                 }
+            }
+        }
+
+        function updateGaugeLabels() {
+            const gaugeLabels = document.querySelectorAll('.gauge-label');
+            if (gaugeLabels.length >= 3) {
+                gaugeLabels[0].textContent = currentTranslations.gaugesDeployed || 'Deployed';
+                gaugeLabels[1].textContent = currentTranslations.gaugesInProgress || 'In Progress';
+                gaugeLabels[2].textContent = currentTranslations.gaugesSigned || 'Signed';
+            }
+        }
+
+        function updateStatusTags() {
+            const statusTags = document.querySelectorAll('.status-tag');
+            statusTags.forEach(tag => {
+                const status = tag.dataset.status;
+                let translatedText;
+                switch (status) {
+                    case 'deployed':
+                        translatedText = currentTranslations.deployed || currentTranslations.statusDeployed || 'Deployed';
+                        break;
+                    case 'in progress':
+                        translatedText = currentTranslations.inProgress || currentTranslations.statusInProgress || 'In Progress';
+                        break;
+                    case 'signed':
+                        translatedText = currentTranslations.signed || currentTranslations.statusSigned || 'Signed';
+                        break;
+                    default:
+                        translatedText = status;
+                }
+                tag.textContent = translatedText;
             });
         }
-    }
 
-    // Gestion des marqueurs
-    function addMarkers() {
-        const selectedContinent = document.getElementById('continent-select').value;
-        const selectedCountry = document.getElementById('country-filter').value.toLowerCase();
-        const selectedCity = document.getElementById('city-filter').value.toLowerCase();
+        function updateMarkers() {
+            if (markerClusterGroup) {
+                markerClusterGroup.eachLayer((layer) => {
+                    if (layer instanceof L.CircleMarker && layer.hospitalData) {
+                        const popupContent = createPopupContent(layer.hospitalData);
+                        if (layer.getPopup()) {
+                            layer.getPopup().setContent(popupContent);
+                        } else {
+                            layer.bindPopup(popupContent);
+                        }
+                    }
+                });
+            }
+        }
 
-        markerClusterGroup.clearLayers();
-        markers = [];
+        // Gestion des marqueurs
+        function addMarkers() {
+            const selectedContinent = document.getElementById('continent-select').value;
+            const selectedCountry = document.getElementById('country-filter').value.toLowerCase();
+            const selectedCity = document.getElementById('city-filter').value.toLowerCase();
 
-        hospitals.forEach((hospital) => {
-            const { city, country } = extractLocationInfo(hospital.address);
+            markerClusterGroup.clearLayers();
+            markers = [];
 
-            const statusMatch = activeStatus.length === 0 || activeStatus.includes(hospital.status.toLowerCase());
-            const continentMatch = !selectedContinent || getContinent(hospital.lat, hospital.lon) === selectedContinent;
+            hospitals.forEach((hospital) => {
+                const { city, country } = extractLocationInfo(hospital.address);
+
+                const statusMatch = activeStatus.length === 0 || activeStatus.includes(hospital.status.toLowerCase());
+                const continentMatch = !selectedContinent || getContinent(hospital.lat, hospital.lon) === selectedContinent;
                 const countryMatch = !selectedCountry || country.toLowerCase().includes(selectedCountry);
                 const cityMatch = !selectedCity || city.toLowerCase().includes(selectedCity);
 
@@ -835,6 +956,7 @@
             updateGauges();
         }
 
+        // Fonctions utilitaires de localisation
         function extractLocationInfo(address) {
             const parts = address.split(',').map(part => part.trim());
             return {
@@ -846,25 +968,25 @@
         function getContinent(lat, lon) {
             // Europe
             if (lat > 36 && lat < 70 && lon > -10 && lon < 40) return "Europe";
-            
+
             // Afrique
             if (lat > -35 && lat < 37 && lon > -20 && lon < 50) return "Africa";
-            
+
             // Asie
             if (lat > -10 && lat < 80 && lon > 40 && lon < 180) return "Asia";
-            
+
             // Océanie (incluant l'Australie)
             if (lat > -50 && lat < 0 && lon > 110 && lon < 180) return "Oceania";
-            
+
             // Amérique du Nord
             if (lat > 15 && lat < 90 && lon > -180 && lon < -30) return "North America";
-            
+
             // Amérique du Sud
             if (lat > -60 && lat < 15 && lon > -90 && lon < -30) return "South America";
-            
+
             // Antarctique
             if (lat < -60) return "Antarctica";
-            
+
             // Si aucune correspondance n'est trouvée
             return "Unknown";
         }
@@ -895,7 +1017,7 @@
             const statusKey = status.toLowerCase().replace(" ", "");
             const statusText = currentTranslations[statusKey] || status;
             const activeClass = isActive ? ' active' : '';
-            
+
             switch (status) {
                 case 'Signed':
                     return `<span class="status-tag status-signed${activeClass}">${statusText}</span>`;
@@ -969,9 +1091,9 @@
                 setTimeout(adjustForMobile, 100);
             });
 
-            document.getElementById('language-select').addEventListener('change', function() {
+            document.getElementById('language-select').addEventListener('change', function () {
                 const openPopups = [];
-                map.eachLayer(function(layer) {
+                map.eachLayer(function (layer) {
                     if (layer instanceof L.CircleMarker && layer.isPopupOpen()) {
                         openPopups.push({
                             latlng: layer.getLatLng(),
@@ -979,11 +1101,11 @@
                         });
                     }
                 });
-                
+
                 applyTranslations(this.value);
                 savePreferences();
                 addMarkers();
-                
+
                 openPopups.forEach(popup => {
                     const marker = findMarkerByLatLng(popup.latlng);
                     if (marker) {
@@ -1017,7 +1139,7 @@
         // Fonction utilitaire
         function debounce(func, wait) {
             let timeout;
-            return function(...args) {
+            return function (...args) {
                 clearTimeout(timeout);
                 timeout = setTimeout(() => func.apply(this, args), wait);
             };
@@ -1025,7 +1147,7 @@
 
         function findMarkerByLatLng(latlng) {
             let foundMarker = null;
-            markerClusterGroup.eachLayer(function(layer) {
+            markerClusterGroup.eachLayer(function (layer) {
                 if (layer instanceof L.CircleMarker && layer.getLatLng().equals(latlng)) {
                     foundMarker = layer;
                 }
