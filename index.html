@@ -342,13 +342,13 @@
         /* Media queries pour le responsive */
         @media (max-width: 1024px) {
             #hamburger {
-                top: calc(20px + env(safe-area-inset-top));
-                left: calc(10px + env(safe-area-inset-left));
+                top: 20px;
+                left: 10px;
             }
 
             #legend-toggle {
-                top: calc(70px + env(safe-area-inset-top));
-                left: calc(10px + env(safe-area-inset-left));
+                top: 70px;
+                left: 10px;
             }
 
             .leaflet-popup-content-wrapper {
@@ -385,15 +385,11 @@
             }
 
             .legend-container {
-                bottom: calc(10px + env(safe-area-inset-bottom));
-                left: calc(20px + env(safe-area-inset-left));
                 bottom: 150px;
                 left: 10px;
             }
 
             .chart-container {
-                bottom: calc(10px + env(safe-area-inset-bottom));
-                right: calc(20px + env(safe-area-inset-right));
                 left: 50%;
                 transform: translateX(-50%);
                 width: auto;
@@ -406,8 +402,6 @@
             }
 
             .controls {
-                top: calc(10px + env(safe-area-inset-top));
-                left: calc(60px + env(safe-area-inset-left));
                 width: 180px;
                 padding: 10px;
                 font-size: 12px;
@@ -438,11 +432,20 @@
         }
 
         @media (max-width: 1024px) and (orientation: landscape) {
-            .leaflet-control-zoom {
-                top: 70px;
-                left: 10px;
+            #hamburger {
+                top: calc(20px + env(safe-area-inset-top));
+                left: calc(10px + env(safe-area-inset-left));
             }
 
+            #legend-toggle {
+                top: calc(70px + env(safe-area-inset-top));
+                left: calc(10px + env(safe-area-inset-left));
+            }
+
+            #theme-toggle {
+                top: calc(10px + env(safe-area-inset-top));
+                right: calc(20px + env(safe-area-inset-left));
+            }
 
             .gauge-wrapper {
                 padding: 0px;
@@ -453,21 +456,20 @@
             }
 
             .chart-container {
-                right: 10px;
-                left: auto;
+                bottom: calc(10px + env(safe-area-inset-bottom));
+                right: calc(20px + env(safe-area-inset-right));
                 transform: none;
                 max-width: 350px;
             }
 
             .legend-container {
-                bottom: 10px;
-                left: 10px;
+                bottom: calc(10px + env(safe-area-inset-bottom));
+                left: calc(20px + env(safe-area-inset-left));
             }
 
-            #legend-toggle {
-                top: 140px;
-                left: 10px;
-                display: block;
+            .controls {
+                top: calc(10px + env(safe-area-inset-top));
+                left: calc(60px + env(safe-area-inset-left));
             }
         }
 
