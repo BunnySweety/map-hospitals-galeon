@@ -342,13 +342,13 @@
         /* Media queries pour le responsive */
         @media (max-width: 1024px) {
             #hamburger {
-                top: calc(85px + env(safe-area-inset-top));
-                left: calc(8px + env(safe-area-inset-left));
+                top: calc(20px + env(safe-area-inset-top));
+                left: calc(10px + env(safe-area-inset-left));
             }
 
-            #theme-toggle {
-                top: calc(10px + env(safe-area-inset-top));
-                right: calc(10px + env(safe-area-inset-right));
+            #legend-toggle {
+                top: calc(70px + env(safe-area-inset-top));
+                left: calc(10px + env(safe-area-inset-left));
             }
 
             .leaflet-popup-content-wrapper {
@@ -385,12 +385,15 @@
             }
 
             .legend-container {
+                bottom: calc(10px + env(safe-area-inset-bottom));
+                left: calc(10px + env(safe-area-inset-left));
                 bottom: 150px;
                 left: 10px;
             }
 
             .chart-container {
                 bottom: calc(10px + env(safe-area-inset-bottom));
+                right: calc(10px + env(safe-area-inset-right));
                 left: 50%;
                 transform: translateX(-50%);
                 width: auto;
@@ -628,10 +631,13 @@
         // Initialisation de la carte
         function initMap() {
             if (!map) {
+                const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
                 map = L.map('map', {
                     center: [50, 10],
                     zoom: 4,
-                    maxZoom: 18
+                    maxZoom: 18,
+                    zoomControl: !isMobile, // Désactive les contrôles de zoom sur mobile
+                    scrollWheelZoom: !isMobile // Désactive le zoom par défilement sur mobile
                 });
 
                 markerClusterGroup = L.markerClusterGroup({
@@ -1119,7 +1125,10 @@
 
         // Gestion des événements
         function addEventListeners() {
-            window.addEventListener('load', adjustForMobile);
+            window.addEventListener('load', () => {
+                adjustForMobile();
+                initApplication();
+            });
             window.addEventListener('resize', debounce(adjustForMobile, 250));
             window.addEventListener('orientationchange', () => {
                 setTimeout(adjustForMobile, 100);
