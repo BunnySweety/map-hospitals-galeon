@@ -347,7 +347,7 @@
             }
 
             #legend-toggle {
-                top: 70px;
+                top: 70px !important;
                 left: 10px;
             }
 
@@ -457,17 +457,15 @@
             }
 
             .chart-container {
-                bottom: 10px;
-                right: calc(20px + env(safe-area-inset-right));
-                left: auto;
+                right: calc(20px + env(safe-area-inset-right)) !important;
                 transform: none;
                 max-width: 350px;
             }
 
             .legend-container {
-                bottom: 10px;
-                left: calc(60px + env(safe-area-inset-left));
-                right: auto;
+                bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+                left: calc(60px + env(safe-area-inset-left)) !important;
+                right: auto !important;
             }
 
             .controls {
@@ -476,21 +474,19 @@
             }
 
             body.landscape-mode #legend-toggle {
-                top: 70px;
-                left: calc(10px + env(safe-area-inset-left));
-                bottom: auto;
+                top: 70px !important;
+                left: calc(10px + env(safe-area-inset-left)) !important;
+                bottom: auto !important;
             }
 
             body.landscape-mode .chart-container {
-                bottom: 10px;
-                right: calc(20px + env(safe-area-inset-right));
+                right: calc(20px + env(safe-area-inset-right)) !important;
                 left: auto;
                 transform: none;
                 max-width: 350px;
             }
 
             body.landscape-mode .legend-container {
-                bottom: 10px;
                 left: calc(60px + env(safe-area-inset-left));
                 right: auto;
             }
@@ -625,6 +621,23 @@
         const MOBILE_BREAKPOINT = 1024;
         const DEFAULT_LANGUAGE = 'en';
 
+        const STATUS = {
+            DEPLOYED: 'Deployed',
+            IN_PROGRESS: 'In Progress',
+            SIGNED: 'Signed'
+        };
+
+        const CONTINENT = {
+            EUROPE: 'Europe',
+            AFRICA: 'Africa',
+            ASIA: 'Asia',
+            OCEANIA: 'Oceania',
+            NORTH_AMERICA: 'North America',
+            SOUTH_AMERICA: 'South America',
+            ANTARCTICA: 'Antarctica',
+            UNKNOWN: 'Unknown'
+        };
+
         // Variables globales
         let map, markers = [], activeStatus = [], language = DEFAULT_LANGUAGE;
         let darkMode = false;
@@ -673,23 +686,20 @@
 
         // Initialisation des jauges
         function initGauges() {
-            ['Deployed', 'In Progress', 'Signed'].forEach(initGauge);
-        }
-
-        function initGauge(status) {
-            const element = document.getElementById(`${status.toLowerCase().replace(' ', '-')}-progress`);
-            if (element) {
-                const svg = element.querySelector('svg');
-                const valueContainer = element.querySelector('.gauge-value');
-
-                if (svg && valueContainer) {
-                    gauges[status] = {
-                        path: svg.querySelector(`path[stroke="${colors[status]}"]`),
-                        element: element,
-                        valueContainer: valueContainer
-                    };
+            ['Deployed', 'In Progress', 'Signed'].forEach(status => {
+                const element = document.getElementById(`${status.toLowerCase().replace(' ', '-')}-progress`);
+                if (element) {
+                    const svg = element.querySelector('svg');
+                    const valueContainer = element.querySelector('.gauge-value');
+                    if (svg && valueContainer) {
+                        gauges[status] = {
+                            path: svg.querySelector(`path[stroke="${colors[status]}"]`),
+                            element: element,
+                            valueContainer: valueContainer
+                        };
+                    }
                 }
-            }
+            });
         }
 
         // Mise à jour des jauges
@@ -974,40 +984,51 @@
 
         // Gestion des marqueurs
         function addMarkers() {
-            const selectedContinent = document.getElementById('continent-select').value;
-            const selectedCountry = document.getElementById('country-filter').value.toLowerCase();
-            const selectedCity = document.getElementById('city-filter').value.toLowerCase();
+            const filters = {
+                continent: document.getElementById('continent-select').value,
+                country: document.getElementById('country-filter').value.toLowerCase(),
+                city: document.getElementById('city-filter').value.toLowerCase()
+            };
 
             markerClusterGroup.clearLayers();
             markers = [];
 
             hospitals.forEach((hospital) => {
-                const { city, country } = extractLocationInfo(hospital.address);
-
-                const statusMatch = activeStatus.length === 0 || activeStatus.includes(hospital.status.toLowerCase());
-                const continentMatch = !selectedContinent || getContinent(hospital.lat, hospital.lon) === selectedContinent;
-                const countryMatch = !selectedCountry || country.toLowerCase().includes(selectedCountry);
-                const cityMatch = !selectedCity || city.toLowerCase().includes(selectedCity);
-
-                if (statusMatch && continentMatch && countryMatch && cityMatch) {
-                    const marker = L.circleMarker([hospital.lat, hospital.lon], {
-                        radius: 8,
-                        fillColor: getColor(hospital.status),
-                        color: "#fff",
-                        weight: 1,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                    });
-
-                    marker.hospitalData = hospital;  // Stockez les données de l'hôpital dans le marqueur
-                    const popupContent = createPopupContent(hospital);
-                    marker.bindPopup(popupContent);
+                if (shouldDisplayHospital(hospital, filters)) {
+                    const marker = createMarker(hospital);
                     markerClusterGroup.addLayer(marker);
                     markers.push(marker);
                 }
             });
 
             updateGauges();
+        }
+
+        function shouldDisplayHospital(hospital, filters) {
+            const { city, country } = extractLocationInfo(hospital.address);
+            const statusMatch = activeStatus.length === 0 || activeStatus.includes(hospital.status.toLowerCase());
+            const continentMatch = !filters.continent || getContinent(hospital.lat, hospital.lon) === filters.continent;
+            const countryMatch = !filters.country || country.toLowerCase().includes(filters.country);
+            const cityMatch = !filters.city || city.toLowerCase().includes(filters.city);
+
+            return statusMatch && continentMatch && countryMatch && cityMatch;
+        }
+
+        function createMarker(hospital) {
+            const marker = L.circleMarker([hospital.lat, hospital.lon], {
+                radius: 8,
+                fillColor: getColor(hospital.status),
+                color: "#fff",
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            });
+
+            marker.hospitalData = hospital;
+            const popupContent = createPopupContent(hospital);
+            marker.bindPopup(popupContent);
+
+            return marker;
         }
 
         // Fonctions utilitaires de localisation
@@ -1020,36 +1041,25 @@
         }
 
         function getContinent(lat, lon) {
-            // Europe
-            if (lat > 36 && lat < 70 && lon > -10 && lon < 40) return "Europe";
+            const continentConfig = [
+                { continent: CONTINENT.EUROPE, condition: (lat, lon) => lat > 36 && lat < 70 && lon > -10 && lon < 40 },
+                { continent: CONTINENT.AFRICA, condition: (lat, lon) => lat > -35 && lat < 37 && lon > -20 && lon < 50 },
+                { continent: CONTINENT.ASIA, condition: (lat, lon) => lat > -10 && lat < 80 && lon > 40 && lon < 180 },
+                { continent: CONTINENT.OCEANIA, condition: (lat, lon) => lat > -50 && lat < 0 && lon > 110 && lon < 180 },
+                { continent: CONTINENT.NORTH_AMERICA, condition: (lat, lon) => lat > 15 && lat < 90 && lon > -180 && lon < -30 },
+                { continent: CONTINENT.SOUTH_AMERICA, condition: (lat, lon) => lat > -60 && lat < 15 && lon > -90 && lon < -30 },
+                { continent: CONTINENT.ANTARCTICA, condition: (lat, lon) => lat < -60 }
+            ];
 
-            // Afrique
-            if (lat > -35 && lat < 37 && lon > -20 && lon < 50) return "Africa";
-
-            // Asie
-            if (lat > -10 && lat < 80 && lon > 40 && lon < 180) return "Asia";
-
-            // Océanie (incluant l'Australie)
-            if (lat > -50 && lat < 0 && lon > 110 && lon < 180) return "Oceania";
-
-            // Amérique du Nord
-            if (lat > 15 && lat < 90 && lon > -180 && lon < -30) return "North America";
-
-            // Amérique du Sud
-            if (lat > -60 && lat < 15 && lon > -90 && lon < -30) return "South America";
-
-            // Antarctique
-            if (lat < -60) return "Antarctica";
-
-            // Si aucune correspondance n'est trouvée
-            return "Unknown";
+            const foundContinent = continentConfig.find(config => config.condition(lat, lon));
+            return foundContinent ? foundContinent.continent : CONTINENT.UNKNOWN;
         }
 
         function getColor(status) {
             switch (status) {
-                case 'Deployed': return '#28a745';
-                case 'In Progress': return '#ffc107';
-                case 'Signed': return '#007bff';
+                case STATUS.DEPLOYED: return '#28a745';
+                case STATUS.IN_PROGRESS: return '#ffc107';
+                case STATUS.SIGNED: return '#007bff';
                 default: return '#6c757d';
             }
         }
@@ -1073,11 +1083,11 @@
             const activeClass = isActive ? ' active' : '';
 
             switch (status) {
-                case 'Signed':
+                case STATUS.SIGNED:
                     return `<span class="status-tag status-signed${activeClass}">${statusText}</span>`;
-                case 'Deployed':
+                case STATUS.DEPLOYED:
                     return `<span class="status-tag status-deployed${activeClass}">${statusText}</span>`;
-                case 'In Progress':
+                case STATUS.IN_PROGRESS:
                     return `<span class="status-tag status-in-progress${activeClass}">${statusText}</span>`;
                 default:
                     return `<span class="status-tag${activeClass}">Unknown</span>`;
@@ -1139,57 +1149,15 @@
 
         // Gestion des événements
         function addEventListeners() {
-            window.addEventListener('load', () => {
-                adjustForMobile();
-                initApplication();
-            });
-            window.addEventListener('resize', debounce(() => {
-                adjustForMobile();
-                if (map) map.invalidateSize();
-            }, 250));
-            window.addEventListener('orientationchange', () => {
-                setTimeout(() => {
-                    adjustForMobile();
-                    if (map) map.invalidateSize();
-                }, 100);
-            });
+            window.addEventListener('load', initApplication);
+            window.addEventListener('resize', debounce(handleResize, 250));
+            window.addEventListener('orientationchange', handleOrientationChange);
 
-            document.getElementById('language-select').addEventListener('change', function () {
-                const openPopups = [];
-                map.eachLayer(function (layer) {
-                    if (layer instanceof L.CircleMarker && layer.isPopupOpen()) {
-                        openPopups.push({
-                            latlng: layer.getLatLng(),
-                            hospitalData: layer.hospitalData
-                        });
-                    }
-                });
-
-                applyTranslations(this.value);
-                savePreferences();
-                addMarkers();
-
-                openPopups.forEach(popup => {
-                    const marker = findMarkerByLatLng(popup.latlng);
-                    if (marker) {
-                        const newContent = createPopupContent(popup.hospitalData);
-                        marker.bindPopup(newContent).openPopup();
-                    }
-                });
-            });
-
-            document.getElementById('continent-select').addEventListener('change', () => {
-                addMarkers();
-                savePreferences();
-            });
-
+            document.getElementById('language-select').addEventListener('change', handleLanguageChange);
+            document.getElementById('continent-select').addEventListener('change', handleFilterChange);
             document.querySelectorAll('#country-filter, #city-filter').forEach(input => {
-                input.addEventListener('input', debounce(() => {
-                    addMarkers();
-                    savePreferences();
-                }, 300));
+                input.addEventListener('input', debounce(handleFilterChange, 300));
             });
-
             document.querySelectorAll('.status-tag').forEach(tag => {
                 tag.addEventListener('click', () => filterHospitals(tag.dataset.status));
             });
@@ -1197,6 +1165,54 @@
             document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
             document.getElementById('hamburger').addEventListener('click', toggleMenu);
             document.getElementById('legend-toggle').addEventListener('click', toggleLegend);
+        }
+
+        function handleResize() {
+            adjustForMobile();
+            if (map) map.invalidateSize();
+        }
+
+        function handleOrientationChange() {
+            setTimeout(() => {
+                adjustForMobile();
+                if (map) map.invalidateSize();
+            }, 100);
+        }
+
+        function handleLanguageChange() {
+            const openPopups = getOpenPopups();
+            applyTranslations(this.value);
+            savePreferences();
+            addMarkers();
+            reopenPopups(openPopups);
+        }
+
+        function handleFilterChange() {
+            addMarkers();
+            savePreferences();
+        }
+
+        function getOpenPopups() {
+            const openPopups = [];
+            map.eachLayer(function (layer) {
+                if (layer instanceof L.CircleMarker && layer.isPopupOpen()) {
+                    openPopups.push({
+                        latlng: layer.getLatLng(),
+                        hospitalData: layer.hospitalData
+                    });
+                }
+            });
+            return openPopups;
+        }
+
+        function reopenPopups(openPopups) {
+            openPopups.forEach(popup => {
+                const marker = findMarkerByLatLng(popup.latlng);
+                if (marker) {
+                    const newContent = createPopupContent(popup.hospitalData);
+                    marker.bindPopup(newContent).openPopup();
+                }
+            });
         }
 
         // Fonction utilitaire
