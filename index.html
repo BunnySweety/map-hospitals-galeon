@@ -433,18 +433,18 @@
 
         @media (max-width: 1024px) and (orientation: landscape) {
             #hamburger {
-                top: calc(20px + env(safe-area-inset-top));
+                top: 20px;
                 left: calc(10px + env(safe-area-inset-left));
             }
 
             #legend-toggle {
-                top: calc(70px + env(safe-area-inset-top));
+                top: 70px;
                 left: calc(10px + env(safe-area-inset-left));
                 bottom: auto;
             }
 
             #theme-toggle {
-                top: calc(10px + env(safe-area-inset-top));
+                top: 10px;
                 right: calc(20px + env(safe-area-inset-right));
             }
 
@@ -457,21 +457,21 @@
             }
 
             .chart-container {
-                bottom: calc(10px + env(safe-area-inset-bottom));
-                right: calc(10px + env(safe-area-inset-right));
+                bottom: 10px;
+                right: calc(20px + env(safe-area-inset-right));
                 left: auto;
                 transform: none;
                 max-width: 350px;
             }
 
             .legend-container {
-                bottom: calc(10px + env(safe-area-inset-bottom));
-                left: calc(10px + env(safe-area-inset-left));
+                bottom: 10px;
+                left: calc(60px + env(safe-area-inset-left));
                 right: auto;
             }
 
             .controls {
-                top: calc(10px + env(safe-area-inset-top));
+                top: 10px;
                 left: calc(60px + env(safe-area-inset-left));
             }
         }
@@ -488,6 +488,26 @@
             left: 0;
             right: 0;
             bottom: env(safe-area-inset-bottom);
+        }
+
+        body.landscape-mode #legend-toggle {
+            top: 70px;
+            left: calc(10px + env(safe-area-inset-left));
+            bottom: auto;
+        }
+
+        body.landscape-mode .chart-container {
+            bottom: 10px;
+            right: calc(20px + env(safe-area-inset-right));
+            left: auto;
+            transform: none;
+            max-width: 350px;
+        }
+
+        body.landscape-mode .legend-container {
+            bottom: 10px;
+            left: calc(60px + env(safe-area-inset-left));
+            right: auto;
         }
     </style>
 </head>
@@ -702,21 +722,16 @@
             const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
             const isLandscape = window.innerWidth > window.innerHeight;
 
+            if (isMobile && isLandscape) {
+                document.body.classList.add('landscape-mode');
+            } else {
+                document.body.classList.remove('landscape-mode');
+            }
+
             adjustChartContainer(isMobile, isLandscape);
             adjustMapContainer(isMobile, isLandscape);
             adjustLegendContainer(isMobile, isLandscape);
             adjustGauges(isMobile);
-
-            const zoomControl = document.querySelector('.leaflet-control-zoom');
-            if (zoomControl) {
-                if (isMobile && isLandscape) {
-                    zoomControl.style.top = '70px';
-                    zoomControl.style.left = '10px';
-                } else {
-                    zoomControl.style.top = '';
-                    zoomControl.style.left = '';
-                }
-            }
 
             if (map) {
                 map.invalidateSize();
@@ -1128,9 +1143,15 @@
                 adjustForMobile();
                 initApplication();
             });
-            window.addEventListener('resize', debounce(adjustForMobile, 250));
+            window.addEventListener('resize', debounce(() => {
+                adjustForMobile();
+                if (map) map.invalidateSize();
+            }, 250));
             window.addEventListener('orientationchange', () => {
-                setTimeout(adjustForMobile, 100);
+                setTimeout(() => {
+                    adjustForMobile();
+                    if (map) map.invalidateSize();
+                }, 100);
             });
 
             document.getElementById('language-select').addEventListener('change', function () {
