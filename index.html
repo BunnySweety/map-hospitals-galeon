@@ -440,11 +440,12 @@
             #legend-toggle {
                 top: calc(70px + env(safe-area-inset-top));
                 left: calc(10px + env(safe-area-inset-left));
+                bottom: auto;
             }
 
             #theme-toggle {
                 top: calc(10px + env(safe-area-inset-top));
-                right: calc(20px + env(safe-area-inset-left));
+                right: calc(20px + env(safe-area-inset-right));
             }
 
             .gauge-wrapper {
@@ -457,14 +458,16 @@
 
             .chart-container {
                 bottom: calc(10px + env(safe-area-inset-bottom));
-                right: calc(20px + env(safe-area-inset-right));
+                right: calc(10px + env(safe-area-inset-right));
+                left: auto;
                 transform: none;
                 max-width: 350px;
             }
 
             .legend-container {
                 bottom: calc(10px + env(safe-area-inset-bottom));
-                left: calc(20px + env(safe-area-inset-left));
+                left: calc(10px + env(safe-area-inset-left));
+                right: auto;
             }
 
             .controls {
