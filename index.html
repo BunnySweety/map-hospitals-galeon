@@ -457,7 +457,11 @@
             .gauge-wrapper {
                 padding: 0;
             }
-    
+
+            .gauge-label {
+                word-wrap: break-word;
+            }
+            
             .legend-container {
                 bottom: 9.375rem;
                 left: 0.625rem;
@@ -533,7 +537,6 @@
             }
     
             .legend-container {
-                bottom: calc(0.625rem + env(safe-area-inset-bottom)) !important;
                 left: calc(3.75rem + env(safe-area-inset-left)) !important;
                 right: auto !important;
             }
