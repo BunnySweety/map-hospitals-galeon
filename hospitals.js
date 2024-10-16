@@ -1,6 +1,6 @@
 const hospitals = [
     {
-        name: "Centre Hospitalier de Châlon-sur-Saone",
+        name: "Centre Hospitalier de Châlon-sur-Saône",
         lat: 46.7795,
         lon: 4.8527,
         status: "Deployed",
@@ -114,6 +114,15 @@ const hospitals = [
         status: "Signed",
         address: "18 Avenue Paul Vaillant Couturier, 91290 Arpajon, France",
         website: "http://www.ch-arpajon.fr",
+        imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+    },
+    {
+        name: "Hôpital Sainte-Foy-la-Grande",
+        lat: 44.8441,
+        lon: 0.2091,
+        status: "Signed",
+        address: "18 Rue Chanzy, 33220 Sainte-Foy-la-Grande, France",
+        website: "http://www.hopital-saintefoylagrande.fr",
         imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
     }
 ];
