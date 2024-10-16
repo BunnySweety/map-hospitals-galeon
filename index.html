@@ -107,19 +107,39 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 1.125rem;
+            background-color: white;
+            box-shadow: 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.2);
+            border: none;
+            transition: all 0.3s ease;
         }
-    
+
+        #hamburger:hover,
+        #legend-toggle:hover,
+        #theme-toggle:hover {
+            background-color: #f0f0f0;
+        }
+
+        #hamburger i,
+        #legend-toggle i,
+        #theme-toggle i {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
         #hamburger {
             top: 1.25rem;
             left: 1rem;
         }
-    
+
         #legend-toggle {
             bottom: 2.75rem;
             left: 1rem;
         }
-    
+
         #theme-toggle {
             top: 1rem;
             right: 1rem;
@@ -413,18 +433,24 @@
             #hamburger,
             #legend-toggle,
             #theme-toggle {
-                width: 2rem;
-                height: 2rem;
+                width: 2.25rem;
+                height: 2.25rem;
+                font-size: 1rem;
             }
     
             #hamburger {
                 top: 1.25rem;
-                left: 0.625rem;
+                left: 1rem;
             }
     
             #legend-toggle {
                 top: 4.375rem !important;
-                left: 0.625rem;
+                left: 1rem !important;
+            }
+
+            #theme-toggle {
+                top: 1.25rem;
+                right: 1rem;
             }
     
             .leaflet-control-zoom {
@@ -528,18 +554,17 @@
         @media (max-width: 64em) and (orientation: landscape) {
             #hamburger {
                 top: 1.25rem;
-                left: calc(0.625rem + env(safe-area-inset-left));
+                left: calc(1rem + env(safe-area-inset-left));
             }
     
             #legend-toggle {
                 top: 4.375rem;
-                left: calc(0.625rem + env(safe-area-inset-left));
-                bottom: auto;
+                left: calc(1rem + env(safe-area-inset-left)) !important;
             }
     
             #theme-toggle {
-                top: 0.625rem;
-                right: calc(0.625rem + env(safe-area-inset-right));
+                top: 1.25rem;
+                right: calc(1rem + env(safe-area-inset-right)) !important;
             }
     
             .gauge-wrapper {
@@ -568,12 +593,12 @@
     
             body.landscape-mode #legend-toggle {
                 top: 4.375rem !important;
-                left: calc(0.625rem + env(safe-area-inset-left)) !important;
+                left: calc(1rem + env(safe-area-inset-left)) !important;
                 bottom: auto !important;
             }
     
             body.landscape-mode .chart-container {
-                right: calc(0.625rem + env(safe-area-inset-right)) !important;
+                right: calc(1rem + env(safe-area-inset-right)) !important;
                 left: auto;
                 transform: none;
                 max-width: 21.875rem;
@@ -581,14 +606,32 @@
     
             body.landscape-mode .legend-container {
                 bottom: 0.625rem;
-                left: calc(3.75rem + env(safe-area-inset-left));
+                left: calc(1rem + env(safe-area-inset-left));
                 right: auto;
+            }
+
+            .popup-content.mobile-landscape {
+                max-width: 200px;
+                font-size: 0.9em;
+            }
+
+            .popup-content.mobile-landscape .popup-image {
+                max-width: 150px;
+                height: auto;
             }
         }
 
         @media (max-width: 20rem) { /* 320px */
             html {
                 font-size: 12px;
+            }
+
+            #hamburger,
+            #legend-toggle,
+            #theme-toggle {
+                width: 2rem;
+                height: 2rem;
+                font-size: 0.875rem;
             }
 
             .chart-container {
@@ -911,7 +954,22 @@
 
                 marker.hospitalData = hospital;
                 const popupContent = createPopupContent(hospital);
+                
                 marker.bindPopup(popupContent);
+                
+                marker.on('click', function(e) {
+                    const isLandscape = window.innerWidth > window.innerHeight;
+                    const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
+                    
+                    if (isMobile && isLandscape) {
+                        setTimeout(() => {
+                            this.openPopup();
+                        }, 100);
+                    } else {
+                        this.openPopup();
+                    }
+                });
+
                 markerClusterGroup.addLayer(marker);
                 markers.push(marker);
             }
@@ -951,8 +1009,25 @@
         }
     }
 
+    // Adjust popups
+    function adjustPopups(isMobile, isLandscape) {
+        if (isMobile && isLandscape) {
+            L.Popup.prototype.options.autoPanPaddingTopLeft = L.point(10, 10);
+            L.Popup.prototype.options.autoPanPaddingBottomRight = L.point(10, 10);
+            L.Popup.prototype.options.keepInView = true;
+        } else {
+            L.Popup.prototype.options.autoPanPaddingTopLeft = null;
+            L.Popup.prototype.options.autoPanPaddingBottomRight = null;
+            L.Popup.prototype.options.keepInView = false;
+        }
+    }
+
     // Create popup content
     function createPopupContent(hospital) {
+        const isLandscape = window.innerWidth > window.innerHeight;
+        const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
+        const popupClass = isMobile && isLandscape ? 'popup-content mobile-landscape' : 'popup-content';        
+
         const statusTag = getStatusTag(hospital.status, true);
         return `
             <div class="popup-content">
@@ -1170,6 +1245,7 @@
         adjustChartContainer(isMobile, isLandscape);
         adjustMapContainer(isMobile, isLandscape);
         adjustLegendContainer(isMobile, isLandscape);
+        adjustPopups(isMobile, isLandscape);
         adjustGauges(isMobile);
 
         if (map) {
