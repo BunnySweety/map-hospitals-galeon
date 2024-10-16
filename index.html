@@ -882,7 +882,13 @@
 
     // Get continent based on coordinates
     function getContinent(lat, lon) {
-        // ... (La logique existante pour déterminer le continent)
+        if (lat > 35 && lat < 71 && lon > -25 && lon < 40) return "Europe";
+        if (lat > -35 && lat < 37 && lon > -20 && lon < 60) return "Africa";
+        if (lat > -10 && lat < 55 && lon > 25 && lon < 180) return "Asia";
+        if (lat > -50 && lat < 0 && lon > 110 && lon < 180) return "Oceania";
+        if (lat > 15 && lat < 72 && lon > -170 && lon < -40) return "North America";
+        if (lat > -57 && lat < 15 && lon > -110 && lon < -35) return "South America";
+        return "Unknown";
     }
 
     // Get color based on status
