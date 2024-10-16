@@ -409,6 +409,13 @@
             body {
                 font-size: 14px;
             }
+
+            #hamburger,
+            #legend-toggle,
+            #theme-toggle {
+                width: 2rem;
+                height: 2rem;
+            }
     
             #hamburger {
                 top: 1.25rem;
@@ -427,7 +434,7 @@
             .leaflet-popup-content-wrapper {
                 min-width: 12rem !important;
                 max-width: 13rem !important;
-                padding: 0.3125rem;
+                padding: 0.188rem;
             }
     
             .leaflet-popup-content h3 {
@@ -441,6 +448,18 @@
             .leaflet-popup-content p,
             .leaflet-popup-content a {
                 font-size: 0.75rem;
+            }
+
+            .popup-title {
+                margin-bottom: 0.188rem;
+            }
+
+            .popup-image {
+                margin: 0 auto 0.188rem;
+            }
+
+            .popup-link, .popup-status, .popup-content {
+                margin: 0.188rem 0;
             }
     
             .gauge {
@@ -471,12 +490,13 @@
                 display: flex;
                 left: 50%;
                 transform: translateX(-50%);
-                width: auto;
-                max-width: 21.875rem;
+                justify-content: space-between;
+                align-items: center;
+                width: 70% !important;
             }
     
             .controls {
-                width: 11.25rem;
+                width: 50%;
                 padding: 0.625rem;
                 font-size: 0.75rem;
             }
@@ -519,7 +539,7 @@
     
             #theme-toggle {
                 top: 0.625rem;
-                right: calc(1.25rem + env(safe-area-inset-right));
+                right: calc(0.625rem + env(safe-area-inset-right));
             }
     
             .gauge-wrapper {
@@ -531,9 +551,9 @@
             }
     
             .chart-container {
-                right: calc(1.25rem + env(safe-area-inset-right)) !important;
+                right: calc(0.625rem + env(safe-area-inset-right)) !important;
                 transform: none;
-                max-width: 21.875rem;
+                width: 35% !important;
             }
     
             .legend-container {
@@ -553,7 +573,7 @@
             }
     
             body.landscape-mode .chart-container {
-                right: calc(1.25rem + env(safe-area-inset-right)) !important;
+                right: calc(0.625rem + env(safe-area-inset-right)) !important;
                 left: auto;
                 transform: none;
                 max-width: 21.875rem;
@@ -563,6 +583,27 @@
                 bottom: 0.625rem;
                 left: calc(3.75rem + env(safe-area-inset-left));
                 right: auto;
+            }
+        }
+
+        @media (max-width: 20rem) { /* 320px */
+            html {
+                font-size: 12px;
+            }
+
+            .chart-container {
+                max-width: 15rem;
+            }
+
+            .gauge {
+                width: 3rem;
+                height: 3rem;
+            }
+
+            .gauge-value,
+            .gauge-percentage,
+            .gauge-label {
+                font-size: 0.65rem;
             }
         }
     
