@@ -129,15 +129,6 @@ function initApplication() {
         isInitialized = true;
         console.log('Application initialized successfully');
 
-        // Log debug information
-        /*
-        console.log('Number of hospitals:', hospitals.length);
-        console.log('Available languages:', Object.keys(translations));
-        console.log('Current language:', language);
-        console.log('Dark mode:', darkMode);
-        console.log('Active statuses:', activeStatus);
-        */
-
     } catch (error) {
         console.error('Error during initialization:', error);
         handleError(error, 'An error occurred during initialization. Please refresh the page or contact support.');
@@ -157,6 +148,12 @@ function initMap() {
             dragging: true,
             tap: true
         });
+
+        // Create new panes for better layer control
+        map.createPane('borderPane');
+        map.getPane('borderPane').style.zIndex = 400;
+        map.createPane('markerPane');
+        map.getPane('markerPane').style.zIndex = 450;
 
         markerClusterGroup = L.markerClusterGroup({
             maxClusterRadius: 50,
@@ -322,6 +319,10 @@ function addMarkers() {
 // Create a marker for a hospital
 function createMarker(hospital) {
     let marker;
+    const markerOptions = {
+        pane: 'markerPane'
+    };
+
     if (mapCustomization.useCustomMarkers) {
         const customIcon = L.icon({
             iconUrl: mapCustomization.customMarkerUrl,
@@ -329,9 +330,10 @@ function createMarker(hospital) {
             iconAnchor: [12, 41],
             popupAnchor: [1, -34]
         });
-        marker = L.marker([hospital.lat, hospital.lon], { icon: customIcon });
+        marker = L.marker([hospital.lat, hospital.lon], { ...markerOptions, icon: customIcon });
     } else {
         marker = L.circleMarker([hospital.lat, hospital.lon], {
+            ...markerOptions,
             radius: 8,
             fillColor: getColor(hospital.status),
             color: "#fff",
@@ -349,6 +351,7 @@ function createMarker(hospital) {
     });
 
     marker.on('click', function (e) {
+        L.DomEvent.stopPropagation(e);
         markerClusterGroup.eachLayer(function (layer) {
             if (layer instanceof L.CircleMarker && layer !== marker) {
                 layer.closePopup();
@@ -442,7 +445,7 @@ function getColor(status) {
     }
 }
 
-// Create popup content
+// Create popup content (continued)
 function createPopupContent(hospital) {
     const isLandscape = window.innerWidth > window.innerHeight;
     const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
@@ -450,7 +453,7 @@ function createPopupContent(hospital) {
 
     const statusTag = getStatusTag(hospital.status, true);
     return `
-        <div class="popup-content">
+        <div class="${popupClass}">
             <h3 class="popup-title">${hospital.name}</h3>
             <img class="popup-image" src="${hospital.imageUrl}" alt="${hospital.name}">
             <div class="popup-address">
@@ -787,6 +790,9 @@ function addEventListeners() {
     document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
     document.getElementById('hamburger').addEventListener('click', toggleMenu);
     document.getElementById('legend-toggle').addEventListener('click', toggleLegend);
+
+    // Add map click event listener
+    map.on('click', handleMapClick);
 }
 
 // Handle language change
@@ -821,12 +827,14 @@ function handleLanguageChange() {
 // Handle continent change
 function handleContinentChange() {
     debouncedUpdateMarkers();
+    updateMapView();
     savePreferences();
 }
 
 // Handle filter change
 function handleFilterChange() {
     debouncedUpdateMarkers();
+    updateMapView();
     savePreferences();
 }
 
@@ -850,7 +858,7 @@ function findMarkerByLatLng(latlng) {
     return foundMarker;
 }
 
-// Enhance accessibility
+// Enhance accessibility (continued)
 function enhanceAccessibility() {
     const languageSelect = document.getElementById('language-select');
     languageSelect.setAttribute('aria-label', 'Select language');
@@ -886,11 +894,13 @@ function applyMapCustomization() {
     }
     if (window.countriesData) {
         window.borderLayer = L.geoJSON(window.countriesData, {
+            pane: 'borderPane',
             style: {
                 color: mapCustomization.borderColor,
                 weight: 1,
                 fillOpacity: 0
-            }
+            },
+            interactive: false
         }).addTo(map);
     }
 
@@ -914,13 +924,6 @@ function updateCustomization(newCustomization) {
     Object.assign(mapCustomization, newCustomization);
     applyMapCustomization();
 }
-
-// Initialize the application when the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-    initApplication();
-    addEventListeners();
-    enhanceAccessibility();
-});
 
 // Function to filter countries if needed
 function filterCountries(countriesData, countriesToShow) {
@@ -961,19 +964,6 @@ function updateMapView() {
     }
 }
 
-// Update the handleContinentChange and handleFilterChange functions
-function handleContinentChange() {
-    debouncedUpdateMarkers();
-    updateMapView();
-    savePreferences();
-}
-
-function handleFilterChange() {
-    debouncedUpdateMarkers();
-    updateMapView();
-    savePreferences();
-}
-
 // Function to get country information from GeoJSON data
 function getCountryInfo(countryName) {
     if (!window.countriesData) return null;
@@ -1007,3 +997,30 @@ function handleError(error, userMessage) {
         errorDiv.remove();
     }, 5000);
 }
+
+// Function to handle map clicks
+function handleMapClick(e) {
+    markerClusterGroup.eachLayer(function (layer) {
+        if (layer instanceof L.CircleMarker) {
+            layer.closePopup();
+        }
+    });
+}
+
+// Initialize the application when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    initApplication();
+    addEventListeners();
+    enhanceAccessibility();
+});
+
+// Export functions for potential use in other modules
+export {
+    initApplication,
+    updateCustomization,
+    filterCountries,
+    getCountryInfo,
+    toggleTheme,
+    toggleLegend,
+    toggleMenu
+};
