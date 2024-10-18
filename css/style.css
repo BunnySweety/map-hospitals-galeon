@@ -1,0 +1,677 @@
+/* Variables CSS pour une gestion facile des couleurs et des thèmes */
+:root {
+    --background-color-light: #f9f9f9;
+    --text-color-light: #1f1f1f;
+    --control-background-light: #ffffff;
+    --control-border-light: #ddd;
+    --hover-background-light: #f1f1f1;
+    --hyperlink-color: #00aaff;
+
+    --background-color-dark: #2b2b2b;
+    --text-color-dark: #f1f1f1;
+    --control-background-dark: #333;
+    --control-border-dark: #555;
+    --hover-background-dark: #444;
+
+    --primary-color: #007bff;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --danger-color: #dc3545;
+}
+
+/* Styles de base */
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    background-color: var(--background-color-light);
+    color: var(--text-color-light);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Utilisation de viewport units pour une adaptation complète */
+#map {
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Styles communs pour les contrôles */
+.controls,
+#hamburger,
+#legend-toggle,
+#theme-toggle,
+.legend-container,
+.chart-container {
+    background: var(--control-background-light);
+    color: var(--text-color-light);
+    border: 1px solid var(--control-border-light);
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+/* Styles spécifiques */
+.controls {
+    position: absolute;
+    top: 1rem;
+    left: 4rem;
+    z-index: 1000;
+    padding: 1rem;
+    width: 80%;
+    max-width: 300px;
+}
+
+.controls select,
+.controls input {
+    margin-bottom: 0.625rem;
+    padding: 0.375rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--control-border-light);
+    background-color: var(--control-background-light);
+    color: var(--text-color-light);
+    font-size: 0.875rem;
+    transition: border-color 0.3s, background-color 0.3s, color 0.3s ease;
+    width: auto;
+}
+
+.leaflet-control-zoom {
+    top: 5rem;
+    left: 0.5rem;
+    border-radius: 0.5rem;
+}
+
+/* Styles pour les boutons circulaires */
+#hamburger,
+#legend-toggle,
+#theme-toggle {
+    position: fixed;
+    z-index: 1000;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.125rem;
+    background-color: white;
+    box-shadow: 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.2);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+#hamburger:hover,
+#legend-toggle:hover,
+#theme-toggle:hover {
+    background-color: #f0f0f0;
+}
+
+#hamburger i,
+#legend-toggle i,
+#theme-toggle i {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+#hamburger {
+    top: 1.25rem;
+    left: 1rem;
+}
+
+#legend-toggle {
+    bottom: 2.75rem;
+    left: 1rem;
+}
+
+#theme-toggle {
+    top: 1rem;
+    right: 1rem;
+}
+
+/* Styles pour la légende et les graphiques */
+.legend-container,
+.chart-container {
+    position: fixed;
+    padding: 0.625rem;
+    z-index: 1000;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.3125rem;
+}
+
+.legend-color {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    margin-right: 0.625rem;
+}
+
+.legend-container {
+    bottom: 1rem;
+    left: 4rem;
+    display: none;
+}
+
+.chart-container {
+    bottom: 1rem;
+    right: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: auto;
+    min-width: 0;
+    max-width: 23.75rem;
+}
+
+/* Styles pour les jauges */
+.gauge-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 5rem;
+    max-width: 33%;
+    position: relative;
+    text-align: center;
+    padding: 0 0.625rem;
+}
+
+.gauge {
+    width: 5rem;
+    height: 5rem;
+    position: relative;
+}
+
+.gauge-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.875rem;
+    font-weight: bold;
+}
+
+.gauge-percentage {
+    margin-top: 0.3125rem;
+    font-size: 0.875rem;
+}
+
+.gauge-label {
+    margin-top: 0.3125rem;
+    font-size: 0.875rem;
+    font-weight: bold;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.gauge-value,
+.gauge-percentage,
+.gauge-label {
+    text-align: center;
+    width: 100%;
+}
+
+/* Styles pour les tags de statut */
+.status-tag {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    margin: 0.3125rem;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    border-radius: 0.3125rem;
+    color: white;
+    cursor: pointer;
+}
+
+/* Couleurs des tags */
+.status-deployed {
+    background-color: #b0e2b5;
+    color: #1e7b34;
+}
+
+.status-in-progress {
+    background-color: #ffe5a0;
+    color: #6e5002;
+}
+
+.status-signed {
+    background-color: #9ecbff;
+    color: #0056b3;
+}
+
+/* Styles des tags actifs */
+.status-tag.active {
+    color: white;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    opacity: 1;
+}
+
+.status-deployed.active {
+    background-color: #28a745;
+}
+
+.status-in-progress.active {
+    background-color: #ffc107;
+    color: #856404;
+}
+
+.status-signed.active {
+    background-color: #007bff;
+}
+
+/* Mode sombre */
+body.dark-mode {
+    background-color: var(--background-color-dark);
+    color: var(--text-color-dark);
+}
+
+body.dark-mode .controls,
+body.dark-mode .controls select,
+body.dark-mode .controls input,
+body.dark-mode #hamburger,
+body.dark-mode #legend-toggle,
+body.dark-mode #theme-toggle,
+body.dark-mode .legend-container,
+body.dark-mode .chart-container,
+body.dark-mode .leaflet-popup-content-wrapper,
+body.dark-mode .leaflet-control-zoom-in,
+body.dark-mode .leaflet-control-zoom-out {
+    background-color: var(--control-background-dark);
+    color: var(--text-color-dark);
+    border-color: var(--control-border-dark);
+}
+
+body.dark-mode #theme-toggle {
+    color: yellow;
+}
+
+/* Styles des popups */
+.leaflet-popup-content-wrapper {
+    background-color: var(--control-background-light);
+    color: var(--text-color-light);
+    border-radius: 0.5rem;
+    padding: 0;
+    border: none;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    min-width: 15rem;
+    max-width: 18.75rem;
+    text-align: center;
+}
+
+.leaflet-popup-content {
+    margin: 0;
+    padding: 0.9375rem;
+    width: auto !important;
+    text-align: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.leaflet-popup-tip-container {
+    display: none;
+}
+
+/* Styles du contenu du popup */
+.popup-content {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.popup-title {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 0.625rem;
+    color: #00aaff;
+    text-align: center;
+    width: 100%;
+}
+
+.popup-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto 0.625rem;
+}
+
+.popup-address {
+    margin: 0.3125rem 0;
+    font-size: 0.875rem;
+    text-align: center;
+    word-wrap: break-word;
+    width: 100%;
+}
+
+.popup-link {
+    color: var(--hyperlink-color);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: bold;
+    margin: 0.3125rem 0;
+    display: inline-block;
+    transition: text-decoration 0.3s ease;
+}
+
+.popup-link:hover {
+    text-decoration: underline;
+}
+
+.popup-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.3125rem;
+    font-size: 0.875rem;
+    font-weight: bold;
+    width: 100%;
+    white-space: nowrap;
+}
+
+.popup-status .status-tag {
+    margin-left: 0.3125rem;
+}
+
+.popup-content p {
+    margin: 0.3125rem 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+}
+
+.popup-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+    word-break: break-all;
+    font-size: 0.875rem;
+}
+
+.popup-content a:hover {
+    text-decoration: underline;
+}
+
+.leaflet-popup-content p {
+    margin: 0.3125rem 0;
+    text-align: center;
+}
+
+.leaflet-control-attribution {
+    display: none;
+}
+
+.popup-address,
+.popup-link,
+.popup-status {
+    margin: 0.5rem 0;
+}
+
+/* Media queries pour le responsive */
+@media (max-width: 64em) {
+
+    /* 1024px */
+    body {
+        font-size: 14px;
+    }
+
+    #hamburger,
+    #legend-toggle,
+    #theme-toggle {
+        width: 2.25rem;
+        height: 2.25rem;
+        font-size: 1rem;
+    }
+
+    #hamburger {
+        top: 1.25rem;
+        left: 1rem;
+    }
+
+    #legend-toggle {
+        top: 4.375rem !important;
+        left: 1rem !important;
+    }
+
+    #theme-toggle {
+        top: 1.25rem;
+        right: 1rem;
+    }
+
+    .leaflet-control-zoom {
+        display: none !important;
+    }
+
+    .leaflet-popup-content-wrapper {
+        min-width: 12rem !important;
+        max-width: 13rem !important;
+        padding: 0.188rem;
+    }
+
+    .leaflet-popup-content h3 {
+        font-size: 0.875rem;
+    }
+
+    .leaflet-popup-content img {
+        width: 6.25rem;
+    }
+
+    .leaflet-popup-content p,
+    .leaflet-popup-content a {
+        font-size: 0.75rem;
+    }
+
+    .popup-title {
+        margin-bottom: 0.188rem;
+    }
+
+    .popup-image {
+        margin: 0 auto 0.188rem;
+    }
+
+    .popup-link,
+    .popup-status,
+    .popup-content {
+        margin: 0.188rem 0;
+    }
+
+    .gauge {
+        width: 3.75rem;
+        height: 3.75rem;
+    }
+
+    .gauge-value,
+    .gauge-percentage,
+    .gauge-label {
+        font-size: 0.75rem;
+    }
+
+    .gauge-wrapper {
+        padding: 0;
+    }
+
+    .gauge-label {
+        word-wrap: break-word;
+    }
+
+    .legend-container {
+        bottom: 10rem;
+        left: 0.625rem;
+    }
+
+    .chart-container {
+        display: flex;
+        left: 50%;
+        transform: translateX(-50%);
+        justify-content: space-between;
+        align-items: center;
+        width: 80% !important;
+    }
+
+    .controls {
+        width: 50%;
+        padding: 0.625rem;
+        font-size: 0.75rem;
+    }
+
+    .status-tag {
+        padding: 0.125rem 0.375rem;
+        margin: 0.3125rem;
+        font-size: 0.75rem;
+    }
+
+    .controls select,
+    .controls input {
+        font-size: 0.75rem;
+        padding: 0.3125rem;
+    }
+
+    .legend-item {
+        font-size: 0.8125rem;
+        margin-bottom: 0.1875rem;
+    }
+
+    .legend-color {
+        width: 0.9375rem;
+        height: 0.9375rem;
+        margin-right: 0.3125rem;
+    }
+}
+
+@media (max-width: 64em) and (orientation: landscape) {
+    #hamburger {
+        top: 1.25rem;
+        left: calc(1rem + env(safe-area-inset-left));
+    }
+
+    #legend-toggle {
+        top: 4.375rem;
+        left: calc(1rem + env(safe-area-inset-left)) !important;
+    }
+
+    #theme-toggle {
+        top: 1.25rem;
+        right: calc(1rem + env(safe-area-inset-right)) !important;
+    }
+
+    .gauge-wrapper {
+        padding: 0;
+    }
+
+    #map {
+        height: 100vw;
+    }
+
+    .chart-container {
+        right: calc(0.625rem + env(safe-area-inset-right)) !important;
+        transform: none;
+        width: 35% !important;
+    }
+
+    .legend-container {
+        left: calc(3.75rem + env(safe-area-inset-left)) !important;
+        right: auto !important;
+    }
+
+    .controls {
+        top: 0.625rem;
+        left: calc(3.75rem + env(safe-area-inset-left));
+    }
+
+    body.landscape-mode #legend-toggle {
+        top: 4.375rem !important;
+        left: calc(1rem + env(safe-area-inset-left)) !important;
+        bottom: auto !important;
+    }
+
+    body.landscape-mode .chart-container {
+        right: calc(1rem + env(safe-area-inset-right)) !important;
+        left: auto;
+        transform: none;
+        max-width: 21.875rem;
+    }
+
+    body.landscape-mode .legend-container {
+        bottom: 0.625rem;
+        left: calc(1rem + env(safe-area-inset-left));
+        right: auto;
+    }
+
+    .popup-content.mobile-landscape {
+        max-width: 200px;
+        font-size: 0.9em;
+    }
+
+    .popup-content.mobile-landscape .popup-image {
+        max-width: 150px;
+        height: auto;
+    }
+}
+
+@media (max-width: 20rem) {
+
+    /* 320px */
+    html {
+        font-size: 12px;
+    }
+
+    #hamburger,
+    #legend-toggle,
+    #theme-toggle {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.875rem;
+    }
+
+    .chart-container {
+        max-width: 15rem;
+    }
+
+    .gauge {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    .gauge-value,
+    .gauge-percentage,
+    .gauge-label {
+        font-size: 0.65rem;
+    }
+}
+
+body {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+#map {
+    height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    width: 100vw;
+    position: fixed;
+    top: env(safe-area-inset-top);
+    left: 0;
+    right: 0;
+    bottom: env(safe-area-inset-bottom);
+}
+
+/* Styles pour le message d'erreur */
+.error-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 10000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
