@@ -805,11 +805,15 @@ function handleLanguageChange() {
     savePreferences();
     debouncedUpdateMarkers();
 
+    markers.forEach(marker => {
+        const newContent = createPopupContent(marker.hospitalData);
+        marker.getPopup().setContent(newContent);
+    });
+
     openPopups.forEach(popup => {
         const marker = findMarkerByLatLng(popup.latlng);
         if (marker) {
-            const newContent = createPopupContent(popup.hospitalData);
-            marker.bindPopup(newContent).openPopup();
+            marker.openPopup();
         }
     });
 }
