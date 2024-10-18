@@ -44,7 +44,7 @@ function loadGeoJSONData() {
     return fetch('data/countries.geojson')
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
         })
