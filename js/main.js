@@ -41,7 +41,7 @@ const mapCustomization = {
 
 // Function to load GeoJSON data
 function loadGeoJSONData() {
-    return fetch('/data/countries.geojson')
+    return fetch('data/countries.geojson')
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
