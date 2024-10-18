@@ -9,7 +9,6 @@ let markerClusterGroup;
 let currentTranslations = {};
 let markersAdded = false;
 let isInitialized = false;
-let updateMarkersTimeout;
 
 const gauges = {};
 const colors = {
@@ -40,21 +39,22 @@ const mapCustomization = {
 };
 
 // Function to load GeoJSON data
-function loadGeoJSONData() {
-    return fetch('data/countries.geojson')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            window.countriesData = data;
-        });
+async function loadGeoJSONData() {
+    try {
+        const response = await fetch('data/countries.geojson');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        window.countriesData = await response.json();
+        console.log('GeoJSON data loaded successfully');
+    } catch (error) {
+        console.error('Error loading GeoJSON data:', error);
+        handleError(error, 'Failed to load map data. Some features may not be available.');
+    }
 }
 
 // Main initialization function
-function initApplication() {
+async function initApplication() {
     if (isInitialized) {
         console.log('Application already initialized. Skipping initialization.');
         return;
@@ -75,17 +75,10 @@ function initApplication() {
         initMap();
 
         // Load GeoJSON data
-        loadGeoJSONData()
-            .then(() => {
-                console.log('GeoJSON data loaded successfully');
-                if (window.countriesData) {
-                    applyMapCustomization();
-                }
-            })
-            .catch(error => {
-                console.error('Error loading GeoJSON data:', error);
-                handleError(error, 'Failed to load map data. Some features may not be available.');
-            });
+        await loadGeoJSONData();
+        if (window.countriesData) {
+            applyMapCustomization();
+        }
 
         // Initialize gauges
         initGauges();
@@ -125,6 +118,9 @@ function initApplication() {
 
         // Enhance accessibility
         enhanceAccessibility();
+
+        // Initialize hospital search
+        initHospitalSearch();
 
         isInitialized = true;
         console.log('Application initialized successfully');
@@ -252,6 +248,8 @@ function updateStatusTagsVisually() {
         const status = tag.dataset.status;
         const isActive = activeStatus.some(s => s.toLowerCase() === status.toLowerCase());
         tag.classList.toggle('active', isActive);
+        // Update aria-pressed for accessibility
+        tag.setAttribute('aria-pressed', isActive.toString());
     });
     console.log('Status tags updated visually');
 }
@@ -322,7 +320,7 @@ function createMarker(hospital) {
     const markerOptions = {
         pane: 'markerPane'
     };
-
+    
     if (mapCustomization.useCustomMarkers) {
         const customIcon = L.icon({
             iconUrl: mapCustomization.customMarkerUrl,
@@ -369,6 +367,7 @@ function updateMarkers() {
     const selectedContinent = document.getElementById('continent-select').value;
     const selectedCountry = document.getElementById('country-filter').value.toLowerCase();
     const selectedCity = document.getElementById('city-filter').value.toLowerCase();
+    const searchTerm = document.getElementById('hospital-search').value.toLowerCase();
 
     let visibleMarkers = 0;
     markers.forEach(marker => {
@@ -380,8 +379,9 @@ function updateMarkers() {
         const continentMatch = !selectedContinent || getContinent(hospital.lat, hospital.lon) === selectedContinent;
         const countryMatch = !selectedCountry || country.toLowerCase().includes(selectedCountry);
         const cityMatch = !selectedCity || city.toLowerCase().includes(selectedCity);
+        const nameMatch = !searchTerm || hospital.name.toLowerCase().includes(searchTerm);
 
-        if (statusMatch && continentMatch && countryMatch && cityMatch) {
+        if (statusMatch && continentMatch && countryMatch && cityMatch && nameMatch) {
             if (!markerClusterGroup.hasLayer(marker)) {
                 markerClusterGroup.addLayer(marker);
             }
@@ -393,6 +393,28 @@ function updateMarkers() {
 
     console.log(`Visible markers after update: ${visibleMarkers}`);
     updateGauges();
+
+    // Add or remove "No markers visible" message
+    const noMarkersMessage = document.getElementById('no-markers-message');
+    if (visibleMarkers === 0) {
+        if (!noMarkersMessage) {
+            const message = document.createElement('div');
+            message.id = 'no-markers-message';
+            message.textContent = 'No hospitals match the current filters.';
+            message.style.position = 'absolute';
+            message.style.top = '50%';
+            message.style.left = '50%';
+            message.style.transform = 'translate(-50%, -50%)';
+            message.style.backgroundColor = 'white';
+            message.style.padding = '10px';
+            message.style.borderRadius = '5px';
+            message.style.zIndex = '1000';
+            document.getElementById('map').appendChild(message);
+        }
+    } else if (noMarkersMessage) {
+        noMarkersMessage.remove();
+    }
+
     console.log('Markers updated successfully');
 }
 
@@ -417,11 +439,50 @@ function adjustPopupOptions() {
 
 // Extract location info from address
 function extractLocationInfo(address) {
+    if (typeof address !== 'string' || address.trim() === '') {
+        console.warn('Invalid address provided to extractLocationInfo');
+        return { street: '', city: '', state: '', country: '', postalCode: '' };
+    }
+
+    // Normalize the address string
+    address = address.trim().replace(/\s+/g, ' ');
+
+    // Split the address into parts
     const parts = address.split(',').map(part => part.trim());
-    return {
-        city: parts[parts.length - 2] || '',
-        country: parts[parts.length - 1] || ''
-    };
+
+    let street = '', city = '', state = '', country = '', postalCode = '';
+
+    // Extract country (assumed to be the last part)
+    if (parts.length > 0) {
+        country = parts.pop();
+    }
+
+    // Extract postal code (if present)
+    const postalCodeMatch = parts[parts.length - 1]?.match(/\b\d{5}(-\d{4})?\b/);
+    if (postalCodeMatch) {
+        postalCode = postalCodeMatch[0];
+        parts[parts.length - 1] = parts[parts.length - 1].replace(postalCode, '').trim();
+    }
+
+    // Extract city and state (if present)
+    if (parts.length > 0) {
+        const cityStatePart = parts.pop();
+        const cityStateMatch = cityStatePart.match(/^(.+?)\s*(?:,\s*)?(\w+)?$/);
+        if (cityStateMatch) {
+            city = cityStateMatch[1];
+            state = cityStateMatch[2] || '';
+        } else {
+            city = cityStatePart;
+        }
+    }
+
+    // The remaining parts form the street address
+    street = parts.join(', ');
+
+    // Clean up any remaining commas
+    [street, city, state, country] = [street, city, state, country].map(s => s.replace(/^,\s*|,\s*$/g, ''));
+
+    return { street, city, state, country, postalCode };
 }
 
 // Get continent based on coordinates
@@ -445,7 +506,7 @@ function getColor(status) {
     }
 }
 
-// Create popup content (continued)
+// Create popup content
 function createPopupContent(hospital) {
     const isLandscape = window.innerWidth > window.innerHeight;
     const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
@@ -455,12 +516,12 @@ function createPopupContent(hospital) {
     return `
         <div class="${popupClass}">
             <h3 class="popup-title">${hospital.name}</h3>
-            <img class="popup-image" src="${hospital.imageUrl}" alt="${hospital.name}">
+            <img class="popup-image" src="${hospital.imageUrl}" alt="${hospital.name}" loading="lazy">
             <div class="popup-address">
                 <strong>${currentTranslations.address || 'Address'}:</strong><br>
                 ${hospital.address}
             </div>
-            <a href="${hospital.website}" target="_blank" class="popup-link">${currentTranslations.visitWebsite || 'Visit Website'}</a>
+            <a href="${hospital.website}" target="_blank" rel="noopener noreferrer" class="popup-link">${currentTranslations.visitWebsite || 'Visit Website'}</a>
             <div class="popup-status">
                 <span>${currentTranslations.status || 'Status'}:</span> ${statusTag}
             </div>
@@ -572,8 +633,10 @@ function applyTranslations(lang) {
 function updatePlaceholders() {
     const countryFilter = document.getElementById('country-filter');
     const cityFilter = document.getElementById('city-filter');
+    const hospitalSearch = document.getElementById('hospital-search');
     if (countryFilter) countryFilter.setAttribute('placeholder', currentTranslations.enterCountry || 'Enter country...');
     if (cityFilter) cityFilter.setAttribute('placeholder', currentTranslations.enterCity || 'Enter city...');
+    if (hospitalSearch) hospitalSearch.setAttribute('placeholder', currentTranslations.searchHospital || 'Search hospital...');
 }
 
 // Update legend
@@ -783,7 +846,7 @@ function addEventListeners() {
 
     document.getElementById('language-select').addEventListener('change', handleLanguageChange);
     document.getElementById('continent-select').addEventListener('change', handleContinentChange);
-    document.querySelectorAll('#country-filter, #city-filter').forEach(input => {
+    document.querySelectorAll('#country-filter, #city-filter, #hospital-search').forEach(input => {
         input.addEventListener('input', debounce(handleFilterChange, 300));
     });
 
@@ -858,7 +921,7 @@ function findMarkerByLatLng(latlng) {
     return foundMarker;
 }
 
-// Enhance accessibility (continued)
+// Enhance accessibility
 function enhanceAccessibility() {
     const languageSelect = document.getElementById('language-select');
     languageSelect.setAttribute('aria-label', 'Select language');
@@ -871,6 +934,9 @@ function enhanceAccessibility() {
 
     const cityFilter = document.getElementById('city-filter');
     cityFilter.setAttribute('aria-label', 'Filter by city');
+
+    const hospitalSearch = document.getElementById('hospital-search');
+    hospitalSearch.setAttribute('aria-label', 'Search for hospital');
 
     const statusTags = document.querySelectorAll('.status-tag');
     statusTags.forEach(tag => {
@@ -1005,6 +1071,19 @@ function handleMapClick(e) {
             layer.closePopup();
         }
     });
+}
+
+// Initialize hospital search
+function initHospitalSearch() {
+    const searchInput = document.getElementById('hospital-search');
+    if (!searchInput) {
+        console.error('Hospital search input not found');
+        return;
+    }
+
+    searchInput.addEventListener('input', debounce(() => {
+        debouncedUpdateMarkers();
+    }, 300));
 }
 
 // Initialize the application when the DOM is fully loaded
