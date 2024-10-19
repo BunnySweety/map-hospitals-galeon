@@ -897,10 +897,7 @@ function handleLanguageChange() {
     const openPopups = [];
     markerClusterGroup.eachLayer(function (layer) {
         if (layer instanceof L.Marker && layer.isPopupOpen()) {
-            openPopups.push({
-                marker: layer,
-                content: layer.getPopup().getContent()
-            });
+            openPopups.push(layer);
             layer.closePopup();
         }
     });
@@ -910,10 +907,7 @@ function handleLanguageChange() {
 
     updateMarkers();
 
-    openPopups.forEach(popup => {
-        const marker = popup.marker;
-        const newContent = createPopupContent(marker.hospitalData);
-        marker.setPopupContent(newContent);
+    openPopups.forEach(marker => {
         marker.openPopup();
     });
 }
