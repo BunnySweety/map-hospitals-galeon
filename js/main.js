@@ -277,22 +277,12 @@ function addMarkers() {
             throw new Error('Hospitals data is not available or not in the correct format');
         }
 
-        const selectedContinent = document.getElementById('continent-select').value;
-        const selectedCountry = document.getElementById('country-filter').value.toLowerCase();
-        const selectedCity = document.getElementById('city-filter').value.toLowerCase();
-
-        console.log(`Filters: continent=${selectedContinent}, country=${selectedCountry}, city=${selectedCity}`);
-
         markerClusterGroup.clearLayers();
         markers = [];
 
         updateMarkersInChunks(hospitals);
 
-        console.log(`Total markers created: ${markers.length}`);
-        map.addLayer(markerClusterGroup);
-        updateGauges();
         markersAdded = true;
-        console.log('addMarkers function completed successfully');
     } catch (error) {
         console.error('Error in addMarkers:', error);
         handleError(error, 'An error occurred while adding markers to the map. Please check the console for more details.');
@@ -302,23 +292,27 @@ function addMarkers() {
 // Update markers in chunks to improve performance
 function updateMarkersInChunks(hospitals, chunkSize = 5) {
     let index = 0;
+    let createdMarkers = 0;
+
     function processChunk() {
         const chunk = hospitals.slice(index, index + chunkSize);
         chunk.forEach(hospital => {
             const { city, country } = extractLocationInfo(hospital.address);
             const marker = createMarker(hospital);
-            markerClusterGroup.addLayer(marker);
             markers.push(marker);
+            createdMarkers++;
         });
         index += chunkSize;
         if (index < hospitals.length) {
-            requestAnimationFrame(processChunk);
+            setTimeout(processChunk, 16); // Use 16ms timeout to aim for 60fps
         } else {
+            console.log(`Total markers created: ${createdMarkers}`);
             console.log('All markers processed');
             updateMarkers();
         }
     }
-    requestAnimationFrame(processChunk);
+
+    processChunk();
 }
 
 // Create a marker for a hospital
@@ -386,29 +380,35 @@ function updateMarkers() {
     let visibleMarkers = 0;
     const bounds = L.latLngBounds();
 
+    markerClusterGroup.clearLayers();
+
     markers.forEach(marker => {
         const hospital = marker.hospitalData;
         const { city, country } = extractLocationInfo(hospital.address);
 
         if (markerMatchesFilters(hospital, filters, city, country)) {
-            if (!markerClusterGroup.hasLayer(marker)) {
-                markerClusterGroup.addLayer(marker);
-            }
+            markerClusterGroup.addLayer(marker);
             bounds.extend(marker.getLatLng());
             visibleMarkers++;
-        } else {
-            markerClusterGroup.removeLayer(marker);
         }
     });
+
+    map.addLayer(markerClusterGroup);
 
     console.log(`Visible markers after update: ${visibleMarkers}`);
     updateGauges();
     updateNoHospitalsMessage(visibleMarkers);
-    updateMapView(visibleMarkers, bounds);
+    
+    if (visibleMarkers > 0) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+        map.setView([50, 10], 4); // Default coordinates and zoom
+    }
 
     console.log('Markers updated successfully');
 }
 
+// Helper function to check if a marker matches the current filters
 function markerMatchesFilters(hospital, filters, city, country) {
     return (activeStatus.length === 0 || activeStatus.some(s => s.toLowerCase() === hospital.status.toLowerCase())) &&
         (!filters.continent || getContinent(hospital.lat, hospital.lon) === filters.continent) &&
@@ -417,6 +417,7 @@ function markerMatchesFilters(hospital, filters, city, country) {
         (!filters.searchTerm || hospital.name.toLowerCase().includes(filters.searchTerm));
 }
 
+// Helper function to update the "No hospitals" message
 function updateNoHospitalsMessage(visibleMarkers) {
     const noHospitalsMessage = document.getElementById('no-hospitals-message');
     if (noHospitalsMessage) {
