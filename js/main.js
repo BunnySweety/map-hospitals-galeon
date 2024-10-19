@@ -286,30 +286,7 @@ function addMarkers() {
         markerClusterGroup.clearLayers();
         markers = [];
 
-        hospitals.forEach((hospital, index) => {
-            console.log(`Processing hospital ${index}:`, hospital);
-            try {
-                const { city, country } = extractLocationInfo(hospital.address);
-
-                const statusMatch = activeStatus.length === 0 ||
-                    activeStatus.some(s => s.toLowerCase() === hospital.status.toLowerCase());
-                const continentMatch = !selectedContinent || getContinent(hospital.lat, hospital.lon) === selectedContinent;
-                const countryMatch = !selectedCountry || country.toLowerCase().includes(selectedCountry);
-                const cityMatch = !selectedCity || city.toLowerCase().includes(selectedCity);
-
-                if (statusMatch && continentMatch && countryMatch && cityMatch) {
-                    console.log('Creating marker for this hospital');
-                    const marker = createMarker(hospital);
-                    markerClusterGroup.addLayer(marker);
-                    markers.push(marker);
-                    console.log('Marker added to cluster group and markers array');
-                } else {
-                    console.log('Hospital did not match filters, skipping');
-                }
-            } catch (error) {
-                console.error(`Error processing hospital ${index}:`, error);
-            }
-        });
+        updateMarkersInChunks(hospitals);
 
         console.log(`Total markers created: ${markers.length}`);
         map.addLayer(markerClusterGroup);
@@ -320,6 +297,28 @@ function addMarkers() {
         console.error('Error in addMarkers:', error);
         handleError(error, 'An error occurred while adding markers to the map. Please check the console for more details.');
     }
+}
+
+// Update markers in chunks to improve performance
+function updateMarkersInChunks(hospitals, chunkSize = 5) {
+    let index = 0;
+    function processChunk() {
+        const chunk = hospitals.slice(index, index + chunkSize);
+        chunk.forEach(hospital => {
+            const { city, country } = extractLocationInfo(hospital.address);
+            const marker = createMarker(hospital);
+            markerClusterGroup.addLayer(marker);
+            markers.push(marker);
+        });
+        index += chunkSize;
+        if (index < hospitals.length) {
+            requestAnimationFrame(processChunk);
+        } else {
+            console.log('All markers processed');
+            updateMarkers();
+        }
+    }
+    requestAnimationFrame(processChunk);
 }
 
 // Create a marker for a hospital
@@ -371,6 +370,11 @@ function createMarker(hospital) {
 
 // Update existing markers
 function updateMarkers() {
+    if (!hospitals || hospitals.length === 0) {
+        console.log('No hospital data available yet. Skipping marker update.');
+        return;
+    }
+
     console.log('Updating existing markers');
     const filters = {
         continent: document.getElementById('continent-select')?.value || '',
@@ -430,7 +434,7 @@ function updateMapView(visibleMarkers, bounds) {
     if (visibleMarkers > 0) {
         map.fitBounds(bounds, { padding: [50, 50] });
     } else {
-        map.setView([50, 10], 4); // Coordonnées et zoom par défaut
+        map.setView([50, 10], 4); // Default coordinates and zoom
     }
 }
 
@@ -530,19 +534,19 @@ function createPopupContent(hospital) {
 
     const statusTag = getStatusTag(hospital.status, true);
     return `
-        <div class="${popupClass}">
-            <h3 class="popup-title">${hospital.name}</h3>
-            <img class="popup-image" src="${hospital.imageUrl}" alt="${hospital.name}" loading="lazy">
-            <div class="popup-address">
-                <strong>${currentTranslations.address || 'Address'}:</strong><br>
-                ${hospital.address}
-            </div>
-            <a href="${hospital.website}" target="_blank" rel="noopener noreferrer" class="popup-link">${currentTranslations.visitWebsite || 'Visit Website'}</a>
-            <div class="popup-status">
-                <span>${currentTranslations.status || 'Status'}:</span> ${statusTag}
-            </div>
+    <div class="${popupClass}">
+        <h3 class="popup-title">${hospital.name}</h3>
+        <img class="popup-image" src="${hospital.imageUrl}" alt="${hospital.name}" loading="lazy">
+        <div class="popup-address">
+            <strong>${currentTranslations.address || 'Address'}:</strong><br>
+            ${hospital.address}
         </div>
-    `;
+        <a href="${hospital.website}" target="_blank" rel="noopener noreferrer" class="popup-link">${currentTranslations.visitWebsite || 'Visit Website'}</a>
+        <div class="popup-status">
+            <span>${currentTranslations.status || 'Status'}:</span> ${statusTag}
+        </div>
+    </div>
+`;
 }
 
 // Get status tag HTML
@@ -553,9 +557,9 @@ function getStatusTag(status, isActive = false) {
 
     if (mapCustomization.useCustomStatusIcons && mapCustomization.customStatusIconUrls[status]) {
         return `<span class="status-tag status-${statusKey}${activeClass}">
-            <img src="${mapCustomization.customStatusIconUrls[status]}" alt="${statusText}" style="width:20px;height:20px;margin-right:5px;">
-            ${statusText}
-        </span>`;
+        <img src="${mapCustomization.customStatusIconUrls[status]}" alt="${statusText}" style="width:20px;height:20px;margin-right:5px;">
+        ${statusText}
+    </span>`;
     } else {
         return `<span class="status-tag status-${statusKey}${activeClass}">${statusText}</span>`;
     }
@@ -644,7 +648,7 @@ function applyTranslations(lang) {
         }
     });
     updatePlaceholders();
-    updateMarkers(); // Pour mettre à jour le message "No hospitals match"
+    updateMarkers(); // To update the "No hospitals match" message
 }
 
 // Update placeholders
@@ -843,7 +847,7 @@ function addEventListeners() {
     window.addEventListener('resize', debounce(() => {
         adjustForMobile();
         if (map) map.invalidateSize();
-
+    
         const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
         if (map) {
             if (isMobile && map.zoomControl) {
@@ -1055,9 +1059,9 @@ function initHospitalSearch() {
 
 // Initialize the application when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
-    initApplication();
-    addEventListeners();
-    enhanceAccessibility();
+    if (!isInitialized) {
+        initApplication();
+    }
 });
 
 // Export functions for potential use in other modules
