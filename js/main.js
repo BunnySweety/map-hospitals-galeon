@@ -318,7 +318,7 @@ function addMarkers() {
         console.log('addMarkers function completed successfully');
     } catch (error) {
         console.error('Error in addMarkers:', error);
-        alert('An error occurred while adding markers to the map. Please check the console for more details.');
+        handleError(error, 'An error occurred while adding markers to the map. Please check the console for more details.');
     }
 }
 
@@ -328,7 +328,7 @@ function createMarker(hospital) {
     const markerOptions = {
         pane: 'markerPane'
     };
-    
+
     if (mapCustomization.useCustomMarkers) {
         const customIcon = L.icon({
             iconUrl: mapCustomization.customMarkerUrl,
@@ -372,27 +372,25 @@ function createMarker(hospital) {
 // Update existing markers
 function updateMarkers() {
     console.log('Updating existing markers');
-    const selectedContinent = document.getElementById('continent-select')?.value || '';
-    const selectedCountry = document.getElementById('country-filter')?.value.toLowerCase() || '';
-    const selectedCity = document.getElementById('city-filter')?.value.toLowerCase() || '';
-    const searchTerm = document.getElementById('hospital-search')?.value.toLowerCase() || '';
+    const filters = {
+        continent: document.getElementById('continent-select')?.value || '',
+        country: document.getElementById('country-filter')?.value.toLowerCase() || '',
+        city: document.getElementById('city-filter')?.value.toLowerCase() || '',
+        searchTerm: document.getElementById('hospital-search')?.value.toLowerCase() || ''
+    };
 
     let visibleMarkers = 0;
+    const bounds = L.latLngBounds();
+
     markers.forEach(marker => {
         const hospital = marker.hospitalData;
         const { city, country } = extractLocationInfo(hospital.address);
 
-        const statusMatch = activeStatus.length === 0 ||
-            activeStatus.some(s => s.toLowerCase() === hospital.status.toLowerCase());
-        const continentMatch = !selectedContinent || getContinent(hospital.lat, hospital.lon) === selectedContinent;
-        const countryMatch = !selectedCountry || country.toLowerCase().includes(selectedCountry);
-        const cityMatch = !selectedCity || city.toLowerCase().includes(selectedCity);
-        const nameMatch = !searchTerm || hospital.name.toLowerCase().includes(searchTerm);
-
-        if (statusMatch && continentMatch && countryMatch && cityMatch && nameMatch) {
+        if (markerMatchesFilters(hospital, filters, city, country)) {
             if (!markerClusterGroup.hasLayer(marker)) {
                 markerClusterGroup.addLayer(marker);
             }
+            bounds.extend(marker.getLatLng());
             visibleMarkers++;
         } else {
             markerClusterGroup.removeLayer(marker);
@@ -401,31 +399,39 @@ function updateMarkers() {
 
     console.log(`Visible markers after update: ${visibleMarkers}`);
     updateGauges();
+    updateNoHospitalsMessage(visibleMarkers);
+    updateMapView(visibleMarkers, bounds);
 
-    // Gestion du message "pas d'hôpitaux"
+    console.log('Markers updated successfully');
+}
+
+function markerMatchesFilters(hospital, filters, city, country) {
+    return (activeStatus.length === 0 || activeStatus.some(s => s.toLowerCase() === hospital.status.toLowerCase())) &&
+        (!filters.continent || getContinent(hospital.lat, hospital.lon) === filters.continent) &&
+        (!filters.country || country.toLowerCase().includes(filters.country)) &&
+        (!filters.city || city.toLowerCase().includes(filters.city)) &&
+        (!filters.searchTerm || hospital.name.toLowerCase().includes(filters.searchTerm));
+}
+
+function updateNoHospitalsMessage(visibleMarkers) {
     const noHospitalsMessage = document.getElementById('no-hospitals-message');
-    if (visibleMarkers === 0) {
-        if (noHospitalsMessage) {
-            noHospitalsMessage.style.display = 'block';
+    if (noHospitalsMessage) {
+        noHospitalsMessage.style.display = visibleMarkers === 0 ? 'block' : 'none';
+        if (visibleMarkers === 0) {
             const messageSpan = noHospitalsMessage.querySelector('span');
             if (messageSpan) {
                 messageSpan.textContent = currentTranslations.noHospitalsMessage || "No hospitals match the current filters.";
             }
         }
-    } else if (noHospitalsMessage) {
-        noHospitalsMessage.style.display = 'none';
     }
+}
 
-    // Mise à jour de la vue de la carte si nécessaire
+function updateMapView(visibleMarkers, bounds) {
     if (visibleMarkers > 0) {
-        const bounds = L.latLngBounds(markers.filter(m => markerClusterGroup.hasLayer(m)).map(m => m.getLatLng()));
         map.fitBounds(bounds, { padding: [50, 50] });
     } else {
-        // Si aucun marqueur n'est visible, revenez à une vue par défaut
         map.setView([50, 10], 4); // Coordonnées et zoom par défaut
     }
-
-    console.log('Markers updated successfully');
 }
 
 // Debounced update markers function
@@ -631,12 +637,14 @@ function loadPreferences() {
 // Apply translations
 function applyTranslations(lang) {
     currentTranslations = translations[lang] || translations[DEFAULT_LANGUAGE];
+    document.querySelectorAll('[data-translate]').forEach(element => {
+        const key = element.getAttribute('data-translate');
+        if (currentTranslations[key]) {
+            element.textContent = currentTranslations[key];
+        }
+    });
     updatePlaceholders();
-    updateLegend();
-    updateContinentSelect();
-    updateGaugeLabels();
-    updateStatusTags();
-    debouncedUpdateMarkers();
+    updateMarkers(); // Pour mettre à jour le message "No hospitals match"
 }
 
 // Update placeholders
@@ -1010,67 +1018,17 @@ function filterCountries(countriesData, countriesToShow) {
     };
 }
 
-// Function to update the map view based on selected filters
-function updateMapView() {
-    const selectedContinent = document.getElementById('continent-select').value;
-    const selectedCountry = document.getElementById('country-filter').value.toLowerCase();
-
-    if (selectedCountry) {
-        // Zoom to the selected country
-        const countryFeature = window.countriesData.features.find(
-            feature => feature.properties.ADMIN.toLowerCase() === selectedCountry
-        );
-        if (countryFeature) {
-            const bounds = L.geoJSON(countryFeature).getBounds();
-            map.fitBounds(bounds);
-        }
-    } else if (selectedContinent) {
-        // Zoom to the selected continent
-        const continentFeatures = window.countriesData.features.filter(
-            feature => getContinent(feature.properties.LAT, feature.properties.LON) === selectedContinent
-        );
-        if (continentFeatures.length > 0) {
-            const bounds = L.geoJSON({ type: 'FeatureCollection', features: continentFeatures }).getBounds();
-            map.fitBounds(bounds);
-        }
-    } else {
-        // Reset to default view
-        map.setView([50, 10], 4);
-    }
-}
-
-// Function to get country information from GeoJSON data
-function getCountryInfo(countryName) {
-    if (!window.countriesData) return null;
-
-    const feature = window.countriesData.features.find(
-        f => f.properties.ADMIN.toLowerCase() === countryName.toLowerCase()
-    );
-
-    if (feature) {
-        return {
-            name: feature.properties.ADMIN,
-            continent: getContinent(feature.properties.LAT, feature.properties.LON),
-            area: feature.properties.AREA,
-            population: feature.properties.POP_EST
-        };
-    }
-
-    return null;
-}
-
 // Function to handle errors and display them to the user
 function handleError(error, userMessage) {
-    console.error(error);
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.textContent = userMessage;
-    document.body.appendChild(errorDiv);
-
-    // Remove error message after 5 seconds
-    setTimeout(() => {
-        errorDiv.remove();
-    }, 5000);
+    console.error('Error:', error);
+    const errorMessageElement = document.getElementById('error-message');
+    if (errorMessageElement) {
+        errorMessageElement.textContent = userMessage || 'An error occurred. Please try again.';
+        errorMessageElement.style.display = 'block';
+        setTimeout(() => {
+            errorMessageElement.style.display = 'none';
+        }, 5000);
+    }
 }
 
 // Function to handle map clicks
