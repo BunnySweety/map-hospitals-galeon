@@ -648,6 +648,10 @@ function applyTranslations(lang) {
         }
     });
     updatePlaceholders();
+    updateContinentSelect();
+    updateGaugeLabels();
+    updateStatusTags();
+    updateLegend();
     updateMarkers(); // To update the "No hospitals match" message
 }
 
