@@ -24,7 +24,8 @@ const translations = {
         noHospitals: "No hospitals available",
         gaugesDeployed: "Deployed",
         gaugesInProgress: "In Progress",
-        gaugesSigned: "Signed"
+        gaugesSigned: "Signed",
+        searchHospital: "Search hospital..."
     },
     fr: { // French
         continent: "Continent",
@@ -51,7 +52,8 @@ const translations = {
         noHospitals: "Aucun hôpital disponible",
         gaugesDeployed: "Déployé",
         gaugesInProgress: "En cours",
-        gaugesSigned: "Signé"
+        gaugesSigned: "Signé",
+        searchHospital: "Rechercher un hôpital..."
     },
     es: { // Spanish
         continent: "Continente",
@@ -78,7 +80,8 @@ const translations = {
         noHospitals: "No hay hospitales disponibles",
         gaugesDeployed: "Desplegado",
         gaugesInProgress: "En progreso",
-        gaugesSigned: "Firmado"
+        gaugesSigned: "Firmado",
+        searchHospital: "Buscar hospital..."
     },
     zh: { // Chinese
         continent: "大陆",
@@ -105,7 +108,8 @@ const translations = {
         noHospitals: "没有可用的医院",
         gaugesDeployed: "部署",
         gaugesInProgress: "进行中",
-        gaugesSigned: "已签署"
+        gaugesSigned: "已签署",
+        searchHospital: "搜索医院..."
     },
     ar: { // Arabic
         continent: "قارة",
@@ -132,7 +136,8 @@ const translations = {
         noHospitals: "لا توجد مستشفيات متاحة",
         gaugesDeployed: "تم النشر",
         gaugesInProgress: "قيد التنفيذ",
-        gaugesSigned: "موقع"
+        gaugesSigned: "موقع",
+        searchHospital: "ابحث عن مستشفى..."
     },
     hi: { // Hindi
         continent: "महाद्वीप",
@@ -159,7 +164,8 @@ const translations = {
         noHospitals: "कोई अस्पताल उपलब्ध नहीं है",
         gaugesDeployed: "तैनात",
         gaugesInProgress: "प्रगति में",
-        gaugesSigned: "हस्ताक्षरित"
+        gaugesSigned: "हस्ताक्षरित",
+        searchHospital: "अस्पताल खोजें..."
     },
     bn: { // Bengali
         continent: "মহাদেশ",
@@ -186,7 +192,8 @@ const translations = {
         noHospitals: "কোনও হাসপাতাল উপলব্ধ নেই",
         gaugesDeployed: "মোতায়েন",
         gaugesInProgress: "প্রগতি",
-        gaugesSigned: "স্বাক্ষরিত"
+        gaugesSigned: "স্বাক্ষরিত",
+        searchHospital: "হাসপাতাল অনুসন্ধান করুন..."
     },
     pt: { // Portuguese
         continent: "Continente",
@@ -213,7 +220,8 @@ const translations = {
         noHospitals: "Nenhum hospital disponível",
         gaugesDeployed: "Implantado",
         gaugesInProgress: "Em progresso",
-        gaugesSigned: "Assinado"
+        gaugesSigned: "Assinado",
+        searchHospital: "Pesquisar hospital..."
     },
     ru: { // Russian
         continent: "Континент",
@@ -240,7 +248,8 @@ const translations = {
         noHospitals: "Нет доступных больниц",
         gaugesDeployed: "Развернутый",
         gaugesInProgress: "В процессе",
-        gaugesSigned: "Подписанный"
+        gaugesSigned: "Подписанный",
+        searchHospital: "Искать больницу..."
     },
     ja: { // Japanese
         continent: "大陸",
@@ -267,7 +276,8 @@ const translations = {
         noHospitals: "利用可能な病院はありません",
         gaugesDeployed: "展開済み",
         gaugesInProgress: "進行中",
-        gaugesSigned: "署名済み"
+        gaugesSigned: "署名済み",
+        searchHospital: "病院を探す..."
     },
     de: { // German
         continent: "Kontinent",
@@ -294,7 +304,8 @@ const translations = {
         noHospitals: "Keine Krankenhäuser verfügbar",
         gaugesDeployed: "Eingesetzt",
         gaugesInProgress: "In Bearbeitung",
-        gaugesSigned: "Unterzeichnet"
+        gaugesSigned: "Unterzeichnet",
+        searchHospital: "Krankenhaus suchen..."
     },
     ko: { // Korean
         continent: "대륙",
@@ -321,7 +332,8 @@ const translations = {
         noHospitals: "이용 가능한 병원이 없습니다",
         gaugesDeployed: "배포됨",
         gaugesInProgress: "진행 중",
-        gaugesSigned: "서명됨"
+        gaugesSigned: "서명됨",
+        searchHospital: "병원 검색..."
     },
     vi: { // Vietnamese
         continent: "Châu lục",
@@ -348,7 +360,8 @@ const translations = {
         noHospitals: "Không có bệnh viện nào",
         gaugesDeployed: "Đã triển khai",
         gaugesInProgress: "Đang tiến hành",
-        gaugesSigned: "Đã ký"
+        gaugesSigned: "Đã ký",
+        searchHospital: "Tìm kiếm bệnh viện..."
     },
     tr: { // Turkish
         continent: "Kıta",
@@ -375,7 +388,8 @@ const translations = {
         noHospitals: "Mevcut hastane yok",
         gaugesDeployed: "Yerleştirildi",
         gaugesInProgress: "Devam ediyor",
-        gaugesSigned: "İmzalandı"
+        gaugesSigned: "İmzalandı",
+        searchHospital: "Hastane arayın..."
     },
     fa: { // Persian
         continent: "قاره",
@@ -402,7 +416,8 @@ const translations = {
         noHospitals: "هیچ بیمارستانی در دسترس نیست",
         gaugesDeployed: "مستقر",
         gaugesInProgress: "در حال پیشرفت",
-        gaugesSigned: "امضا شده"
+        gaugesSigned: "امضا شده",
+        searchHospital: "جستجوی بیمارستان..."
     },
     ur: { // Urdu
         continent: "براعظم",
@@ -429,7 +444,8 @@ const translations = {
         noHospitals: "کوئی ہسپتال دستیاب نہیں ہے",
         gaugesDeployed: "تعینات",
         gaugesInProgress: "جاری ہے",
-        gaugesSigned: "دستخط شدہ"
+        gaugesSigned: "دستخط شدہ",
+        searchHospital: "ہسپتال تلاش کریں..."
     },
     it: { // Italian
         continent: "Continente",
@@ -456,7 +472,8 @@ const translations = {
         noHospitals: "Nessun ospedale disponibile",
         gaugesDeployed: "Distribuito",
         gaugesInProgress: "In corso",
-        gaugesSigned: "Firmato"
+        gaugesSigned: "Firmato",
+        searchHospital: "Cerca ospedale..."
     },
     ta: { // Tamil
         continent: "கண்டம்",
@@ -483,7 +500,8 @@ const translations = {
         noHospitals: "முகாமிடக்கூடிய மருத்துவமனைகள் இல்லை",
         gaugesDeployed: "பயன்படுத்தப்பட்டது",
         gaugesInProgress: "முன்னேற்றத்தில்",
-        gaugesSigned: "கையெழுத்திடப்பட்டது"
+        gaugesSigned: "கையெழுத்திடப்பட்டது",
+        searchHospital: "மருத்துவமனைத் தேடுங்கள்..."
     },
     pl: { // Polish
         continent: "Kontynent",
@@ -510,7 +528,8 @@ const translations = {
         noHospitals: "Brak dostępnych szpitali",
         gaugesDeployed: "Wdrożone",
         gaugesInProgress: "W toku",
-        gaugesSigned: "Podpisany"
+        gaugesSigned: "Podpisany",
+        searchHospital: "Szukaj szpitala..."
     },
     nl: { // Dutch
         continent: "Continent",
@@ -537,6 +556,7 @@ const translations = {
         noHospitals: "Geen beschikbare ziekenhuizen",
         gaugesDeployed: "Ingezet",
         gaugesInProgress: "In uitvoering",
-        gaugesSigned: "Ondertekend"
+        gaugesSigned: "Ondertekend",
+        searchHospital: "Zoek ziekenhuis..."
     }
 };
