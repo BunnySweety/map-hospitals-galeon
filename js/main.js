@@ -1065,7 +1065,6 @@ export {
     initApplication,
     updateCustomization,
     filterCountries,
-    getCountryInfo,
     toggleTheme,
     toggleLegend,
     toggleMenu
