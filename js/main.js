@@ -63,6 +63,14 @@ async function initApplication() {
     console.log('Initializing application...');
 
     try {
+        // Check for necessary DOM elements
+        const requiredElements = ['map', 'continent-select', 'country-filter', 'city-filter', 'hospital-search'];
+        for (const elementId of requiredElements) {
+            if (!document.getElementById(elementId)) {
+                throw new Error(`Required element #${elementId} not found in the DOM`);
+            }
+        }
+
         // Check for necessary data
         if (!hospitals || !Array.isArray(hospitals) || hospitals.length === 0) {
             throw new Error('Hospitals data is missing or invalid');
@@ -364,10 +372,10 @@ function createMarker(hospital) {
 // Update existing markers
 function updateMarkers() {
     console.log('Updating existing markers');
-    const selectedContinent = document.getElementById('continent-select').value;
-    const selectedCountry = document.getElementById('country-filter').value.toLowerCase();
-    const selectedCity = document.getElementById('city-filter').value.toLowerCase();
-    const searchTerm = document.getElementById('hospital-search').value.toLowerCase();
+    const selectedContinent = document.getElementById('continent-select')?.value || '';
+    const selectedCountry = document.getElementById('country-filter')?.value.toLowerCase() || '';
+    const selectedCity = document.getElementById('city-filter')?.value.toLowerCase() || '';
+    const searchTerm = document.getElementById('hospital-search')?.value.toLowerCase() || '';
 
     let visibleMarkers = 0;
     markers.forEach(marker => {
@@ -923,20 +931,19 @@ function findMarkerByLatLng(latlng) {
 
 // Enhance accessibility
 function enhanceAccessibility() {
-    const languageSelect = document.getElementById('language-select');
-    languageSelect.setAttribute('aria-label', 'Select language');
+    const elements = {
+        languageSelect: document.getElementById('language-select'),
+        continentSelect: document.getElementById('continent-select'),
+        countryFilter: document.getElementById('country-filter'),
+        cityFilter: document.getElementById('city-filter'),
+        hospitalSearch: document.getElementById('hospital-search')
+    };
 
-    const continentSelect = document.getElementById('continent-select');
-    continentSelect.setAttribute('aria-label', 'Filter by continent');
-
-    const countryFilter = document.getElementById('country-filter');
-    countryFilter.setAttribute('aria-label', 'Filter by country');
-
-    const cityFilter = document.getElementById('city-filter');
-    cityFilter.setAttribute('aria-label', 'Filter by city');
-
-    const hospitalSearch = document.getElementById('hospital-search');
-    hospitalSearch.setAttribute('aria-label', 'Search for hospital');
+    for (const [key, element] of Object.entries(elements)) {
+        if (element) {
+            element.setAttribute('aria-label', `${key.replace(/([A-Z])/g, ' $1').trim()}`);
+        }
+    }
 
     const statusTags = document.querySelectorAll('.status-tag');
     statusTags.forEach(tag => {

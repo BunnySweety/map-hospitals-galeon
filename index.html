@@ -35,7 +35,7 @@
                 class="legend-text">Signed</span></div>
     </div>
     <div class="controls">
-        <select id="language-select">
+        <select id="language-select" aria-label="Select language">
             <option value="en">English</option>
             <option value="fr">Français</option>
             <option value="es">Español</option>
@@ -57,7 +57,7 @@
             <option value="pl">Polski</option>
             <option value="nl">Nederlands</option>
         </select>
-        <select id="continent-select">
+        <select id="continent-select" aria-label="Select continent">
             <option value="">Continent</option>
             <option value="Europe">Europe</option>
             <option value="North America">North America</option>
@@ -66,8 +66,12 @@
             <option value="Africa">Africa</option>
             <option value="Oceania">Oceania</option>
         </select>
+        <label for="country-filter">Country:</label>
         <input type="text" id="country-filter" placeholder="Enter country...">
+        <label for="city-filter">City:</label>
         <input type="text" id="city-filter" placeholder="Enter city...">
+        <label for="hospital-search">Hospital:</label>
+        <input type="text" id="hospital-search" placeholder="Search hospital...">
         <div class="status-filters">
             <span class="status-tag status-deployed" data-status="deployed">Deployed</span>
             <span class="status-tag status-in-progress" data-status="in progress">In Progress</span>
@@ -121,6 +125,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
     <script src="js/translations.js"></script>
     <script src="js/hospitals.js"></script>
-    <script type="module" src="js/main.js"></script>
+    <script src="js/main.js" type="module"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" defer></script>
 </body>
 </html>
