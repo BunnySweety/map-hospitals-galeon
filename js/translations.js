@@ -25,7 +25,8 @@ const translations = {
         gaugesDeployed: "Deployed",
         gaugesInProgress: "In Progress",
         gaugesSigned: "Signed",
-        searchHospital: "Search hospital..."
+        searchHospital: "Search hospital...",
+        noHospitalsMessage: "No hospitals match the current filters."
     },
     fr: { // French
         continent: "Continent",
@@ -53,7 +54,8 @@ const translations = {
         gaugesDeployed: "Déployé",
         gaugesInProgress: "En cours",
         gaugesSigned: "Signé",
-        searchHospital: "Rechercher un hôpital..."
+        searchHospital: "Rechercher un hôpital...",
+        noHospitalsMessage: "Aucun hôpital ne correspond aux filtres actuels."
     },
     es: { // Spanish
         continent: "Continente",
@@ -81,7 +83,8 @@ const translations = {
         gaugesDeployed: "Desplegado",
         gaugesInProgress: "En progreso",
         gaugesSigned: "Firmado",
-        searchHospital: "Buscar hospital..."
+        searchHospital: "Buscar hospital...",
+        noHospitalsMessage: "Ningún hospital coincide con los filtros actuales."
     },
     zh: { // Chinese
         continent: "大陆",
@@ -109,7 +112,8 @@ const translations = {
         gaugesDeployed: "部署",
         gaugesInProgress: "进行中",
         gaugesSigned: "已签署",
-        searchHospital: "搜索医院..."
+        searchHospital: "搜索医院...",
+        noHospitalsMessage: "没有医院符合当前的筛选条件。"
     },
     ar: { // Arabic
         continent: "قارة",
@@ -137,7 +141,8 @@ const translations = {
         gaugesDeployed: "تم النشر",
         gaugesInProgress: "قيد التنفيذ",
         gaugesSigned: "موقع",
-        searchHospital: "ابحث عن مستشفى..."
+        searchHospital: "ابحث عن مستشفى...",
+        noHospitalsMessage: "لا توجد مستشفيات تطابق الفلاتر الحالية."
     },
     hi: { // Hindi
         continent: "महाद्वीप",
@@ -165,7 +170,8 @@ const translations = {
         gaugesDeployed: "तैनात",
         gaugesInProgress: "प्रगति में",
         gaugesSigned: "हस्ताक्षरित",
-        searchHospital: "अस्पताल खोजें..."
+        searchHospital: "अस्पताल खोजें...",
+        noHospitalsMessage: "कोई अस्पताल वर्तमान फिल्टर से मेल नहीं खाता।"
     },
     bn: { // Bengali
         continent: "মহাদেশ",
@@ -193,7 +199,8 @@ const translations = {
         gaugesDeployed: "মোতায়েন",
         gaugesInProgress: "প্রগতি",
         gaugesSigned: "স্বাক্ষরিত",
-        searchHospital: "হাসপাতাল অনুসন্ধান করুন..."
+        searchHospital: "হাসপাতাল অনুসন্ধান করুন...",
+        noHospitalsMessage: "বর্তমান ফিল্টারগুলির সাথে মেলে এমন কোনও হাসপাতাল নেই।"
     },
     pt: { // Portuguese
         continent: "Continente",
@@ -221,7 +228,8 @@ const translations = {
         gaugesDeployed: "Implantado",
         gaugesInProgress: "Em progresso",
         gaugesSigned: "Assinado",
-        searchHospital: "Pesquisar hospital..."
+        searchHospital: "Pesquisar hospital...",
+        noHospitalsMessage: "Nenhum hospital corresponde aos filtros atuais."
     },
     ru: { // Russian
         continent: "Континент",
@@ -249,7 +257,8 @@ const translations = {
         gaugesDeployed: "Развернутый",
         gaugesInProgress: "В процессе",
         gaugesSigned: "Подписанный",
-        searchHospital: "Искать больницу..."
+        searchHospital: "Искать больницу...",
+        noHospitalsMessage: "Нет больниц, соответствующих текущим фильтрам."
     },
     ja: { // Japanese
         continent: "大陸",
@@ -277,7 +286,8 @@ const translations = {
         gaugesDeployed: "展開済み",
         gaugesInProgress: "進行中",
         gaugesSigned: "署名済み",
-        searchHospital: "病院を探す..."
+        searchHospital: "病院を探す...",
+        noHospitalsMessage: "現在のフィルターに一致する病院はありません。"
     },
     de: { // German
         continent: "Kontinent",
@@ -305,7 +315,8 @@ const translations = {
         gaugesDeployed: "Eingesetzt",
         gaugesInProgress: "In Bearbeitung",
         gaugesSigned: "Unterzeichnet",
-        searchHospital: "Krankenhaus suchen..."
+        searchHospital: "Krankenhaus suchen...",
+        noHospitalsMessage: "Keine Krankenhäuser entsprechen den aktuellen Filtern."
     },
     ko: { // Korean
         continent: "대륙",
@@ -333,7 +344,8 @@ const translations = {
         gaugesDeployed: "배포됨",
         gaugesInProgress: "진행 중",
         gaugesSigned: "서명됨",
-        searchHospital: "병원 검색..."
+        searchHospital: "병원 검색...",
+        noHospitalsMessage: "현재 필터와 일치하는 병원이 없습니다."
     },
     vi: { // Vietnamese
         continent: "Châu lục",
@@ -361,7 +373,8 @@ const translations = {
         gaugesDeployed: "Đã triển khai",
         gaugesInProgress: "Đang tiến hành",
         gaugesSigned: "Đã ký",
-        searchHospital: "Tìm kiếm bệnh viện..."
+        searchHospital: "Tìm kiếm bệnh viện...",
+        noHospitalsMessage: "Không có bệnh viện nào khớp với các bộ lọc hiện tại."
     },
     tr: { // Turkish
         continent: "Kıta",
@@ -389,7 +402,8 @@ const translations = {
         gaugesDeployed: "Yerleştirildi",
         gaugesInProgress: "Devam ediyor",
         gaugesSigned: "İmzalandı",
-        searchHospital: "Hastane arayın..."
+        searchHospital: "Hastane arayın...",
+        noHospitalsMessage: "Mevcut filtrelerle eşleşen hastane yok."
     },
     fa: { // Persian
         continent: "قاره",
@@ -417,7 +431,8 @@ const translations = {
         gaugesDeployed: "مستقر",
         gaugesInProgress: "در حال پیشرفت",
         gaugesSigned: "امضا شده",
-        searchHospital: "جستجوی بیمارستان..."
+        searchHospital: "جستجوی بیمارستان...",
+        noHospitalsMessage: "هیچ بیمارستانی مطابق با فیلترهای فعلی نیست."
     },
     ur: { // Urdu
         continent: "براعظم",
@@ -445,7 +460,8 @@ const translations = {
         gaugesDeployed: "تعینات",
         gaugesInProgress: "جاری ہے",
         gaugesSigned: "دستخط شدہ",
-        searchHospital: "ہسپتال تلاش کریں..."
+        searchHospital: "ہسپتال تلاش کریں...",
+        noHospitalsMessage: "موجودہ فلٹرز سے مماثل کوئی ہسپتال نہیں ہے۔"
     },
     it: { // Italian
         continent: "Continente",
@@ -473,7 +489,8 @@ const translations = {
         gaugesDeployed: "Distribuito",
         gaugesInProgress: "In corso",
         gaugesSigned: "Firmato",
-        searchHospital: "Cerca ospedale..."
+        searchHospital: "Cerca ospedale...",
+        noHospitalsMessage: "Nessun ospedale corrisponde ai filtri attuali."
     },
     ta: { // Tamil
         continent: "கண்டம்",
@@ -501,7 +518,8 @@ const translations = {
         gaugesDeployed: "பயன்படுத்தப்பட்டது",
         gaugesInProgress: "முன்னேற்றத்தில்",
         gaugesSigned: "கையெழுத்திடப்பட்டது",
-        searchHospital: "மருத்துவமனைத் தேடுங்கள்..."
+        searchHospital: "மருத்துவமனைத் தேடுங்கள்...",
+        noHospitalsMessage: "தற்போதைய வடிப்பான்களுடன் பொருந்தும் மருத்துவமனைகள் எதுவும் இல்லை."
     },
     pl: { // Polish
         continent: "Kontynent",
@@ -529,7 +547,8 @@ const translations = {
         gaugesDeployed: "Wdrożone",
         gaugesInProgress: "W toku",
         gaugesSigned: "Podpisany",
-        searchHospital: "Szukaj szpitala..."
+        searchHospital: "Szukaj szpitala...",
+        noHospitalsMessage: "Brak szpitali spełniających aktualne filtry."
     },
     nl: { // Dutch
         continent: "Continent",
@@ -557,6 +576,7 @@ const translations = {
         gaugesDeployed: "Ingezet",
         gaugesInProgress: "In uitvoering",
         gaugesSigned: "Ondertekend",
-        searchHospital: "Zoek ziekenhuis..."
+        searchHospital: "Zoek ziekenhuis...",
+        noHospitalsMessage: "Geen ziekenhuizen voldoen aan de huidige filters."
     }
 };

@@ -402,25 +402,27 @@ function updateMarkers() {
     console.log(`Visible markers after update: ${visibleMarkers}`);
     updateGauges();
 
-    // Add or remove "No markers visible" message
-    const noMarkersMessage = document.getElementById('no-markers-message');
+    // Gestion du message "pas d'hôpitaux"
+    const noHospitalsMessage = document.getElementById('no-hospitals-message');
     if (visibleMarkers === 0) {
-        if (!noMarkersMessage) {
-            const message = document.createElement('div');
-            message.id = 'no-markers-message';
-            message.textContent = 'No hospitals match the current filters.';
-            message.style.position = 'absolute';
-            message.style.top = '50%';
-            message.style.left = '50%';
-            message.style.transform = 'translate(-50%, -50%)';
-            message.style.backgroundColor = 'white';
-            message.style.padding = '10px';
-            message.style.borderRadius = '5px';
-            message.style.zIndex = '1000';
-            document.getElementById('map').appendChild(message);
+        if (noHospitalsMessage) {
+            noHospitalsMessage.style.display = 'block';
+            const messageSpan = noHospitalsMessage.querySelector('span');
+            if (messageSpan) {
+                messageSpan.textContent = currentTranslations.noHospitalsMessage || "No hospitals match the current filters.";
+            }
         }
-    } else if (noMarkersMessage) {
-        noMarkersMessage.remove();
+    } else if (noHospitalsMessage) {
+        noHospitalsMessage.style.display = 'none';
+    }
+
+    // Mise à jour de la vue de la carte si nécessaire
+    if (visibleMarkers > 0) {
+        const bounds = L.latLngBounds(markers.filter(m => markerClusterGroup.hasLayer(m)).map(m => m.getLatLng()));
+        map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+        // Si aucun marqueur n'est visible, revenez à une vue par défaut
+        map.setView([50, 10], 4); // Coordonnées et zoom par défaut
     }
 
     console.log('Markers updated successfully');
