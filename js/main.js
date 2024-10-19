@@ -290,21 +290,30 @@ function addMarkers() {
 }
 
 // Update markers in chunks to improve performance
-function updateMarkersInChunks(hospitals, chunkSize = 5) {
+function updateMarkersInChunks(hospitals, chunkSize = 3) {
     let index = 0;
     let createdMarkers = 0;
 
     function processChunk() {
+        const startTime = performance.now();
         const chunk = hospitals.slice(index, index + chunkSize);
+        
         chunk.forEach(hospital => {
-            const { city, country } = extractLocationInfo(hospital.address);
             const marker = createMarker(hospital);
             markers.push(marker);
             createdMarkers++;
         });
+
         index += chunkSize;
+        
         if (index < hospitals.length) {
-            setTimeout(processChunk, 16); // Use 16ms timeout to aim for 60fps
+            const endTime = performance.now();
+            const processTime = endTime - startTime;
+            const delay = Math.max(0, 16 - processTime); // Aim for 60fps
+
+            requestAnimationFrame(() => {
+                setTimeout(processChunk, delay);
+            });
         } else {
             console.log(`Total markers created: ${createdMarkers}`);
             console.log('All markers processed');
@@ -312,16 +321,16 @@ function updateMarkersInChunks(hospitals, chunkSize = 5) {
         }
     }
 
-    processChunk();
+    requestAnimationFrame(processChunk);
 }
 
 // Create a marker for a hospital
 function createMarker(hospital) {
-    let marker;
     const markerOptions = {
         pane: 'markerPane'
     };
 
+    let marker;
     if (mapCustomization.useCustomMarkers) {
         const customIcon = L.icon({
             iconUrl: mapCustomization.customMarkerUrl,
@@ -343,9 +352,9 @@ function createMarker(hospital) {
     }
 
     marker.hospitalData = hospital;
-    const popupContent = createPopupContent(hospital);
 
-    marker.bindPopup(popupContent, {
+    // Bind popup with a function that generates content on demand
+    marker.bindPopup(() => createPopupContent(hospital), {
         autoPan: false
     });
 
@@ -390,6 +399,12 @@ function updateMarkers() {
             markerClusterGroup.addLayer(marker);
             bounds.extend(marker.getLatLng());
             visibleMarkers++;
+            
+            // Update popup content if it's open
+            if (marker.isPopupOpen()) {
+                const newContent = createPopupContent(hospital);
+                marker.getPopup().setContent(newContent);
+            }
         }
     });
 
@@ -431,18 +446,10 @@ function updateNoHospitalsMessage(visibleMarkers) {
     }
 }
 
-function updateMapView(visibleMarkers, bounds) {
-    if (visibleMarkers > 0) {
-        map.fitBounds(bounds, { padding: [50, 50] });
-    } else {
-        map.setView([50, 10], 4); // Default coordinates and zoom
-    }
-}
-
 // Debounced update markers function
 const debouncedUpdateMarkers = debounce(() => {
-    updateMarkers();
-}, 300);
+    requestAnimationFrame(updateMarkers);
+}, 250);
 
 // Adjust popup options
 function adjustPopupOptions() {
@@ -547,7 +554,7 @@ function createPopupContent(hospital) {
             <span>${currentTranslations.status || 'Status'}:</span> ${statusTag}
         </div>
     </div>
-`;
+    `;
 }
 
 // Get status tag HTML
@@ -888,43 +895,38 @@ function addEventListeners() {
 // Handle language change
 function handleLanguageChange() {
     const openPopups = [];
-    map.eachLayer(function (layer) {
-        if (layer instanceof L.CircleMarker && layer.isPopupOpen()) {
+    markerClusterGroup.eachLayer(function (layer) {
+        if (layer instanceof L.Marker && layer.isPopupOpen()) {
             openPopups.push({
-                latlng: layer.getLatLng(),
-                hospitalData: layer.hospitalData
+                marker: layer,
+                content: layer.getPopup().getContent()
             });
+            layer.closePopup();
         }
     });
 
     applyTranslations(this.value);
     savePreferences();
-    debouncedUpdateMarkers();
 
-    markers.forEach(marker => {
-        const newContent = createPopupContent(marker.hospitalData);
-        marker.getPopup().setContent(newContent);
-    });
+    updateMarkers();
 
     openPopups.forEach(popup => {
-        const marker = findMarkerByLatLng(popup.latlng);
-        if (marker) {
-            marker.openPopup();
-        }
+        const marker = popup.marker;
+        const newContent = createPopupContent(marker.hospitalData);
+        marker.setPopupContent(newContent);
+        marker.openPopup();
     });
 }
 
 // Handle continent change
 function handleContinentChange() {
     debouncedUpdateMarkers();
-    updateMapView();
     savePreferences();
 }
 
 // Handle filter change
 function handleFilterChange() {
     debouncedUpdateMarkers();
-    updateMapView();
     savePreferences();
 }
 
@@ -941,7 +943,7 @@ function debounce(func, wait) {
 function findMarkerByLatLng(latlng) {
     let foundMarker = null;
     markerClusterGroup.eachLayer(function (layer) {
-        if (layer instanceof L.CircleMarker && layer.getLatLng().equals(latlng)) {
+        if (layer instanceof L.Marker && layer.getLatLng().equals(latlng)) {
             foundMarker = layer;
         }
     });
@@ -977,10 +979,8 @@ function enhanceAccessibility() {
 
 // Apply map customization
 function applyMapCustomization() {
-    // Apply background color
     document.getElementById('map').style.backgroundColor = mapCustomization.backgroundColor;
 
-    // Update borders
     if (window.borderLayer) {
         map.removeLayer(window.borderLayer);
     }
@@ -996,18 +996,12 @@ function applyMapCustomization() {
         }).addTo(map);
     }
 
-    // Update labels
     const style = document.createElement('style');
     style.textContent = `.leaflet-marker-icon { color: ${mapCustomization.labelColor} !important; }`;
     document.head.appendChild(style);
 
-    // Update markers
     updateMarkers();
-
-    // Update legend
     updateLegend();
-
-    // Update status tags
     updateStatusTags();
 }
 
@@ -1043,7 +1037,7 @@ function handleError(error, userMessage) {
 // Function to handle map clicks
 function handleMapClick(e) {
     markerClusterGroup.eachLayer(function (layer) {
-        if (layer instanceof L.CircleMarker) {
+        if (layer instanceof L.Marker) {
             layer.closePopup();
         }
     });
