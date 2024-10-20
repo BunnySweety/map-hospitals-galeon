@@ -78,50 +78,50 @@ async function initApplication() {
         // Initialize map
         console.log('Initializing map...');
         initMap();
-        
+
         // Load GeoJSON data
         console.log('Loading GeoJSON data...');
         await loadGeoJSONData();
-        
+
         // Initialize UI components
         console.log('Initializing UI components...');
         initGauges();
         initStatusTags();
-        
+
         // Load user preferences
         console.log('Loading user preferences...');
         loadPreferences();
-        
+
         // Apply translations
         console.log('Applying translations...');
         await applyTranslations(language);
-        
+
         // Add markers
         console.log('Adding markers...');
         await addMarkers();
-        
+
         // Set up event listeners
         console.log('Setting up event listeners...');
         addEventListeners();
-        
+
         // Adjust for mobile devices
         console.log('Adjusting for mobile devices...');
         adjustForMobile();
-        
+
         // Update UI elements
         console.log('Updating UI elements...');
         updateGauges();
         updateTileLayer();
         updateStatusTagsVisually();
-        
+
         // Apply map customization
         console.log('Applying map customization...');
         applyMapCustomization();
-        
+
         // Enhance accessibility
         console.log('Enhancing accessibility...');
         enhanceAccessibility();
-        
+
         // Initialize hospital search
         console.log('Initializing hospital search...');
         initHospitalSearch();
@@ -943,9 +943,9 @@ function updateStatusTags() {
         const status = tag.dataset.status || tag.className.split(/\s+/).find(cls => cls.startsWith('status-'))?.replace('status-', '');
         if (status) {
             const translationKey = status.toLowerCase().replace(" ", "");
-            tag.textContent = currentTranslations[translationKey] || 
-                              currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] || 
-                              status;
+            tag.textContent = currentTranslations[translationKey] ||
+                currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] ||
+                status;
         } else {
             console.warn('Status tag found without a status attribute or class:', tag);
         }
