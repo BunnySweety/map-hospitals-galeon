@@ -68,37 +68,84 @@ async function initApplication() {
         return;
     }
 
-    console.log('Initializing application...');
+    console.log('Starting application initialization...');
 
     try {
+        // Check required elements and data
         checkRequiredElements();
         checkRequiredData();
 
+        // Initialize map
+        console.log('Initializing map...');
         initMap();
+        
+        // Load GeoJSON data
+        console.log('Loading GeoJSON data...');
         await loadGeoJSONData();
+        
+        // Initialize UI components
+        console.log('Initializing UI components...');
         initGauges();
         initStatusTags();
+        
+        // Load user preferences
+        console.log('Loading user preferences...');
         loadPreferences();
+        
+        // Apply translations
+        console.log('Applying translations...');
         await applyTranslations(language);
+        
+        // Add markers
+        console.log('Adding markers...');
         await addMarkers();
+        
+        // Set up event listeners
+        console.log('Setting up event listeners...');
         addEventListeners();
+        
+        // Adjust for mobile devices
+        console.log('Adjusting for mobile devices...');
         adjustForMobile();
+        
+        // Update UI elements
+        console.log('Updating UI elements...');
         updateGauges();
         updateTileLayer();
-
-        const controls = document.querySelector('.controls');
-        if (controls) controls.style.display = 'block';
-
         updateStatusTagsVisually();
+        
+        // Apply map customization
+        console.log('Applying map customization...');
         applyMapCustomization();
+        
+        // Enhance accessibility
+        console.log('Enhancing accessibility...');
         enhanceAccessibility();
+        
+        // Initialize hospital search
+        console.log('Initializing hospital search...');
         initHospitalSearch();
+
+        // Show controls
+        const controls = document.querySelector('.controls');
+        if (controls) {
+            controls.style.display = 'block';
+        } else {
+            console.warn('Controls element not found');
+        }
+
+        // Delayed marker update
+        console.log('Scheduling delayed marker update...');
+        setTimeout(() => {
+            updateMarkers();
+        }, 100);
 
         isInitialized = true;
         console.log('Application initialized successfully');
     } catch (error) {
         console.error('Error during initialization:', error);
         handleError(error, 'An error occurred during initialization. Please refresh the page or contact support.');
+        throw error;  // Re-throw the error for higher-level error handling
     }
 }
 
@@ -107,6 +154,7 @@ async function initApplication() {
  * @throws {Error} If a required element is missing
  */
 function checkRequiredElements() {
+    console.log('Checking required elements...');
     const requiredElements = ['map', 'continent-select', 'country-filter', 'city-filter', 'hospital-search'];
     for (const elementId of requiredElements) {
         const element = document.getElementById(elementId);
@@ -114,6 +162,7 @@ function checkRequiredElements() {
             throw new Error(`Required element #${elementId} not found in the DOM`);
         }
     }
+    console.log('All required elements found');
 }
 
 /**
@@ -121,12 +170,14 @@ function checkRequiredElements() {
  * @throws {Error} If required data is missing or invalid
  */
 function checkRequiredData() {
+    console.log('Checking required data...');
     if (!hospitals || !Array.isArray(hospitals) || hospitals.length === 0) {
         throw new Error('Hospitals data is missing or invalid');
     }
     if (!translations || typeof translations !== 'object') {
         throw new Error('Translations data is missing or invalid');
     }
+    console.log('All required data is valid');
 }
 
 // Map Initialization and Update Functions
@@ -889,14 +940,14 @@ function updateGaugeLabels() {
 function updateStatusTags() {
     const statusTags = document.querySelectorAll('.status-tag');
     statusTags.forEach(tag => {
-        const status = tag.dataset.status;
+        const status = tag.dataset.status || tag.className.split(/\s+/).find(cls => cls.startsWith('status-'))?.replace('status-', '');
         if (status) {
             const translationKey = status.toLowerCase().replace(" ", "");
-            tag.textContent = currentTranslations[translationKey] ||
-                currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] ||
-                status;
+            tag.textContent = currentTranslations[translationKey] || 
+                              currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] || 
+                              status;
         } else {
-            console.warn('Status tag found without a status attribute:', tag);
+            console.warn('Status tag found without a status attribute or class:', tag);
         }
     });
 }
@@ -1164,14 +1215,16 @@ function enhanceAccessibility() {
  * @param {string} userMessage - The message to display to the user
  */
 function handleError(error, userMessage) {
-    console.error('Error:', error);
+    console.error('Initialization error:', error);
     const errorMessageElement = document.getElementById('error-message');
     if (errorMessageElement) {
-        errorMessageElement.textContent = userMessage || 'An error occurred. Please try again.';
+        errorMessageElement.textContent = userMessage;
         errorMessageElement.style.display = 'block';
         setTimeout(() => {
             errorMessageElement.style.display = 'none';
         }, 5000);
+    } else {
+        alert(userMessage);
     }
 }
 
