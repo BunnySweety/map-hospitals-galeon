@@ -898,7 +898,6 @@ function handleLanguageChange() {
     markerClusterGroup.eachLayer(function (layer) {
         if (layer instanceof L.Marker && layer.isPopupOpen()) {
             openPopups.push(layer);
-            layer.closePopup();
         }
     });
 
@@ -906,9 +905,17 @@ function handleLanguageChange() {
     savePreferences();
 
     updateMarkers();
+    updateOpenPopups(openPopups);
+}
 
+// Update open popups
+function updateOpenPopups(openPopups) {
     openPopups.forEach(marker => {
-        marker.openPopup();
+        if (marker.getPopup()) {
+            const newContent = createPopupContent(marker.hospitalData);
+            marker.getPopup().setContent(newContent);
+            marker.getPopup().update();
+        }
     });
 }
 
