@@ -16,9 +16,6 @@ const colors = {
     'In Progress': '#FFA500',
     'Signed': '#2196F3'
 };
-const debouncedUpdateMarkers = debounce(() => {
-    requestAnimationFrame(updateMarkers);
-}, 300);
 
 // Customization configuration
 const mapCustomization = {
@@ -59,6 +56,10 @@ const debounce = (func, wait) => {
         timeout = setTimeout(later, wait);
     };
 };
+
+const debouncedUpdateMarkers = debounce(() => {
+    requestAnimationFrame(updateMarkers);
+}, 300);
 
 /**
  * Main initialization function
