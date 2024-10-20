@@ -16,6 +16,9 @@ const colors = {
     'In Progress': '#FFA500',
     'Signed': '#2196F3'
 };
+const debouncedUpdateMarkers = debounce(() => {
+    requestAnimationFrame(updateMarkers);
+}, 300);
 
 // Customization configuration
 const mapCustomization = {
@@ -365,6 +368,8 @@ async function updateMarkers() {
 
     let visibleMarkers = 0;
     const bounds = L.latLngBounds();
+    const markersToAdd = [];
+    const markersToRemove = [];
 
     markers.forEach(marker => {
         const hospital = marker.hospitalData;
@@ -372,28 +377,31 @@ async function updateMarkers() {
 
         if (markerMatchesFilters(hospital, filters, city, country)) {
             if (!markerClusterGroup.hasLayer(marker)) {
-                markerClusterGroup.addLayer(marker);
+                markersToAdd.push(marker);
             }
             bounds.extend(marker.getLatLng());
             visibleMarkers++;
-        } else {
-            if (markerClusterGroup.hasLayer(marker)) {
-                markerClusterGroup.removeLayer(marker);
-            }
+        } else if (markerClusterGroup.hasLayer(marker)) {
+            markersToRemove.push(marker);
         }
     });
 
-    console.log(`Visible markers after update: ${visibleMarkers}`);
-    updateGauges();
-    updateNoHospitalsMessage(visibleMarkers);
+    requestAnimationFrame(() => {
+        markerClusterGroup.removeLayers(markersToRemove);
+        markerClusterGroup.addLayers(markersToAdd);
 
-    if (visibleMarkers === 0) {
-        map.setView([50, 10], 4);
-    } else if (!map.getBounds().intersects(bounds)) {
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: map.getZoom() });
-    }
+        console.log(`Visible markers after update: ${visibleMarkers}`);
+        updateGauges();
+        updateNoHospitalsMessage(visibleMarkers);
 
-    console.log('Markers updated successfully');
+        if (visibleMarkers === 0) {
+            map.setView([50, 10], 4);
+        } else if (!map.getBounds().intersects(bounds)) {
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: map.getZoom() });
+        }
+
+        console.log('Markers updated successfully');
+    });
 }
 
 // Filter and Search Functions
@@ -437,7 +445,7 @@ function markerMatchesFilters(hospital, filters, city, country) {
  * Handles filter changes
  */
 function handleFilterChange() {
-    document.dispatchEvent(new Event('mapUpdate'));
+    debouncedUpdateMarkers();
     savePreferences();
 }
 
@@ -493,7 +501,7 @@ function addEventListeners() {
     Object.entries(eventMap).forEach(([id, { event, handler }]) => {
         const element = document.getElementById(id);
         if (element) {
-            element.addEventListener(event, debounce(handler, 250));
+            element.addEventListener(event, handler);
         } else {
             console.warn(`Element with id '${id}' not found. Event listener not added.`);
         }
@@ -507,7 +515,7 @@ function addEventListeners() {
         map.on('click', handleMapClick);
     }
 
-    document.addEventListener('mapUpdate', debounce(updateMarkers, 250));
+    document.addEventListener('mapUpdate', debouncedUpdateMarkers);
 
     console.log('Event listeners added successfully');
 }
