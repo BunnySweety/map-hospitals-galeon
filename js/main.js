@@ -419,11 +419,16 @@ function getFilters() {
  * @returns {boolean} True if the marker matches all filters, false otherwise
  */
 function markerMatchesFilters(hospital, filters, city, country) {
+    console.log(`Filtering hospital: ${hospital.name}`);
+    console.log(`City from address: ${city}, Filter city: ${filters.city}`);
+
     const statusMatch = activeStatus.length === 0 || activeStatus.some(s => s.toLowerCase() === hospital.status.toLowerCase());
     const continentMatch = !filters.continent || getContinent(hospital.lat, hospital.lon) === filters.continent;
-    const countryMatch = !filters.country || country.toLowerCase().includes(filters.country);
-    const cityMatch = !filters.city || city.toLowerCase().includes(filters.city);
-    const searchMatch = !filters.searchTerm || hospital.name.toLowerCase().includes(filters.searchTerm);
+    const countryMatch = !filters.country || country.toLowerCase().includes(filters.country.toLowerCase());
+    const cityMatch = !filters.city || (city && city.toLowerCase().includes(filters.city.toLowerCase()));
+    const searchMatch = !filters.searchTerm || hospital.name.toLowerCase().includes(filters.searchTerm.toLowerCase());
+
+    console.log(`Status match: ${statusMatch}, Continent match: ${continentMatch}, Country match: ${countryMatch}, City match: ${cityMatch}, Search match: ${searchMatch}`);
 
     return statusMatch && continentMatch && countryMatch && cityMatch && searchMatch;
 }
@@ -753,35 +758,38 @@ function extractLocationInfo(address) {
         return { street: '', city: '', state: '', country: '', postalCode: '' };
     }
 
+    // Normalize the address string
     address = address.trim().replace(/\s+/g, ' ');
+
+    // Split the address into parts
     const parts = address.split(',').map(part => part.trim());
 
     let street = '', city = '', state = '', country = '', postalCode = '';
 
+    // Extract country (assumed to be the last part)
     if (parts.length > 0) {
         country = parts.pop();
     }
 
-    const postalCodeMatch = parts[parts.length - 1]?.match(/\b[A-Z0-9]{5,7}\b/i);
+    // Extract postal code (if present)
+    const postalCodeMatch = parts[parts.length - 1]?.match(/\b[A-Z0-9]{5,10}\b/i);
     if (postalCodeMatch) {
         postalCode = postalCodeMatch[0];
         parts[parts.length - 1] = parts[parts.length - 1].replace(postalCode, '').trim();
     }
 
+    // Extract city (assumed to be the last remaining part)
     if (parts.length > 0) {
-        const cityStatePart = parts.pop();
-        const cityStateMatch = cityStatePart.match(/^(.+?)\s*(?:,\s*)?(\w+)?$/);
-        if (cityStateMatch) {
-            city = cityStateMatch[1];
-            state = cityStateMatch[2] || '';
-        } else {
-            city = cityStatePart;
-        }
+        city = parts.pop();
     }
 
+    // The remaining parts form the street address
     street = parts.join(', ');
 
+    // Clean up any remaining commas
     [street, city, state, country] = [street, city, state, country].map(s => s.replace(/^,\s*|,\s*$/g, ''));
+
+    console.log(`Extracted location info: City: ${city}, Country: ${country}`);
 
     return { street, city, state, country, postalCode };
 }
