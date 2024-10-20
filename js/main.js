@@ -39,6 +39,12 @@ const mapCustomization = {
 };
 
 // Utility Functions
+/**
+ * Debounces a function
+ * @param {Function} func - The function to debounce
+ * @param {number} wait - The number of milliseconds to delay
+ * @returns {Function} - The debounced function
+ */
 const debounce = (func, wait) => {
     let timeout;
     return function executedFunction(...args) {
@@ -51,7 +57,11 @@ const debounce = (func, wait) => {
     };
 };
 
-// Main initialization function
+/**
+ * Main initialization function
+ * @async
+ * @throws {Error} If initialization fails
+ */
 async function initApplication() {
     if (isInitialized) {
         console.log('Application already initialized. Skipping initialization.');
@@ -69,14 +79,16 @@ async function initApplication() {
         initGauges();
         initStatusTags();
         loadPreferences();
-        applyTranslations(language);
-        addMarkers();
+        await applyTranslations(language);
+        await addMarkers();
         addEventListeners();
         adjustForMobile();
         updateGauges();
         updateTileLayer();
 
-        document.querySelector('.controls').style.display = 'block';
+        const controls = document.querySelector('.controls');
+        if (controls) controls.style.display = 'block';
+
         updateStatusTagsVisually();
         applyMapCustomization();
         enhanceAccessibility();
@@ -90,6 +102,10 @@ async function initApplication() {
     }
 }
 
+/**
+ * Checks if all required DOM elements are present
+ * @throws {Error} If a required element is missing
+ */
 function checkRequiredElements() {
     const requiredElements = ['map', 'continent-select', 'country-filter', 'city-filter', 'hospital-search'];
     for (const elementId of requiredElements) {
@@ -100,6 +116,10 @@ function checkRequiredElements() {
     }
 }
 
+/**
+ * Checks if required data is available
+ * @throws {Error} If required data is missing or invalid
+ */
 function checkRequiredData() {
     if (!hospitals || !Array.isArray(hospitals) || hospitals.length === 0) {
         throw new Error('Hospitals data is missing or invalid');
@@ -110,6 +130,9 @@ function checkRequiredData() {
 }
 
 // Map Initialization and Update Functions
+/**
+ * Initializes the map
+ */
 function initMap() {
     if (!map) {
         const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
@@ -138,6 +161,9 @@ function initMap() {
     }
 }
 
+/**
+ * Updates the map tile layer based on the current theme
+ */
 function updateTileLayer() {
     if (window.currentTileLayer && map.hasLayer(window.currentTileLayer)) {
         map.removeLayer(window.currentTileLayer);
@@ -154,10 +180,14 @@ function updateTileLayer() {
 }
 
 // Marker Functions
-function addMarkers() {
+/**
+ * Adds markers to the map
+ * @async
+ */
+async function addMarkers() {
     if (markersAdded) {
         console.log('Markers already added. Updating existing markers.');
-        updateMarkers();
+        await updateMarkers();
         return;
     }
 
@@ -171,7 +201,7 @@ function addMarkers() {
         markerClusterGroup.clearLayers();
         markers = [];
 
-        updateMarkersInChunks(hospitals);
+        await updateMarkersInChunks(hospitals);
 
         markersAdded = true;
     } catch (error) {
@@ -180,33 +210,47 @@ function addMarkers() {
     }
 }
 
+/**
+ * Updates markers in chunks to improve performance
+ * @param {Array} hospitals - Array of hospital data
+ * @param {number} [chunkSize=3] - Number of markers to process in each chunk
+ * @returns {Promise} A promise that resolves when all markers are processed
+ */
 function updateMarkersInChunks(hospitals, chunkSize = 3) {
-    let index = 0;
-    let createdMarkers = 0;
+    return new Promise((resolve) => {
+        let index = 0;
+        let createdMarkers = 0;
 
-    function processChunk() {
-        const chunk = hospitals.slice(index, index + chunkSize);
+        function processChunk() {
+            const chunk = hospitals.slice(index, index + chunkSize);
 
-        chunk.forEach(hospital => {
-            const marker = createMarker(hospital);
-            markers.push(marker);
-            createdMarkers++;
-        });
+            chunk.forEach(hospital => {
+                const marker = createMarker(hospital);
+                markers.push(marker);
+                createdMarkers++;
+            });
 
-        index += chunkSize;
+            index += chunkSize;
 
-        if (index < hospitals.length) {
-            requestAnimationFrame(processChunk);
-        } else {
-            console.log(`Total markers created: ${createdMarkers}`);
-            console.log('All markers processed');
-            updateMarkers();
+            if (index < hospitals.length) {
+                requestAnimationFrame(processChunk);
+            } else {
+                console.log(`Total markers created: ${createdMarkers}`);
+                console.log('All markers processed');
+                updateMarkers();
+                resolve();
+            }
         }
-    }
 
-    requestAnimationFrame(processChunk);
+        requestAnimationFrame(processChunk);
+    });
 }
 
+/**
+ * Creates a marker for a hospital
+ * @param {Object} hospital - Hospital data
+ * @returns {L.Marker} Leaflet marker object
+ */
 function createMarker(hospital) {
     const markerOptions = {
         pane: 'markerPane'
@@ -255,7 +299,11 @@ function createMarker(hospital) {
     return marker;
 }
 
-function updateMarkers() {
+/**
+ * Updates existing markers based on current filters
+ * @async
+ */
+async function updateMarkers() {
     if (!hospitals || hospitals.length === 0) {
         console.log('No hospital data available yet. Skipping marker update.');
         return;
@@ -298,6 +346,10 @@ function updateMarkers() {
 }
 
 // Filter and Search Functions
+/**
+ * Gets current filter values
+ * @returns {Object} Current filter values
+ */
 function getFilters() {
     return {
         continent: document.getElementById('continent-select')?.value || '',
@@ -316,30 +368,26 @@ function getFilters() {
  * @returns {boolean} True if the marker matches all filters, false otherwise
  */
 function markerMatchesFilters(hospital, filters, city, country) {
-    // Check if the hospital status is in the active statuses or if no status filter is applied
     const statusMatch = activeStatus.length === 0 || activeStatus.some(s => s.toLowerCase() === hospital.status.toLowerCase());
-
-    // Check if the hospital is in the selected continent
     const continentMatch = !filters.continent || getContinent(hospital.lat, hospital.lon) === filters.continent;
-
-    // Check if the hospital country matches the country filter
     const countryMatch = !filters.country || country.toLowerCase().includes(filters.country);
-
-    // Check if the hospital city matches the city filter
     const cityMatch = !filters.city || city.toLowerCase().includes(filters.city);
-
-    // Check if the hospital name matches the search term
     const searchMatch = !filters.searchTerm || hospital.name.toLowerCase().includes(filters.searchTerm);
 
-    // Return true only if all filter conditions are met
     return statusMatch && continentMatch && countryMatch && cityMatch && searchMatch;
 }
 
+/**
+ * Handles filter changes
+ */
 function handleFilterChange() {
     document.dispatchEvent(new Event('mapUpdate'));
     savePreferences();
 }
 
+/**
+ * Initializes hospital search functionality
+ */
 function initHospitalSearch() {
     const searchInput = document.getElementById('hospital-search');
     if (!searchInput) {
@@ -353,6 +401,9 @@ function initHospitalSearch() {
 }
 
 // Event Listeners
+/**
+ * Adds event listeners to various elements
+ */
 function addEventListeners() {
     window.addEventListener('load', () => {
         adjustForMobile();
@@ -405,6 +456,10 @@ function addEventListeners() {
     console.log('Event listeners added successfully');
 }
 
+/**
+ * Handles language change
+ * @param {Event} event - The change event
+ */
 function handleLanguageChange(event) {
     const newLanguage = event.target.value;
     applyTranslations(newLanguage);
@@ -413,6 +468,9 @@ function handleLanguageChange(event) {
     updateMarkers();
 }
 
+/**
+ * Updates all popups with new content
+ */
 function updateAllPopups() {
     markers.forEach(marker => {
         if (marker.getPopup()) {
@@ -425,6 +483,9 @@ function updateAllPopups() {
     });
 }
 
+/**
+ * Updates map controls based on screen size
+ */
 function updateMapControls() {
     const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
     if (isMobile && map.zoomControl) {
@@ -435,13 +496,24 @@ function updateMapControls() {
     }
 }
 
+/**
+ * Handles status tag click
+ * @param {Event} event - The click event
+ */
 function handleStatusTagClick(event) {
     const status = event.target.dataset.status;
-    filterHospitals(status);
-    document.dispatchEvent(new Event('mapUpdate'));
+    if (status) {
+        filterHospitals(status);
+        document.dispatchEvent(new Event('mapUpdate'));
+    } else {
+        console.warn('Status tag clicked without a status attribute:', event.target);
+    }
 }
 
-function handleMapClick(e) {
+/**
+ * Handles map click
+ */
+function handleMapClick() {
     markerClusterGroup.eachLayer(function (layer) {
         if (layer instanceof L.Marker) {
             layer.closePopup();
@@ -450,16 +522,27 @@ function handleMapClick(e) {
 }
 
 // UI Update Functions
+/**
+ * Updates status tags visually
+ */
 function updateStatusTagsVisually() {
     document.querySelectorAll('.status-tag').forEach(tag => {
         const status = tag.dataset.status;
-        const isActive = activeStatus.some(s => s.toLowerCase() === status.toLowerCase());
-        tag.classList.toggle('active', isActive);
-        tag.setAttribute('aria-pressed', isActive.toString());
+        if (status) {
+            const isActive = activeStatus.some(s => s.toLowerCase() === status.toLowerCase());
+            tag.classList.toggle('active', isActive);
+            tag.setAttribute('aria-pressed', isActive.toString());
+        } else {
+            console.warn('Status tag found without a status attribute:', tag);
+        }
     });
     console.log('Status tags updated visually');
 }
 
+/**
+ * Updates the "No hospitals" message
+ * @param {number} visibleMarkers - Number of visible markers
+ */
 function updateNoHospitalsMessage(visibleMarkers) {
     const noHospitalsMessage = document.getElementById('no-hospitals-message');
     if (noHospitalsMessage) {
@@ -473,6 +556,9 @@ function updateNoHospitalsMessage(visibleMarkers) {
     }
 }
 
+/**
+ * Updates the gauges with current data
+ */
 function updateGauges() {
     const statusCounts = hospitals.reduce((acc, hospital) => {
         acc[hospital.status] = (acc[hospital.status] || 0) + 1;
@@ -498,6 +584,9 @@ function updateGauges() {
 }
 
 // Customization and Styling Functions
+/**
+ * Applies map customization
+ */
 function applyMapCustomization() {
     const mapElement = document.getElementById('map');
     if (mapElement) {
@@ -528,11 +617,18 @@ function applyMapCustomization() {
     updateStatusTags();
 }
 
+/**
+ * Updates map customization
+ * @param {Object} newCustomization - New customization settings
+ */
 function updateCustomization(newCustomization) {
     Object.assign(mapCustomization, newCustomization);
     applyMapCustomization();
 }
 
+/**
+ * Toggles dark mode
+ */
 function toggleTheme() {
     darkMode = !darkMode;
     document.body.classList.toggle('dark-mode');
@@ -540,6 +636,9 @@ function toggleTheme() {
     savePreferences();
 }
 
+/**
+ * Toggles legend visibility
+ */
 function toggleLegend() {
     const legendContainer = document.querySelector('.legend-container');
     if (legendContainer) {
@@ -547,6 +646,9 @@ function toggleLegend() {
     }
 }
 
+/**
+ * Toggles menu visibility
+ */
 function toggleMenu() {
     const controls = document.querySelector('.controls');
     if (controls) {
@@ -555,6 +657,10 @@ function toggleMenu() {
 }
 
 // Data Processing Functions
+/**
+ * Loads GeoJSON data
+ * @async
+ */
 async function loadGeoJSONData() {
     try {
         const response = await fetch('data/countries.geojson');
@@ -570,6 +676,12 @@ async function loadGeoJSONData() {
     }
 }
 
+/**
+ * Filters countries based on a list
+ * @param {Object} countriesData - GeoJSON data of countries
+ * @param {Array} countriesToShow - List of countries to show
+ * @returns {Object} Filtered GeoJSON data
+ */
 function filterCountries(countriesData, countriesToShow) {
     return {
         ...countriesData,
@@ -590,27 +702,21 @@ function extractLocationInfo(address) {
         return { street: '', city: '', state: '', country: '', postalCode: '' };
     }
 
-    // Normalize the address string
     address = address.trim().replace(/\s+/g, ' ');
-
-    // Split the address into parts
     const parts = address.split(',').map(part => part.trim());
 
     let street = '', city = '', state = '', country = '', postalCode = '';
 
-    // Extract country (assumed to be the last part)
     if (parts.length > 0) {
         country = parts.pop();
     }
 
-    // Extract postal code (if present)
     const postalCodeMatch = parts[parts.length - 1]?.match(/\b[A-Z0-9]{5,7}\b/i);
     if (postalCodeMatch) {
         postalCode = postalCodeMatch[0];
         parts[parts.length - 1] = parts[parts.length - 1].replace(postalCode, '').trim();
     }
 
-    // Extract city and state (if present)
     if (parts.length > 0) {
         const cityStatePart = parts.pop();
         const cityStateMatch = cityStatePart.match(/^(.+?)\s*(?:,\s*)?(\w+)?$/);
@@ -622,15 +728,19 @@ function extractLocationInfo(address) {
         }
     }
 
-    // The remaining parts form the street address
     street = parts.join(', ');
 
-    // Clean up any remaining commas
     [street, city, state, country] = [street, city, state, country].map(s => s.replace(/^,\s*|,\s*$/g, ''));
 
     return { street, city, state, country, postalCode };
 }
 
+/**
+ * Determines the continent based on coordinates
+ * @param {number} lat - Latitude
+ * @param {number} lon - Longitude
+ * @returns {string} Continent name
+ */
 function getContinent(lat, lon) {
     if (lat > 35 && lat < 71 && lon > -25 && lon < 40) return "Europe";
     if (lat > -35 && lat < 37 && lon > -20 && lon < 60) return "Africa";
@@ -641,11 +751,21 @@ function getContinent(lat, lon) {
     return "Unknown";
 }
 
+/**
+ * Gets color based on status
+ * @param {string} status - Hospital status
+ * @returns {string} Color code
+ */
 function getColor(status) {
     return colors[status] || '#6c757d';
 }
 
 // Popup Content Creation
+/**
+ * Creates popup content for a hospital
+ * @param {Object} hospital - Hospital data
+ * @returns {string} HTML content for the popup
+ */
 function createPopupContent(hospital) {
     const isLandscape = window.innerWidth > window.innerHeight;
     const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
@@ -668,6 +788,12 @@ function createPopupContent(hospital) {
     `;
 }
 
+/**
+ * Gets status tag HTML
+ * @param {string} status - Hospital status
+ * @param {boolean} isActive - Whether the status is active
+ * @returns {string} HTML for the status tag
+ */
 function getStatusTag(status, isActive = false) {
     const statusKey = status.toLowerCase().replace(" ", "");
     const statusText = currentTranslations[statusKey] || status;
@@ -684,6 +810,10 @@ function getStatusTag(status, isActive = false) {
 }
 
 // Translation and Localization Functions
+/**
+ * Applies translations to the UI
+ * @param {string} lang - Language code
+ */
 function applyTranslations(lang) {
     currentTranslations = translations[lang] || translations[DEFAULT_LANGUAGE];
     document.querySelectorAll('[data-translate]').forEach(element => {
@@ -700,6 +830,9 @@ function applyTranslations(lang) {
     updateMarkers();
 }
 
+/**
+ * Updates placeholders with translated text
+ */
 function updatePlaceholders() {
     const elements = {
         'country-filter': 'enterCountry',
@@ -715,6 +848,9 @@ function updatePlaceholders() {
     });
 }
 
+/**
+ * Updates continent select options with translated text
+ */
 function updateContinentSelect() {
     const continentSelect = document.getElementById('continent-select');
     if (continentSelect) {
@@ -734,6 +870,9 @@ function updateContinentSelect() {
     }
 }
 
+/**
+ * Updates gauge labels with translated text
+ */
 function updateGaugeLabels() {
     const gaugeLabels = document.querySelectorAll('.gauge-label');
     const labelTexts = ['gaugesDeployed', 'gaugesInProgress', 'gaugesSigned'];
@@ -744,15 +883,27 @@ function updateGaugeLabels() {
     });
 }
 
+/**
+ * Updates status tags with translated text
+ */
 function updateStatusTags() {
     const statusTags = document.querySelectorAll('.status-tag');
     statusTags.forEach(tag => {
         const status = tag.dataset.status;
-        const translationKey = status.toLowerCase().replace(" ", "");
-        tag.textContent = currentTranslations[translationKey] || currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] || status;
+        if (status) {
+            const translationKey = status.toLowerCase().replace(" ", "");
+            tag.textContent = currentTranslations[translationKey] ||
+                currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] ||
+                status;
+        } else {
+            console.warn('Status tag found without a status attribute:', tag);
+        }
     });
 }
 
+/**
+ * Updates legend with translated text and custom icons if applicable
+ */
 function updateLegend() {
     const legendItems = document.querySelectorAll('.legend-item .legend-text');
     const legendTexts = ['legendDeployed', 'legendInProgress', 'legendSigned'];
@@ -771,13 +922,19 @@ function updateLegend() {
                 img.src = iconUrl;
                 img.style.width = '20px';
                 img.style.height = '20px';
-                item.parentNode.querySelector('.legend-color').replaceWith(img);
+                const colorElement = item.parentNode.querySelector('.legend-color');
+                if (colorElement) {
+                    colorElement.replaceWith(img);
+                }
             }
         });
     }
 }
 
 // Preferences Management
+/**
+ * Saves user preferences to localStorage
+ */
 function savePreferences() {
     const preferences = {
         theme: darkMode ? 'dark' : 'light',
@@ -790,6 +947,9 @@ function savePreferences() {
     localStorage.setItem('galeonMapPreferences', JSON.stringify(preferences));
 }
 
+/**
+ * Loads user preferences from localStorage
+ */
 function loadPreferences() {
     const savedPreferences = localStorage.getItem('galeonMapPreferences');
     if (savedPreferences) {
@@ -828,6 +988,9 @@ function loadPreferences() {
 }
 
 // Mobile Adjustments
+/**
+ * Adjusts the layout for mobile devices
+ */
 function adjustForMobile() {
     const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
     const isLandscape = window.innerWidth > window.innerHeight;
@@ -845,6 +1008,11 @@ function adjustForMobile() {
     }
 }
 
+/**
+ * Adjusts the chart container for different screen sizes
+ * @param {boolean} isMobile - Whether the device is mobile
+ * @param {boolean} isLandscape - Whether the device is in landscape mode
+ */
 function adjustChartContainer(isMobile, isLandscape) {
     const chartContainer = document.querySelector('.chart-container');
     if (chartContainer) {
@@ -869,6 +1037,11 @@ function adjustChartContainer(isMobile, isLandscape) {
     }
 }
 
+/**
+ * Adjusts the map container for different screen sizes
+ * @param {boolean} isMobile - Whether the device is mobile
+ * @param {boolean} isLandscape - Whether the device is in landscape mode
+ */
 function adjustMapContainer(isMobile, isLandscape) {
     const mapContainer = document.getElementById('map');
     if (mapContainer) {
@@ -882,7 +1055,11 @@ function adjustMapContainer(isMobile, isLandscape) {
     }
 }
 
-function adjustLegendContainer(isMobile, isLandscape) {
+/**
+ * Adjusts the legend container for different screen sizes
+ * @param {boolean} isMobile - Whether the device is mobile
+ */
+function adjustLegendContainer(isMobile) {
     const legendContainer = document.querySelector('.legend-container');
     const legendToggle = document.getElementById('legend-toggle');
 
@@ -907,6 +1084,10 @@ function adjustLegendContainer(isMobile, isLandscape) {
     }
 }
 
+/**
+ * Adjusts gauges for mobile devices
+ * @param {boolean} isMobile - Whether the device is mobile
+ */
 function adjustGauges(isMobile) {
     const gauges = document.querySelectorAll('.gauge');
     const gaugeTexts = document.querySelectorAll('.gauge-value, .gauge-percentage, .gauge-label');
@@ -930,6 +1111,9 @@ function adjustGauges(isMobile) {
     }
 }
 
+/**
+ * Adjusts popup options for mobile devices
+ */
 function adjustPopupOptions() {
     const isLandscape = window.innerWidth > window.innerHeight;
     const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
@@ -944,6 +1128,9 @@ function adjustPopupOptions() {
 }
 
 // Accessibility Enhancements
+/**
+ * Enhances accessibility of various UI elements
+ */
 function enhanceAccessibility() {
     const elements = {
         languageSelect: document.getElementById('language-select'),
@@ -971,6 +1158,11 @@ function enhanceAccessibility() {
 }
 
 // Error Handling
+/**
+ * Handles errors and displays them to the user
+ * @param {Error} error - The error object
+ * @param {string} userMessage - The message to display to the user
+ */
 function handleError(error, userMessage) {
     console.error('Error:', error);
     const errorMessageElement = document.getElementById('error-message');
@@ -984,10 +1176,17 @@ function handleError(error, userMessage) {
 }
 
 // Initialization
+/**
+ * Initializes gauges
+ */
 function initGauges() {
     ['Deployed', 'In Progress', 'Signed'].forEach(initGauge);
 }
 
+/**
+ * Initializes a single gauge
+ * @param {string} status - The status for the gauge
+ */
 function initGauge(status) {
     const element = document.getElementById(`${status.toLowerCase().replace(' ', '-')}-progress`);
     if (element) {
@@ -1004,6 +1203,9 @@ function initGauge(status) {
     }
 }
 
+/**
+ * Initializes status tags
+ */
 function initStatusTags() {
     document.querySelectorAll('.status-tag').forEach(tag => {
         tag.removeEventListener('click', handleStatusTagClick);
@@ -1011,6 +1213,10 @@ function initStatusTags() {
     });
 }
 
+/**
+ * Filters hospitals based on status
+ * @param {string} status - The status to filter by
+ */
 function filterHospitals(status) {
     if (!status) return;
 
