@@ -124,5 +124,14 @@ const hospitals = [
         address: "18 Rue Chanzy, 33220 Sainte-Foy-la-Grande, France",
         website: "http://www.hopital-saintefoylagrande.fr",
         imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"
+    },
+    {
+        name: "Centre Hospitalier de Montceau",
+        lat: 46.6756,
+        lon: 4.3663,
+        status: "Signed",
+        address: "Boulevard du Bois du Verne, 71300 Montceau-les-Mines, France",
+        website: "http://www.ch-montceau.fr",
+        imageUrl: "https://i.ibb.co/HYs7nHY/b-timent-moderne-dh-pital.webp"        
     }
 ];
