@@ -645,7 +645,7 @@ function initPopupImageLoading(popupElement) {
             img.src = actualSrc;
         };
         tempImage.onerror = () => {
-            img.src = 'images/default-hospital.jpg';
+            img.src = 'images/default-hospital.png';
         };
         tempImage.src = actualSrc;
     }
@@ -953,7 +953,7 @@ function createPopupContent(hospital) {
         <h3 class="popup-title">${hospital.name}</h3>
         <div class="popup-image-wrapper">
             <img 
-                src="images/default-hospital.jpg"
+                src="images/default-hospital.png"
                 data-src="${hospital.imageUrl}" 
                 alt="${hospital.name}"
                 class="popup-image"
