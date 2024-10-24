@@ -553,16 +553,13 @@ async function handleLanguageChange(event) {
     const newLanguage = event.target.value;
     language = newLanguage;
 
-    // Wait for translations to be loaded and applied
+    console.log(`Langue sélectionnée : ${newLanguage}`);
+
     await applyTranslations(newLanguage);
 
-    // Update the UI, including status tags, without reinitializing them
     updateStatusTags();
-
-    // Save the new language preference
     savePreferences();
 }
-
 /**
  * Updates all UI elements that need translation
  */
@@ -1055,7 +1052,6 @@ async function applyTranslations(language) {
         return;
     }
 
-    // Apply translations to UI elements
     document.querySelectorAll('[data-translate]').forEach(element => {
         const translationKey = element.getAttribute('data-translate');
         if (translations[language][translationKey]) {
@@ -1063,7 +1059,6 @@ async function applyTranslations(language) {
         }
     });
 
-    // Also update status tags based on translations
     updateStatusTags();
 }
 
