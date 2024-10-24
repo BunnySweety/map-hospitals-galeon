@@ -60,7 +60,6 @@ const debounce = (func, wait) => {
 const debouncedUpdateMarkers = debounce(() => {
     requestAnimationFrame(updateMarkers);
 }, 300);
-
 /**
  * Main initialization function
  * @async
@@ -198,25 +197,20 @@ function initMap() {
             zoomControl: !isMobile,
             scrollWheelZoom: true,
             dragging: true,
-            tap: true,
-            wheelDebounceTime: 150, // Debounce le zoom à la souris
-            zoomSnap: 0.5, // Rend le zoom plus fluide
-            zoomDelta: 0.5
+            tap: true
         });
 
+        map.createPane('borderPane').style.zIndex = 400;
+        map.createPane('markerPane').style.zIndex = 450;
+
         markerClusterGroup = L.markerClusterGroup({
-            chunkedLoading: true,
-            chunkInterval: 50,
-            chunkDelay: 50,
             maxClusterRadius: 50,
             spiderfyOnMaxZoom: true,
             showCoverageOnHover: false,
-            zoomToBoundsOnClick: true,
-            removeOutsideVisibleBounds: true
+            zoomToBoundsOnClick: true
         });
 
         map.addLayer(markerClusterGroup);
-        optimizeMarkerClustering();
         updateTileLayer();
     }
 }
@@ -282,7 +276,6 @@ function updateMarkersInChunks(hospitals, chunkSize = 3) {
         let createdMarkers = 0;
 
         function processChunk() {
-            const startTime = performance.now();
             const chunk = hospitals.slice(index, index + chunkSize);
 
             chunk.forEach(hospital => {
@@ -292,21 +285,12 @@ function updateMarkersInChunks(hospitals, chunkSize = 3) {
             });
 
             index += chunkSize;
-            const endTime = performance.now();
 
             if (index < hospitals.length) {
-                // If chunk processing takes less than 16ms (60fps), increase chunk size
-                if (endTime - startTime < 16 && chunkSize < 10) {
-                    chunkSize++;
-                }
-                // If processing takes longer than 16ms, reduce chunk size
-                else if (endTime - startTime > 16 && chunkSize > 2) {
-                    chunkSize--;
-                }
-                
-                setTimeout(() => requestAnimationFrame(processChunk), 0);
+                requestAnimationFrame(processChunk);
             } else {
                 console.log(`Total markers created: ${createdMarkers}`);
+                console.log('All markers processed');
                 updateMarkers();
                 resolve();
             }
@@ -314,17 +298,6 @@ function updateMarkersInChunks(hospitals, chunkSize = 3) {
 
         requestAnimationFrame(processChunk);
     });
-}
-
-/**
- * Optimizes marker clustering
- */
-function optimizeMarkerClustering() {
-    if (markerClusterGroup) {
-        markerClusterGroup.options.chunkedLoading = true;
-        markerClusterGroup.options.chunkInterval = 50;
-        markerClusterGroup.options.chunkDelay = 50;
-    }
 }
 
 /**
@@ -983,10 +956,14 @@ function updateGaugeLabels() {
 function updateStatusTags() {
     const statusTags = document.querySelectorAll('.status-tag');
     statusTags.forEach(tag => {
-        const status = tag.dataset.status;
+        const status = tag.dataset.status || tag.className.split(/\s+/).find(cls => cls.startsWith('status-'))?.replace('status-', '');
         if (status) {
-            const translationKey = status.toLowerCase().replace(/\s+/g, '');
-            tag.textContent = currentTranslations[translationKey] || status;
+            const translationKey = status.toLowerCase().replace(" ", "");
+            tag.textContent = currentTranslations[translationKey] ||
+                currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] ||
+                status;
+        } else {
+            console.warn('Status tag found without a status attribute or class:', tag);
         }
     });
 }
