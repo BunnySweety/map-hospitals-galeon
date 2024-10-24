@@ -526,10 +526,12 @@ function addEventListeners() {
  */
 function handleLanguageChange(event) {
     const newLanguage = event.target.value;
+    language = newLanguage;
     applyTranslations(newLanguage);
     savePreferences();
     updateAllPopups();
     updateMarkers();
+    updateStatusTags();
 }
 
 /**
@@ -956,12 +958,21 @@ function updateGaugeLabels() {
 function updateStatusTags() {
     const statusTags = document.querySelectorAll('.status-tag');
     statusTags.forEach(tag => {
+        // Get status from data attribute or class
         const status = tag.dataset.status || tag.className.split(/\s+/).find(cls => cls.startsWith('status-'))?.replace('status-', '');
         if (status) {
-            const translationKey = status.toLowerCase().replace(" ", "");
-            tag.textContent = currentTranslations[translationKey] ||
-                currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] ||
-                status;
+            // Convert status to correct translation key format
+            const translationKey = status.toLowerCase().replace(/\s+/g, "");
+            const translatedText = currentTranslations[translationKey] || 
+                                 currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] || 
+                                 status;
+            
+            // Update the text content while preserving any child elements
+            const existingIcon = tag.querySelector('img');
+            tag.textContent = translatedText;
+            if (existingIcon) {
+                tag.insertBefore(existingIcon, tag.firstChild);
+            }
         } else {
             console.warn('Status tag found without a status attribute or class:', tag);
         }
