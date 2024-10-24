@@ -9,6 +9,7 @@ let markerClusterGroup;
 let currentTranslations = {};
 let markersAdded = false;
 let isInitialized = false;
+let tagsInitialized = false;
 
 const gauges = {};
 const colors = {
@@ -104,11 +105,11 @@ async function initApplication() {
     console.log('Starting application initialization...');
 
     try {
-        // Check required elements and data
+        // Check required DOM elements and data
         checkRequiredElements();
         checkRequiredData();
 
-        // Initialize map
+        // Initialize the map
         console.log('Initializing map...');
         initMap();
 
@@ -116,7 +117,7 @@ async function initApplication() {
         console.log('Loading GeoJSON data...');
         await loadGeoJSONData();
 
-        // Initialize UI components - REMOVE initStatusTags FROM HERE
+        // Initialize gauges (progress indicators)
         console.log('Initializing UI components...');
         initGauges();
 
@@ -124,14 +125,17 @@ async function initApplication() {
         console.log('Loading user preferences...');
         loadPreferences();
 
-        // Apply translations and initialize status tags AFTER translations are loaded
+        // Apply translations and then initialize status tags
         console.log('Applying translations...');
         await applyTranslations(language);
-        
-        // Initialize status tags only once after translations
-        initStatusTags();
 
-        // Add markers
+        // Initialize status tags (ensure this is called only once after translations)
+        if (!tagsInitialized) { // New condition to avoid multiple initializations
+            initStatusTags();
+            tagsInitialized = true; // Add a flag to track initialization state
+        }
+
+        // Add markers to the map
         console.log('Adding markers...');
         await addMarkers();
 
@@ -139,11 +143,9 @@ async function initApplication() {
         console.log('Setting up event listeners...');
         addEventListeners();
 
-        // Rest of initialization...
         adjustForMobile();
         updateGauges();
         updateTileLayer();
-        // REMOVE updateStatusTagsVisually FROM HERE
         applyMapCustomization();
         enhanceAccessibility();
         initHospitalSearch();
@@ -581,12 +583,14 @@ function addEventListeners() {
 async function handleLanguageChange(event) {
     const newLanguage = event.target.value;
     language = newLanguage;
-    
+
     // Wait for translations to be loaded and applied
     await applyTranslations(newLanguage);
-    
-    // Update UI elements
-    updateAllUI();
+
+    // Visually update the status tags without reinitializing them
+    updateStatusTags();
+
+    // Save language preferences
     savePreferences();
 }
 
@@ -1177,12 +1181,16 @@ function updateGaugeLabels() {
  * Updates status tags with proper data attributes
  */
 function updateStatusTags() {
+    const statusTagsContainer = document.querySelector('.status-tags-container');
+    if (!statusTagsContainer) return;
+
+    // Update the tag classes based on whether their status is active
     document.querySelectorAll('.status-tag').forEach(tag => {
-        const originalStatus = tag.dataset.originalStatus;
-        if (originalStatus) {
-            const isActive = activeStatus.includes(originalStatus);
-            const newTag = getStatusTag(originalStatus, isActive);
-            tag.outerHTML = newTag;
+        const status = tag.dataset.status;
+        if (status) {
+            const isActive = activeStatus.includes(status);
+            tag.classList.toggle('active', isActive);
+            tag.setAttribute('aria-pressed', isActive.toString());
         }
     });
 }
