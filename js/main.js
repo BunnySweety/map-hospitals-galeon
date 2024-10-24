@@ -369,6 +369,10 @@ function createMarker(hospital) {
         this.openPopup();
     });
 
+    marker.on('popupopen', function() {
+        initPopupImageLoading(this.getPopup().getElement());
+    });
+
     return marker;
 }
 
@@ -585,12 +589,11 @@ function updateAllUI() {
 
 
 /**
- * Updates all popups with new content
+ * Updates all popups with new content and initializes image loading
  */
 function updateAllPopups() {
     console.log('Updating all popups');
     
-    // Mettre à jour les popups en lots pour éviter le blocage
     const BATCH_SIZE = 5;
     const updatePopupsBatch = (index) => {
         const end = Math.min(index + BATCH_SIZE, markers.length);
@@ -606,12 +609,13 @@ function updateAllPopups() {
                     
                     if (popup.isOpen()) {
                         popup.update();
+
+                        initPopupImageLoading(popup.getElement());
                     }
                 }
             }
         }
 
-        // Continuer avec le prochain lot si nécessaire
         if (end < markers.length) {
             requestAnimationFrame(() => {
                 updatePopupsBatch(end);
@@ -619,10 +623,32 @@ function updateAllPopups() {
         }
     };
 
-    // Démarrer la mise à jour par lots
     requestAnimationFrame(() => {
         updatePopupsBatch(0);
     });
+}
+
+/**
+ * Initializes image loading for popup
+ * @param {HTMLElement} popupElement - The popup DOM element
+ */
+function initPopupImageLoading(popupElement) {
+    if (!popupElement) return;
+
+    const img = popupElement.querySelector('.popup-image');
+    if (img && img.dataset.src) {
+        const actualSrc = img.dataset.src;
+        
+        // Créer une nouvelle image pour le préchargement
+        const tempImage = new Image();
+        tempImage.onload = () => {
+            img.src = actualSrc;
+        };
+        tempImage.onerror = () => {
+            img.src = 'images/default-hospital.jpg';
+        };
+        tempImage.src = actualSrc;
+    }
 }
 
 /**
@@ -918,16 +944,22 @@ function createPopupContent(hospital) {
     const translatedStatus = getTranslatedStatus(hospital.status);
     const statusClass = hospital.status.toLowerCase().replace(/\s+/g, "-");
 
+    // Éviter le chargement différé pour Edge
+    const isEdge = /Edge/.test(navigator.userAgent);
+    const loadingAttr = isEdge ? '' : 'loading="lazy"';
+
     return `
     <div class="${popupClass}">
         <h3 class="popup-title">${hospital.name}</h3>
-        <img 
-            src="${hospital.imageUrl}" 
-            alt="${hospital.name}"
-            class="popup-image"
-            loading="lazy"
-            onerror="this.src='images/default-hospital.jpg';"
-        />
+        <div class="popup-image-wrapper">
+            <img 
+                src="images/default-hospital.jpg"
+                data-src="${hospital.imageUrl}" 
+                alt="${hospital.name}"
+                class="popup-image"
+                ${loadingAttr}
+            />
+        </div>
         <div class="popup-address">
             <strong>${currentTranslations.address || 'Address'}:</strong><br>
             ${hospital.address}
