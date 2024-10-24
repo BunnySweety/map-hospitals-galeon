@@ -829,7 +829,6 @@ function getColor(status) {
     return colors[status] || '#6c757d';
 }
 
-// Popup Content Creation
 /**
  * Creates popup content for a hospital
  * @param {Object} hospital - Hospital data
@@ -840,7 +839,12 @@ function createPopupContent(hospital) {
     const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
     const popupClass = isMobile && isLandscape ? 'popup-content mobile-landscape' : 'popup-content';
 
-    const statusTag = getStatusTag(hospital.status, true);
+    // Get the translated status
+    const statusKey = hospital.status.toLowerCase().replace(/\s+/g, "");
+    const translatedStatus = currentTranslations[statusKey] || 
+                           currentTranslations[`status${hospital.status.charAt(0).toUpperCase() + hospital.status.slice(1)}`] ||
+                           hospital.status;
+
     return `
     <div class="${popupClass}">
         <h3 class="popup-title">${hospital.name}</h3>
@@ -851,7 +855,8 @@ function createPopupContent(hospital) {
         </div>
         <a href="${hospital.website}" target="_blank" rel="noopener noreferrer" class="popup-link">${currentTranslations.visitWebsite || 'Visit Website'}</a>
         <div class="popup-status">
-            <span>${currentTranslations.status || 'Status'}:</span> ${statusTag}
+            <span>${currentTranslations.status || 'Status'}:</span>
+            <span class="status-tag status-${hospital.status.toLowerCase().replace(/\s+/g, "-")}">${translatedStatus}</span>
         </div>
     </div>
     `;
@@ -864,17 +869,20 @@ function createPopupContent(hospital) {
  * @returns {string} HTML for the status tag
  */
 function getStatusTag(status, isActive = false) {
-    const statusKey = status.toLowerCase().replace(" ", "");
-    const statusText = currentTranslations[statusKey] || status;
+    const statusKey = status.toLowerCase().replace(/\s+/g, "");
+    const translatedStatus = currentTranslations[statusKey] || 
+                           currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] ||
+                           status;
     const activeClass = isActive ? ' active' : '';
+    const statusClass = status.toLowerCase().replace(/\s+/g, "-");
 
     if (mapCustomization.useCustomStatusIcons && mapCustomization.customStatusIconUrls[status]) {
-        return `<span class="status-tag status-${statusKey}${activeClass}">
-        <img src="${mapCustomization.customStatusIconUrls[status]}" alt="${statusText}" style="width:20px;height:20px;margin-right:5px;">
-        ${statusText}
-    </span>`;
+        return `<span class="status-tag status-${statusClass}${activeClass}">
+            <img src="${mapCustomization.customStatusIconUrls[status]}" alt="${translatedStatus}" style="width:20px;height:20px;margin-right:5px;">
+            ${translatedStatus}
+        </span>`;
     } else {
-        return `<span class="status-tag status-${statusKey}${activeClass}">${statusText}</span>`;
+        return `<span class="status-tag status-${statusClass}${activeClass}">${translatedStatus}</span>`;
     }
 }
 
