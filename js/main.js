@@ -116,18 +116,20 @@ async function initApplication() {
         console.log('Loading GeoJSON data...');
         await loadGeoJSONData();
 
-        // Initialize UI components
+        // Initialize UI components - REMOVE initStatusTags FROM HERE
         console.log('Initializing UI components...');
         initGauges();
-        initStatusTags();
 
         // Load user preferences
         console.log('Loading user preferences...');
         loadPreferences();
 
-        // Apply translations
+        // Apply translations and initialize status tags AFTER translations are loaded
         console.log('Applying translations...');
         await applyTranslations(language);
+        
+        // Initialize status tags only once after translations
+        initStatusTags();
 
         // Add markers
         console.log('Adding markers...');
@@ -137,38 +139,20 @@ async function initApplication() {
         console.log('Setting up event listeners...');
         addEventListeners();
 
-        // Adjust for mobile devices
-        console.log('Adjusting for mobile devices...');
+        // Rest of initialization...
         adjustForMobile();
-
-        // Update UI elements
-        console.log('Updating UI elements...');
         updateGauges();
         updateTileLayer();
-        updateStatusTagsVisually();
-
-        // Apply map customization
-        console.log('Applying map customization...');
+        // REMOVE updateStatusTagsVisually FROM HERE
         applyMapCustomization();
-
-        // Enhance accessibility
-        console.log('Enhancing accessibility...');
         enhanceAccessibility();
-
-        // Initialize hospital search
-        console.log('Initializing hospital search...');
         initHospitalSearch();
 
-        // Show controls
         const controls = document.querySelector('.controls');
         if (controls) {
             controls.style.display = 'block';
-        } else {
-            console.warn('Controls element not found');
         }
 
-        // Delayed marker update
-        console.log('Scheduling delayed marker update...');
         setTimeout(() => {
             updateMarkers();
         }, 100);
@@ -178,7 +162,7 @@ async function initApplication() {
     } catch (error) {
         console.error('Error during initialization:', error);
         handleError(error, 'An error occurred during initialization. Please refresh the page or contact support.');
-        throw error;  // Re-throw the error for higher-level error handling
+        throw error;
     }
 }
 
@@ -817,7 +801,6 @@ function updateGauges() {
     });
 }
 
-// Customization and Styling Functions
 /**
  * Applies map customization
  */
@@ -848,7 +831,6 @@ function applyMapCustomization() {
 
     updateMarkers();
     updateLegend();
-    updateStatusTags();
 }
 
 /**
@@ -1511,35 +1493,45 @@ function initGauge(status) {
 }
 
 /**
- * Initializes status tags with proper translations
+ * Initialize status tags once and prevent multiple initializations
  */
 function initStatusTags() {
-    let statusContainer = document.querySelector('.status-tags-container');
-    if (!statusContainer) {
-        statusContainer = document.createElement('div');
-        statusContainer.className = 'status-tags-container';
-        const controls = document.querySelector('.controls');
-        if (controls) {
+    console.log('Initializing status tags...');
+    const statusContainer = document.querySelector('.status-tags-container');
+    
+    // Si le conteneur existe déjà et a des tags, ne pas réinitialiser
+    if (statusContainer && statusContainer.children.length > 0) {
+        console.log('Status tags already initialized, skipping...');
+        return;
+    }
 
-            const searchInput = document.getElementById('hospital-search');
-            if (searchInput) {
-                searchInput.after(statusContainer);
-            } else {
-                controls.appendChild(statusContainer);
-            }
+    let container = statusContainer;
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'status-tags-container';
+        const controls = document.querySelector('.controls');
+        const searchInput = document.getElementById('hospital-search');
+        
+        if (controls && searchInput) {
+            searchInput.after(container);
+        } else if (controls) {
+            controls.appendChild(container);
         }
     }
 
-    statusContainer.innerHTML = '';
+    // Vider le conteneur pour éviter les doublons
+    container.innerHTML = '';
 
+    // Créer les tags une seule fois
     const statuses = ['Deployed', 'In Progress', 'Signed'];
     const tags = statuses
         .map(status => getStatusTag(status, activeStatus.includes(status)))
         .join('');
     
-    statusContainer.innerHTML = tags;
+    container.innerHTML = tags;
 
-    document.querySelectorAll('.status-tag').forEach(tag => {
+    // Ajouter les événements une seule fois
+    container.querySelectorAll('.status-tag').forEach(tag => {
         tag.removeEventListener('click', handleStatusTagClick);
         tag.addEventListener('click', handleStatusTagClick);
     });
