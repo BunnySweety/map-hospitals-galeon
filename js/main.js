@@ -25,6 +25,18 @@ const IMAGE_LOADING_STATES = {
 
 const DEFAULT_IMAGE = 'images/default-hospital.png';
 
+const STATUS_MAP = {
+    'Deployed': 'deployed',
+    'In Progress': 'inProgress',
+    'Signed': 'signed'
+};
+
+const REVERSE_STATUS_MAP = {
+    'deployed': 'Deployed',
+    'inProgress': 'In Progress',
+    'signed': 'Signed'
+};
+
 // Customization configuration
 const mapCustomization = {
     backgroundColor: '#f0f0f0',
@@ -472,18 +484,31 @@ function getFilters() {
  * @returns {boolean} True if the marker matches all filters, false otherwise
  */
 function markerMatchesFilters(hospital, filters, city, country) {
-    console.log(`Filtering hospital: ${hospital.name}`);
-    console.log(`City from address: ${city}, Filter city: ${filters.city}`);
-
-    const statusMatch = activeStatus.length === 0 || activeStatus.some(s => s.toLowerCase() === hospital.status.toLowerCase());
+    const statusMatch = activeStatus.length === 0 || 
+                       activeStatus.some(s => s.toLowerCase() === hospital.status.toLowerCase() ||
+                                            STATUS_MAP[s] === hospital.status.toLowerCase());
+    
     const continentMatch = !filters.continent || getContinent(hospital.lat, hospital.lon) === filters.continent;
     const countryMatch = !filters.country || country.toLowerCase().includes(filters.country.toLowerCase());
     const cityMatch = !filters.city || (city && city.toLowerCase().includes(filters.city.toLowerCase()));
     const searchMatch = !filters.searchTerm || hospital.name.toLowerCase().includes(filters.searchTerm.toLowerCase());
 
-    console.log(`Status match: ${statusMatch}, Continent match: ${continentMatch}, Country match: ${countryMatch}, City match: ${cityMatch}, Search match: ${searchMatch}`);
-
     return statusMatch && continentMatch && countryMatch && cityMatch && searchMatch;
+}
+
+/**
+ * Gets normalized status
+ * @param {string} status - Status to normalize
+ * @returns {string} Normalized status
+ */
+function getNormalizedStatus(status) {
+    if (STATUS_MAP[status]) {
+        return STATUS_MAP[status];
+    }
+    if (REVERSE_STATUS_MAP[status.toLowerCase()]) {
+        return REVERSE_STATUS_MAP[status.toLowerCase()];
+    }
+    return status;
 }
 
 /**
@@ -1175,16 +1200,16 @@ function updateGaugeLabels() {
  * Updates status tags with proper data attributes
  */
 function updateStatusTags() {
-    const statusList = ['Deployed', 'In Progress', 'Signed'];
+    const statusList = Object.keys(STATUS_MAP);
     
     document.querySelectorAll('.status-tag').forEach(tag => {
         const status = tag.dataset.status || tag.textContent.trim();
-        if (statusList.includes(status)) {
-            const isActive = activeStatus.includes(status);
-            const newTag = getStatusTag(status, isActive);
+        const normalizedStatus = getNormalizedStatus(status);
+        
+        if (statusList.includes(normalizedStatus)) {
+            const isActive = activeStatus.includes(normalizedStatus);
+            const newTag = getStatusTag(normalizedStatus, isActive);
             tag.outerHTML = newTag;
-        } else {
-            console.warn(`Invalid status found: ${status}`);
         }
     });
 }
@@ -1498,13 +1523,14 @@ function initGauge(status) {
  * Initializes status tags with proper attributes
  */
 function initStatusTags() {
-    const statusContainer = document.querySelector('.status-tags-container');
+    let statusContainer = document.querySelector('.status-tags-container');
     if (!statusContainer) {
-        console.warn('Status tags container not found');
-        return;
+        statusContainer = document.createElement('div');
+        statusContainer.className = 'status-tags-container';
+        document.querySelector('.controls')?.appendChild(statusContainer);
     }
 
-    const statuses = ['Deployed', 'In Progress', 'Signed'];
+    const statuses = Object.keys(STATUS_MAP); // ['Deployed', 'In Progress', 'Signed']
     statusContainer.innerHTML = statuses
         .map(status => getStatusTag(status, activeStatus.includes(status)))
         .join('');
@@ -1525,19 +1551,13 @@ function filterHospitals(status) {
         return;
     }
 
-    // Normalize status to match our expected format
-    const originalStatus = getOriginalStatus(status);
-    if (!originalStatus) {
-        console.warn(`Invalid status provided: ${status}`);
-        return;
-    }
-
-    const index = activeStatus.findIndex(s => s === originalStatus);
+    const normalizedStatus = getNormalizedStatus(status);
+    const index = activeStatus.findIndex(s => getNormalizedStatus(s) === normalizedStatus);
 
     if (index > -1) {
         activeStatus.splice(index, 1);
     } else {
-        activeStatus.push(originalStatus);
+        activeStatus.push(normalizedStatus);
     }
 
     updateStatusTagsVisually();
