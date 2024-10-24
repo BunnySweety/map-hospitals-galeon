@@ -221,52 +221,81 @@ html {
     width: 100%;
 }
 
-/* Styles pour les tags de statut */
-.status-tag {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    margin: 0.3125rem;
-    font-size: 0.875rem;
-    text-transform: uppercase;
-    border-radius: 0.3125rem;
-    color: white;
-    cursor: pointer;
+/* Status Tags Container */
+.status-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    width: 100%;
+    justify-content: flex-start;
 }
 
-/* Couleurs des tags */
-.status-deployed {
+/* Status Tags Base Styles */
+.status-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    min-width: 80px;
+    text-align: center;
+    user-select: none;
+}
+
+/* Status Colors and Hover States */
+.status-tag.status-deployed {
     background-color: #b0e2b5;
     color: #1e7b34;
 }
 
-.status-in-progress {
+.status-tag.status-in-progress {
     background-color: #ffe5a0;
     color: #6e5002;
 }
 
-.status-signed {
+.status-tag.status-signed {
     background-color: #9ecbff;
     color: #0056b3;
 }
 
-/* Styles des tags actifs */
+/* Active States */
 .status-tag.active {
-    color: white;
-    border: 2px solid rgba(0, 0, 0, 0.1);
-    opacity: 1;
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
-.status-deployed.active {
+.status-tag.status-deployed.active {
     background-color: #28a745;
+    color: white;
 }
 
-.status-in-progress.active {
+.status-tag.status-in-progress.active {
     background-color: #ffc107;
     color: #856404;
 }
 
-.status-signed.active {
+.status-tag.status-signed.active {
     background-color: #007bff;
+    color: white;
+}
+
+/* Hover Effects */
+.status-tag:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.status-tag img {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    vertical-align: middle;
 }
 
 /* Mode sombre */
@@ -293,6 +322,14 @@ body.dark-mode .leaflet-control-zoom-out {
 
 body.dark-mode #theme-toggle {
     color: yellow;
+}
+
+body.dark-mode .status-tag {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .status-tag.active {
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* Styles des popups */
@@ -378,7 +415,10 @@ body.dark-mode #theme-toggle {
 }
 
 .popup-status .status-tag {
-    margin-left: 0.3125rem;
+    margin-left: 8px;
+    min-width: auto;
+    padding: 4px 8px;
+    font-size: 0.75rem;
 }
 
 .popup-content p {
@@ -545,6 +585,17 @@ body.dark-mode #theme-toggle {
         height: 0.9375rem;
         margin-right: 0.3125rem;
     }
+
+    .status-tags-container {
+        gap: 6px;
+        margin-top: 8px;
+    }
+
+    .status-tag {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        min-width: 60px;
+    }
 }
 
 @media (max-width: 64em) and (orientation: landscape) {
@@ -645,6 +696,17 @@ body.dark-mode #theme-toggle {
     .gauge-percentage,
     .gauge-label {
         font-size: 0.65rem;
+    }
+
+    .status-tag {
+        padding: 3px 6px;
+        font-size: 0.7rem;
+        min-width: 50px;
+    }
+    
+    .popup-status .status-tag {
+        padding: 2px 6px;
+        font-size: 0.7rem;
     }
 }
 
