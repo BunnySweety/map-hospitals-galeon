@@ -589,17 +589,39 @@ function updateAllUI() {
  */
 function updateAllPopups() {
     console.log('Updating all popups');
-    markers.forEach(marker => {
-        if (marker.getPopup()) {
-            const hospital = marker.hospitalData;
-            if (hospital) {
-                const newContent = createPopupContent(hospital);
-                marker.getPopup().setContent(newContent);
-                if (marker.getPopup().isOpen()) {
-                    marker.getPopup().update();
+    
+    // Mettre à jour les popups en lots pour éviter le blocage
+    const BATCH_SIZE = 5;
+    const updatePopupsBatch = (index) => {
+        const end = Math.min(index + BATCH_SIZE, markers.length);
+        
+        for (let i = index; i < end; i++) {
+            const marker = markers[i];
+            if (marker.getPopup()) {
+                const hospital = marker.hospitalData;
+                if (hospital) {
+                    const popup = marker.getPopup();
+                    const newContent = createPopupContent(hospital);
+                    popup.setContent(newContent);
+                    
+                    if (popup.isOpen()) {
+                        popup.update();
+                    }
                 }
             }
         }
+
+        // Continuer avec le prochain lot si nécessaire
+        if (end < markers.length) {
+            requestAnimationFrame(() => {
+                updatePopupsBatch(end);
+            });
+        }
+    };
+
+    // Démarrer la mise à jour par lots
+    requestAnimationFrame(() => {
+        updatePopupsBatch(0);
     });
 }
 
@@ -899,7 +921,13 @@ function createPopupContent(hospital) {
     return `
     <div class="${popupClass}">
         <h3 class="popup-title">${hospital.name}</h3>
-        <img class="popup-image" src="${hospital.imageUrl}" alt="${hospital.name}" loading="lazy">
+        <img 
+            src="${hospital.imageUrl}" 
+            alt="${hospital.name}"
+            class="popup-image"
+            loading="lazy"
+            onerror="this.src='images/default-hospital.jpg';"
+        />
         <div class="popup-address">
             <strong>${currentTranslations.address || 'Address'}:</strong><br>
             ${hospital.address}
