@@ -701,35 +701,6 @@ function handleMapClick() {
     });
 }
 
-// UI Update Functions
-/**
- * Updates status tags visually with proper status attributes
- */
-function updateStatusTagsVisually() {
-    document.querySelectorAll('.status-tag').forEach(tag => {
-        const status = tag.dataset.status;
-        if (status) {
-            const isActive = activeStatus.includes(status);
-            tag.classList.toggle('active', isActive);
-            tag.setAttribute('aria-pressed', isActive.toString());
-        } else {
-            // Instead of just warning, attempt to fix the tag
-            const statusFromClass = tag.className.match(/status-(\w+)/);
-            if (statusFromClass) {
-                const derivedStatus = getOriginalStatus(statusFromClass[1]);
-                if (derivedStatus) {
-                    tag.setAttribute('data-status', derivedStatus);
-                    const isActive = activeStatus.includes(derivedStatus);
-                    tag.classList.toggle('active', isActive);
-                    tag.setAttribute('aria-pressed', isActive.toString());
-                }
-            } else {
-                console.warn('Status tag found without status class:', tag);
-            }
-        }
-    });
-}
-
 /**
  * Updates the "No hospitals" message
  * @param {number} visibleMarkers - Number of visible markers
@@ -1150,19 +1121,43 @@ function updateGaugeLabels() {
 }
 
 /**
+ * Capitalizes the first letter of a string
+ * @param {string} str - String to capitalize
+ * @returns {string} Capitalized string
+ */
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
  * Updates status tags with proper data attributes
  */
 function updateStatusTags() {
     const statusTagsContainer = document.querySelector('.status-tags-container');
     if (!statusTagsContainer) return;
 
-    // Update the tag classes based on whether their status is active
+    // Iterate through each status tag and update its status
     document.querySelectorAll('.status-tag').forEach(tag => {
         const status = tag.dataset.status;
         if (status) {
             const isActive = activeStatus.includes(status);
             tag.classList.toggle('active', isActive);
             tag.setAttribute('aria-pressed', isActive.toString());
+
+            // Update tag text with the current translation
+            tag.textContent = translations[language][`status${capitalize(status)}`] || status;
+        } else {
+            // Fix for status tag without data-status attribute
+            const statusFromClass = tag.className.match(/status-(\w+)/);
+            if (statusFromClass) {
+                const derivedStatus = getOriginalStatus(statusFromClass[1]);
+                if (derivedStatus) {
+                    tag.setAttribute('data-status', derivedStatus);
+                    const isActive = activeStatus.includes(derivedStatus);
+                    tag.classList.toggle('active', isActive);
+                    tag.setAttribute('aria-pressed', isActive.toString());
+                }
+            }
         }
     });
 }
@@ -1501,22 +1496,6 @@ function initStatusTags() {
     console.log('Status tags initialized');
 }
 
-function updateStatusTags() {
-    const statusTagsContainer = document.querySelector('.status-tags-container');
-    if (!statusTagsContainer) return;
-
-    document.querySelectorAll('.status-tag').forEach(tag => {
-        const status = tag.dataset.status;
-        if (status) {
-            const isActive = activeStatus.includes(status);
-            tag.classList.toggle('active', isActive);
-            tag.setAttribute('aria-pressed', isActive.toString());
-            // Update tag text with the current translation
-            tag.textContent = translations[language][`status${capitalize(status)}`] || status;
-        }
-    });
-}
-
 /**
  * Filters hospitals based on status with proper error handling
  * @param {string} status - The status to filter by
@@ -1536,7 +1515,6 @@ function filterHospitals(status) {
         activeStatus.push(normalizedStatus);
     }
 
-    updateStatusTagsVisually();
     document.dispatchEvent(new Event('mapUpdate'));
     savePreferences();
 }
