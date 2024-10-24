@@ -681,7 +681,7 @@ function updateMapControls() {
  * @param {Event} event - The click event
  */
 function handleStatusTagClick(event) {
-    const originalStatus = event.target.dataset.originalStatus;
+    const originalStatus = event.target.getAttribute('data-original-status');
     if (originalStatus) {
         filterHospitals(originalStatus);
         document.dispatchEvent(new Event('mapUpdate'));
@@ -1485,6 +1485,7 @@ function initStatusTags() {
         const statusTag = document.createElement('span');
         statusTag.classList.add('status-tag', `status-${status}`);
         statusTag.setAttribute('data-status', status);
+        statusTag.setAttribute('data-original-status', status);
         statusTag.textContent = translations[language][`status${capitalize(status)}`] || status;
         statusTagsContainer.appendChild(statusTag);
 
