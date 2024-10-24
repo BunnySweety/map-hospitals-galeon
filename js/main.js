@@ -1,4 +1,3 @@
-
 // Constants
 const MOBILE_BREAKPOINT = 1024;
 const DEFAULT_LANGUAGE = 'en';
@@ -984,14 +983,10 @@ function updateGaugeLabels() {
 function updateStatusTags() {
     const statusTags = document.querySelectorAll('.status-tag');
     statusTags.forEach(tag => {
-        const status = tag.dataset.status || tag.className.split(/\s+/).find(cls => cls.startsWith('status-'))?.replace('status-', '');
+        const status = tag.dataset.status;
         if (status) {
-            const translationKey = status.toLowerCase().replace(" ", "");
-            tag.textContent = currentTranslations[translationKey] ||
-                currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] ||
-                status;
-        } else {
-            console.warn('Status tag found without a status attribute or class:', tag);
+            const translationKey = status.toLowerCase().replace(/\s+/g, '');
+            tag.textContent = currentTranslations[translationKey] || status;
         }
     });
 }
