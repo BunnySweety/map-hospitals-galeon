@@ -105,66 +105,35 @@ async function initApplication() {
     console.log('Starting application initialization...');
 
     try {
-        // Check required DOM elements and data
+        // Check required elements and data
         checkRequiredElements();
         checkRequiredData();
 
-        // Initialize the map
-        console.log('Initializing map...');
+        // Initialize map
         initMap();
 
         // Load GeoJSON data
-        console.log('Loading GeoJSON data...');
         await loadGeoJSONData();
 
-        // Initialize gauges (progress indicators)
-        console.log('Initializing UI components...');
+        // Initialize gauges and preferences
         initGauges();
-
-        // Load user preferences
-        console.log('Loading user preferences...');
         loadPreferences();
 
-        // Apply translations and then initialize status tags
-        console.log('Applying translations...');
-        await applyTranslations(language);
+        // Apply translations and initialize status tags
+        await applyTranslations(language); // Apply translations and initialize tags correctly
 
-        // Initialize status tags (ensure this is called only once after translations)
-        if (!tagsInitialized) { // New condition to avoid multiple initializations
-            initStatusTags();
-            tagsInitialized = true; // Add a flag to track initialization state
+        if (!tagsInitialized) {
+            initStatusTags(); // Only initialize status tags once
+            tagsInitialized = true;
         }
 
-        // Add markers to the map
-        console.log('Adding markers...');
+        // Add markers and set up event listeners
         await addMarkers();
-
-        // Set up event listeners
-        console.log('Setting up event listeners...');
         addEventListeners();
 
-        adjustForMobile();
-        updateGauges();
-        updateTileLayer();
-        applyMapCustomization();
-        enhanceAccessibility();
-        initHospitalSearch();
-
-        const controls = document.querySelector('.controls');
-        if (controls) {
-            controls.style.display = 'block';
-        }
-
-        setTimeout(() => {
-            updateMarkers();
-        }, 100);
-
         isInitialized = true;
-        console.log('Application initialized successfully');
     } catch (error) {
         console.error('Error during initialization:', error);
-        handleError(error, 'An error occurred during initialization. Please refresh the page or contact support.');
-        throw error;
     }
 }
 
@@ -587,10 +556,10 @@ async function handleLanguageChange(event) {
     // Wait for translations to be loaded and applied
     await applyTranslations(newLanguage);
 
-    // Visually update the status tags without reinitializing them
+    // Update the UI, including status tags, without reinitializing them
     updateStatusTags();
 
-    // Save language preferences
+    // Save the new language preference
     savePreferences();
 }
 
@@ -1107,21 +1076,24 @@ function getStatusTag(status, isActive = false) {
  * @param {string} lang - Language code
  * @returns {Promise} Promise that resolves when translations are applied
  */
-async function applyTranslations(lang) {
-    return new Promise((resolve) => {
-        console.log('Applying translations for language:', lang);
-        currentTranslations = translations[lang] || translations[DEFAULT_LANGUAGE];
-        
-        // Update all translatable elements
-        document.querySelectorAll('[data-translate]').forEach(element => {
-            const key = element.getAttribute('data-translate');
-            if (currentTranslations[key]) {
-                element.textContent = currentTranslations[key];
-            }
-        });
+async function applyTranslations(language) {
+    console.log(`Applying translations for language: ${language}`);
 
-        resolve();
+    if (!translations[language]) {
+        console.error(`Translations not found for language: ${language}`);
+        return;
+    }
+
+    // Apply translations to UI elements
+    document.querySelectorAll('[data-translate]').forEach(element => {
+        const translationKey = element.getAttribute('data-translate');
+        if (translations[language][translationKey]) {
+            element.textContent = translations[language][translationKey];
+        }
     });
+
+    // Also update status tags based on translations
+    updateStatusTags();
 }
 
 /**
@@ -1504,44 +1476,44 @@ function initGauge(status) {
  * Initialize status tags once and prevent multiple initializations
  */
 function initStatusTags() {
-    console.log('Initializing status tags...');
-    const statusContainer = document.querySelector('.status-tags-container');
-    
-    // Si le conteneur existe déjà et a des tags, ne pas réinitialiser
-    if (statusContainer && statusContainer.children.length > 0) {
-        console.log('Status tags already initialized, skipping...');
+    const statusTagsContainer = document.querySelector('.status-tags-container');
+    if (!statusTagsContainer) {
+        console.error('Status tags container not found');
         return;
     }
 
-    let container = statusContainer;
-    if (!container) {
-        container = document.createElement('div');
-        container.className = 'status-tags-container';
-        const controls = document.querySelector('.controls');
-        const searchInput = document.getElementById('hospital-search');
-        
-        if (controls && searchInput) {
-            searchInput.after(container);
-        } else if (controls) {
-            controls.appendChild(container);
+    // Clear existing status tags to prevent duplication
+    statusTagsContainer.innerHTML = ''; // Clear the container before adding new tags
+
+    const statuses = ['deployed', 'inProgress', 'signed'];
+
+    statuses.forEach(status => {
+        const statusTag = document.createElement('span');
+        statusTag.classList.add('status-tag', `status-${status}`);
+        statusTag.setAttribute('data-status', status);
+        statusTag.textContent = translations[language][`status${capitalize(status)}`] || status; // Apply translated text
+        statusTagsContainer.appendChild(statusTag);
+
+        // Add event listener for tag click
+        statusTag.addEventListener('click', handleStatusTagClick);
+    });
+
+    console.log('Status tags initialized');
+}
+
+function updateStatusTags() {
+    const statusTagsContainer = document.querySelector('.status-tags-container');
+    if (!statusTagsContainer) return;
+
+    document.querySelectorAll('.status-tag').forEach(tag => {
+        const status = tag.dataset.status;
+        if (status) {
+            const isActive = activeStatus.includes(status);
+            tag.classList.toggle('active', isActive);
+            tag.setAttribute('aria-pressed', isActive.toString());
+            // Update tag text with the current translation
+            tag.textContent = translations[language][`status${capitalize(status)}`] || status;
         }
-    }
-
-    // Vider le conteneur pour éviter les doublons
-    container.innerHTML = '';
-
-    // Créer les tags une seule fois
-    const statuses = ['Deployed', 'In Progress', 'Signed'];
-    const tags = statuses
-        .map(status => getStatusTag(status, activeStatus.includes(status)))
-        .join('');
-    
-    container.innerHTML = tags;
-
-    // Ajouter les événements une seule fois
-    container.querySelectorAll('.status-tag').forEach(tag => {
-        tag.removeEventListener('click', handleStatusTagClick);
-        tag.addEventListener('click', handleStatusTagClick);
     });
 }
 
