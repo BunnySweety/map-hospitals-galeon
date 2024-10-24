@@ -9,7 +9,6 @@ let markerClusterGroup;
 let currentTranslations = {};
 let markersAdded = false;
 let isInitialized = false;
-let tagsInitialized = false;
 
 const gauges = {};
 const colors = {
@@ -110,30 +109,60 @@ async function initApplication() {
         checkRequiredData();
 
         // Initialize map
+        console.log('Initializing map...');
         initMap();
 
         // Load GeoJSON data
+        console.log('Loading GeoJSON data...');
         await loadGeoJSONData();
 
-        // Initialize gauges and preferences
+        // Initialize UI components - REMOVE initStatusTags FROM HERE
+        console.log('Initializing UI components...');
         initGauges();
+
+        // Load user preferences
+        console.log('Loading user preferences...');
         loadPreferences();
 
-        // Apply translations and initialize status tags
-        await applyTranslations(language); // Apply translations and initialize tags correctly
+        // Apply translations and initialize status tags AFTER translations are loaded
+        console.log('Applying translations...');
+        await applyTranslations(language);
+        
+        // Initialize status tags only once after translations
+        initStatusTags();
 
-        if (!tagsInitialized) {
-            initStatusTags(); // Only initialize status tags once
-            tagsInitialized = true;
-        }
-
-        // Add markers and set up event listeners
+        // Add markers
+        console.log('Adding markers...');
         await addMarkers();
+
+        // Set up event listeners
+        console.log('Setting up event listeners...');
         addEventListeners();
 
+        // Rest of initialization...
+        adjustForMobile();
+        updateGauges();
+        updateTileLayer();
+        // REMOVE updateStatusTagsVisually FROM HERE
+        applyMapCustomization();
+        enhanceAccessibility();
+        initHospitalSearch();
+
+        const controls = document.querySelector('.controls');
+        if (controls) {
+            controls.style.display = 'block';
+        }
+
+        setTimeout(() => {
+            updateMarkers();
+        }, 100);
+
         isInitialized = true;
+        console.log('Application initialized successfully');
     } catch (error) {
         console.error('Error during initialization:', error);
+        handleError(error, 'An error occurred during initialization. Please refresh the page or contact support.');
+        throw error;
     }
 }
 
@@ -552,14 +581,15 @@ function addEventListeners() {
 async function handleLanguageChange(event) {
     const newLanguage = event.target.value;
     language = newLanguage;
-
-    console.log(`Langue sélectionnée : ${newLanguage}`);
-
+    
+    // Wait for translations to be loaded and applied
     await applyTranslations(newLanguage);
-
-    updateStatusTags();
+    
+    // Update UI elements
+    updateAllUI();
     savePreferences();
 }
+
 /**
  * Updates all UI elements that need translation
  */
@@ -678,7 +708,7 @@ function updateMapControls() {
  * @param {Event} event - The click event
  */
 function handleStatusTagClick(event) {
-    const originalStatus = event.target.getAttribute('data-original-status');
+    const originalStatus = event.target.dataset.originalStatus;
     if (originalStatus) {
         filterHospitals(originalStatus);
         document.dispatchEvent(new Event('mapUpdate'));
@@ -694,6 +724,35 @@ function handleMapClick() {
     markerClusterGroup.eachLayer(function (layer) {
         if (layer instanceof L.Marker) {
             layer.closePopup();
+        }
+    });
+}
+
+// UI Update Functions
+/**
+ * Updates status tags visually with proper status attributes
+ */
+function updateStatusTagsVisually() {
+    document.querySelectorAll('.status-tag').forEach(tag => {
+        const status = tag.dataset.status;
+        if (status) {
+            const isActive = activeStatus.includes(status);
+            tag.classList.toggle('active', isActive);
+            tag.setAttribute('aria-pressed', isActive.toString());
+        } else {
+            // Instead of just warning, attempt to fix the tag
+            const statusFromClass = tag.className.match(/status-(\w+)/);
+            if (statusFromClass) {
+                const derivedStatus = getOriginalStatus(statusFromClass[1]);
+                if (derivedStatus) {
+                    tag.setAttribute('data-status', derivedStatus);
+                    const isActive = activeStatus.includes(derivedStatus);
+                    tag.classList.toggle('active', isActive);
+                    tag.setAttribute('aria-pressed', isActive.toString());
+                }
+            } else {
+                console.warn('Status tag found without status class:', tag);
+            }
         }
     });
 }
@@ -1044,22 +1103,21 @@ function getStatusTag(status, isActive = false) {
  * @param {string} lang - Language code
  * @returns {Promise} Promise that resolves when translations are applied
  */
-async function applyTranslations(language) {
-    console.log(`Applying translations for language: ${language}`);
+async function applyTranslations(lang) {
+    return new Promise((resolve) => {
+        console.log('Applying translations for language:', lang);
+        currentTranslations = translations[lang] || translations[DEFAULT_LANGUAGE];
+        
+        // Update all translatable elements
+        document.querySelectorAll('[data-translate]').forEach(element => {
+            const key = element.getAttribute('data-translate');
+            if (currentTranslations[key]) {
+                element.textContent = currentTranslations[key];
+            }
+        });
 
-    if (!translations[language]) {
-        console.error(`Translations not found for language: ${language}`);
-        return;
-    }
-
-    document.querySelectorAll('[data-translate]').forEach(element => {
-        const translationKey = element.getAttribute('data-translate');
-        if (translations[language][translationKey]) {
-            element.textContent = translations[language][translationKey];
-        }
+        resolve();
     });
-
-    updateStatusTags();
 }
 
 /**
@@ -1116,43 +1174,15 @@ function updateGaugeLabels() {
 }
 
 /**
- * Capitalizes the first letter of a string
- * @param {string} str - String to capitalize
- * @returns {string} Capitalized string
- */
-function capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-/**
  * Updates status tags with proper data attributes
  */
 function updateStatusTags() {
-    const statusTagsContainer = document.querySelector('.status-tags-container');
-    if (!statusTagsContainer) return;
-
-    // Iterate through each status tag and update its status
     document.querySelectorAll('.status-tag').forEach(tag => {
-        const status = tag.dataset.status;
-        if (status) {
-            const isActive = activeStatus.includes(status);
-            tag.classList.toggle('active', isActive);
-            tag.setAttribute('aria-pressed', isActive.toString());
-
-            // Update tag text with the current translation
-            tag.textContent = translations[language][`status${capitalize(status)}`] || status;
-        } else {
-            // Fix for status tag without data-status attribute
-            const statusFromClass = tag.className.match(/status-(\w+)/);
-            if (statusFromClass) {
-                const derivedStatus = getOriginalStatus(statusFromClass[1]);
-                if (derivedStatus) {
-                    tag.setAttribute('data-status', derivedStatus);
-                    const isActive = activeStatus.includes(derivedStatus);
-                    tag.classList.toggle('active', isActive);
-                    tag.setAttribute('aria-pressed', isActive.toString());
-                }
-            }
+        const originalStatus = tag.dataset.originalStatus;
+        if (originalStatus) {
+            const isActive = activeStatus.includes(originalStatus);
+            const newTag = getStatusTag(originalStatus, isActive);
+            tag.outerHTML = newTag;
         }
     });
 }
@@ -1466,28 +1496,45 @@ function initGauge(status) {
  * Initialize status tags once and prevent multiple initializations
  */
 function initStatusTags() {
-    const statusTagsContainer = document.querySelector('.status-filters');
-    if (!statusTagsContainer) {
-        console.error('Status tags container not found');
+    console.log('Initializing status tags...');
+    const statusContainer = document.querySelector('.status-tags-container');
+    
+    // Si le conteneur existe déjà et a des tags, ne pas réinitialiser
+    if (statusContainer && statusContainer.children.length > 0) {
+        console.log('Status tags already initialized, skipping...');
         return;
     }
 
-    statusTagsContainer.innerHTML = '';
+    let container = statusContainer;
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'status-tags-container';
+        const controls = document.querySelector('.controls');
+        const searchInput = document.getElementById('hospital-search');
+        
+        if (controls && searchInput) {
+            searchInput.after(container);
+        } else if (controls) {
+            controls.appendChild(container);
+        }
+    }
 
-    const statuses = ['deployed', 'inProgress', 'signed'];
+    // Vider le conteneur pour éviter les doublons
+    container.innerHTML = '';
 
-    statuses.forEach(status => {
-        const statusTag = document.createElement('span');
-        statusTag.classList.add('status-tag', `status-${status}`);
-        statusTag.setAttribute('data-status', status);
-        statusTag.setAttribute('data-original-status', status);
-        statusTag.textContent = translations[language][`status${capitalize(status)}`] || status;
-        statusTagsContainer.appendChild(statusTag);
+    // Créer les tags une seule fois
+    const statuses = ['Deployed', 'In Progress', 'Signed'];
+    const tags = statuses
+        .map(status => getStatusTag(status, activeStatus.includes(status)))
+        .join('');
+    
+    container.innerHTML = tags;
 
-        statusTag.addEventListener('click', handleStatusTagClick);
+    // Ajouter les événements une seule fois
+    container.querySelectorAll('.status-tag').forEach(tag => {
+        tag.removeEventListener('click', handleStatusTagClick);
+        tag.addEventListener('click', handleStatusTagClick);
     });
-
-    console.log('Status tags initialized');
 }
 
 /**
@@ -1509,6 +1556,7 @@ function filterHospitals(status) {
         activeStatus.push(normalizedStatus);
     }
 
+    updateStatusTagsVisually();
     document.dispatchEvent(new Event('mapUpdate'));
     savePreferences();
 }
