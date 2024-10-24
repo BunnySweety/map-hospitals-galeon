@@ -1201,12 +1201,27 @@ function updateGaugeLabels() {
  */
 function updateStatusTags() {
     const statusList = Object.keys(STATUS_MAP);
+    const existingTags = document.querySelectorAll('.status-tag');
     
-    document.querySelectorAll('.status-tag').forEach(tag => {
-        const status = tag.dataset.status || tag.textContent.trim();
-        const normalizedStatus = getNormalizedStatus(status);
-        
-        if (statusList.includes(normalizedStatus)) {
+    // Remove duplicate tags if they exist
+    if (existingTags.length > statusList.length) {
+        const statusContainer = document.querySelector('.status-tags-container');
+        if (statusContainer) {
+            statusContainer.innerHTML = '';
+            statusList.forEach(status => {
+                const isActive = activeStatus.includes(status);
+                const newTag = getStatusTag(status, isActive);
+                statusContainer.insertAdjacentHTML('beforeend', newTag);
+            });
+        }
+        return;
+    }
+    
+    // Update existing tags
+    existingTags.forEach(tag => {
+        const status = tag.dataset.status;
+        if (status && statusList.includes(status)) {
+            const normalizedStatus = getNormalizedStatus(status);
             const isActive = activeStatus.includes(normalizedStatus);
             const newTag = getStatusTag(normalizedStatus, isActive);
             tag.outerHTML = newTag;
@@ -1523,18 +1538,33 @@ function initGauge(status) {
  * Initializes status tags with proper attributes
  */
 function initStatusTags() {
+    // Clear existing status tags first
     let statusContainer = document.querySelector('.status-tags-container');
     if (!statusContainer) {
         statusContainer = document.createElement('div');
         statusContainer.className = 'status-tags-container';
-        document.querySelector('.controls')?.appendChild(statusContainer);
+        const controls = document.querySelector('.controls');
+        if (controls) {
+            // Insert after the search inputs
+            const searchInput = document.querySelector('#hospital-search');
+            if (searchInput) {
+                searchInput.after(statusContainer);
+            } else {
+                controls.appendChild(statusContainer);
+            }
+        }
+    } else {
+        // Clear existing content to prevent duplication
+        statusContainer.innerHTML = '';
     }
 
-    const statuses = Object.keys(STATUS_MAP); // ['Deployed', 'In Progress', 'Signed']
+    // Add new status tags
+    const statuses = Object.keys(STATUS_MAP);
     statusContainer.innerHTML = statuses
         .map(status => getStatusTag(status, activeStatus.includes(status)))
         .join('');
 
+    // Add event listeners
     document.querySelectorAll('.status-tag').forEach(tag => {
         tag.removeEventListener('click', handleStatusTagClick);
         tag.addEventListener('click', handleStatusTagClick);
