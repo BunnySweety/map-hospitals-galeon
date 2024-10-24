@@ -1,3 +1,4 @@
+
 // Constants
 const MOBILE_BREAKPOINT = 1024;
 const DEFAULT_LANGUAGE = 'en';
@@ -199,16 +200,10 @@ function initMap() {
             scrollWheelZoom: true,
             dragging: true,
             tap: true,
-            wheelDebounceTime: 150,
-            zoomSnap: 0.5,
+            wheelDebounceTime: 150, // Debounce le zoom à la souris
+            zoomSnap: 0.5, // Rend le zoom plus fluide
             zoomDelta: 0.5
         });
-
-        // Créer les panes après l'initialisation de la carte
-        map.createPane('borderPane');
-        map.getPane('borderPane').style.zIndex = 400;
-        map.createPane('markerPane');
-        map.getPane('markerPane').style.zIndex = 450;
 
         markerClusterGroup = L.markerClusterGroup({
             chunkedLoading: true,
@@ -690,28 +685,24 @@ function applyMapCustomization() {
         mapElement.style.backgroundColor = mapCustomization.backgroundColor;
     }
 
-    // S'assurer que la carte et les données GeoJSON sont disponibles
-    if (map && window.countriesData && map.getPane('borderPane')) {
-        if (window.borderLayer) {
-            map.removeLayer(window.borderLayer);
-        }
-
-        try {
-            window.borderLayer = L.geoJSON(window.countriesData, {
-                pane: 'borderPane',
-                style: {
-                    color: mapCustomization.borderColor,
-                    weight: 1,
-                    fillOpacity: 0
-                },
-                interactive: false
-            });
-
-            window.borderLayer.addTo(map);
-        } catch (error) {
-            console.warn('Error adding GeoJSON layer:', error);
-        }
+    if (window.borderLayer) {
+        map.removeLayer(window.borderLayer);
     }
+    if (window.countriesData) {
+        window.borderLayer = L.geoJSON(window.countriesData, {
+            pane: 'borderPane',
+            style: {
+                color: mapCustomization.borderColor,
+                weight: 1,
+                fillOpacity: 0
+            },
+            interactive: false
+        }).addTo(map);
+    }
+
+    const style = document.createElement('style');
+    style.textContent = `.leaflet-marker-icon { color: ${mapCustomization.labelColor} !important; }`;
+    document.head.appendChild(style);
 
     updateMarkers();
     updateLegend();
@@ -769,17 +760,11 @@ async function loadGeoJSONData() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        
-        if (!data || !data.type || !data.features) {
-            throw new Error('Invalid GeoJSON data structure');
-        }
-        
         window.countriesData = data;
         console.log('GeoJSON data loaded successfully');
     } catch (error) {
         console.error('Error loading GeoJSON data:', error);
         handleError(error, 'Failed to load map data. Some features may not be available.');
-        window.countriesData = null;
     }
 }
 
@@ -999,10 +984,14 @@ function updateGaugeLabels() {
 function updateStatusTags() {
     const statusTags = document.querySelectorAll('.status-tag');
     statusTags.forEach(tag => {
-        const status = tag.dataset.status;
+        const status = tag.dataset.status || tag.className.split(/\s+/).find(cls => cls.startsWith('status-'))?.replace('status-', '');
         if (status) {
-            const translationKey = status.toLowerCase().replace(/\s+/g, '');
-            tag.textContent = currentTranslations[translationKey] || status;
+            const translationKey = status.toLowerCase().replace(" ", "");
+            tag.textContent = currentTranslations[translationKey] ||
+                currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] ||
+                status;
+        } else {
+            console.warn('Status tag found without a status attribute or class:', tag);
         }
     });
 }
