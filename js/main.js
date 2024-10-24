@@ -17,6 +17,14 @@ const colors = {
     'Signed': '#2196F3'
 };
 
+const IMAGE_LOADING_STATES = {
+    LOADING: 'loading',
+    SUCCESS: 'success',
+    ERROR: 'error'
+};
+
+const DEFAULT_IMAGE = 'images/default-hospital.png';
+
 // Customization configuration
 const mapCustomization = {
     backgroundColor: '#f0f0f0',
@@ -589,18 +597,21 @@ function updateAllUI() {
 
 
 /**
- * Updates all popups with new content and initializes image loading
+ * Updates all popups with optimized image loading
  */
 function updateAllPopups() {
     console.log('Updating all popups');
     
     const BATCH_SIZE = 5;
-    const updatePopupsBatch = (index) => {
-        const end = Math.min(index + BATCH_SIZE, markers.length);
+    let currentBatch = 0;
+    
+    function processNextBatch() {
+        const start = currentBatch * BATCH_SIZE;
+        const end = Math.min(start + BATCH_SIZE, markers.length);
         
-        for (let i = index; i < end; i++) {
+        for (let i = start; i < end; i++) {
             const marker = markers[i];
-            if (marker.getPopup()) {
+            if (marker?.getPopup()) {
                 const hospital = marker.hospitalData;
                 if (hospital) {
                     const popup = marker.getPopup();
@@ -609,45 +620,64 @@ function updateAllPopups() {
                     
                     if (popup.isOpen()) {
                         popup.update();
-
                         initPopupImageLoading(popup.getElement());
                     }
                 }
             }
         }
 
+        currentBatch++;
+        
         if (end < markers.length) {
-            requestAnimationFrame(() => {
-                updatePopupsBatch(end);
-            });
+            requestAnimationFrame(processNextBatch);
         }
-    };
+    }
 
-    requestAnimationFrame(() => {
-        updatePopupsBatch(0);
-    });
+    requestAnimationFrame(processNextBatch);
 }
 
 /**
- * Initializes image loading for popup
+ * Initializes image loading for popup with improved error handling and state management
  * @param {HTMLElement} popupElement - The popup DOM element
  */
 function initPopupImageLoading(popupElement) {
     if (!popupElement) return;
 
     const img = popupElement.querySelector('.popup-image');
-    if (img && img.dataset.src) {
-        const actualSrc = img.dataset.src;
-        
-        // Créer une nouvelle image pour le préchargement
-        const tempImage = new Image();
-        tempImage.onload = () => {
-            img.src = actualSrc;
-        };
-        tempImage.onerror = () => {
-            img.src = 'images/default-hospital.png';
-        };
-        tempImage.src = actualSrc;
+    if (!img || !img.dataset.src) return;
+
+    const actualSrc = img.dataset.src;
+    if (!actualSrc) return;
+
+    // Keep track of the current loading state
+    const loadingState = img.getAttribute('data-loading-state');
+    if (loadingState === IMAGE_LOADING_STATES.SUCCESS) return;
+
+    // Create an image loader
+    const imageLoader = new Image();
+    
+    imageLoader.onload = () => {
+        requestAnimationFrame(() => {
+            if (img.parentElement) { // Check if image is still in DOM
+                img.src = actualSrc;
+                img.setAttribute('data-loading-state', IMAGE_LOADING_STATES.SUCCESS);
+            }
+        });
+    };
+
+    imageLoader.onerror = () => {
+        requestAnimationFrame(() => {
+            if (img.parentElement) { // Check if image is still in DOM
+                img.src = DEFAULT_IMAGE;
+                img.setAttribute('data-loading-state', IMAGE_LOADING_STATES.ERROR);
+            }
+        });
+    };
+
+    // Start loading only if we're not already in a loading state
+    if (loadingState !== IMAGE_LOADING_STATES.LOADING) {
+        img.setAttribute('data-loading-state', IMAGE_LOADING_STATES.LOADING);
+        imageLoader.src = actualSrc;
     }
 }
 
@@ -944,20 +974,16 @@ function createPopupContent(hospital) {
     const translatedStatus = getTranslatedStatus(hospital.status);
     const statusClass = hospital.status.toLowerCase().replace(/\s+/g, "-");
 
-    // Éviter le chargement différé pour Edge
-    const isEdge = /Edge/.test(navigator.userAgent);
-    const loadingAttr = isEdge ? '' : 'loading="lazy"';
-
     return `
     <div class="${popupClass}">
         <h3 class="popup-title">${hospital.name}</h3>
         <div class="popup-image-wrapper">
             <img 
-                src="images/default-hospital.png"
+                src="${DEFAULT_IMAGE}"
                 data-src="${hospital.imageUrl}" 
                 alt="${hospital.name}"
                 class="popup-image"
-                ${loadingAttr}
+                data-loading-state="${IMAGE_LOADING_STATES.LOADING}"
             />
         </div>
         <div class="popup-address">
