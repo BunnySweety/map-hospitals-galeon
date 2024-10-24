@@ -57,9 +57,19 @@ const debounce = (func, wait) => {
     };
 };
 
+/**
+ * Debounced marker update with optimized timing
+ */
 const debouncedUpdateMarkers = debounce(() => {
-    requestAnimationFrame(updateMarkers);
-}, 300);
+    requestAnimationFrame(() => {
+        const startTime = performance.now();
+        updateMarkers().then(() => {
+            const duration = performance.now() - startTime;
+            console.log(`Markers update took ${duration.toFixed(2)}ms`);
+        });
+    });
+}, 150);
+
 /**
  * Main initialization function
  * @async
@@ -267,36 +277,45 @@ async function addMarkers() {
 /**
  * Updates markers in chunks to improve performance
  * @param {Array} hospitals - Array of hospital data
- * @param {number} [chunkSize=3] - Number of markers to process in each chunk
+ * @param {number} [chunkSize=5] - Number of markers to process in each chunk
  * @returns {Promise} A promise that resolves when all markers are processed
  */
-function updateMarkersInChunks(hospitals, chunkSize = 3) {
+function updateMarkersInChunks(hospitals, chunkSize = 5) {
     return new Promise((resolve) => {
-        let index = 0;
+        const chunks = [];
+        for (let i = 0; i < hospitals.length; i += chunkSize) {
+            chunks.push(hospitals.slice(i, i + chunkSize));
+        }
+
+        let currentChunk = 0;
         let createdMarkers = 0;
 
-        function processChunk() {
-            const chunk = hospitals.slice(index, index + chunkSize);
+        function processNextChunk() {
+            if (currentChunk >= chunks.length) {
+                console.log(`Total markers created: ${createdMarkers}`);
+                resolve();
+                return;
+            }
 
-            chunk.forEach(hospital => {
+            const startTime = performance.now();
+            
+            chunks[currentChunk].forEach(hospital => {
                 const marker = createMarker(hospital);
                 markers.push(marker);
                 createdMarkers++;
             });
 
-            index += chunkSize;
+            currentChunk++;
 
-            if (index < hospitals.length) {
-                requestAnimationFrame(processChunk);
+            const processingTime = performance.now() - startTime;
+            if (processingTime < 16 && currentChunk < chunks.length) {
+                processNextChunk();
             } else {
-                console.log(`Total markers created: ${createdMarkers}`);
-                console.log('All markers processed');
-                updateMarkers();
-                resolve();
+                requestAnimationFrame(processNextChunk);
             }
         }
 
-        requestAnimationFrame(processChunk);
+        requestAnimationFrame(processNextChunk);
     });
 }
 
@@ -363,45 +382,59 @@ async function updateMarkers() {
         return;
     }
 
-    console.log('Updating existing markers');
     const filters = getFilters();
-
-    let visibleMarkers = 0;
     const bounds = L.latLngBounds();
-    const markersToAdd = [];
-    const markersToRemove = [];
+    let visibleMarkers = 0;
 
-    markers.forEach(marker => {
+    const markersToUpdate = markers.map(marker => {
         const hospital = marker.hospitalData;
         const { city, country } = extractLocationInfo(hospital.address);
-
-        if (markerMatchesFilters(hospital, filters, city, country)) {
-            if (!markerClusterGroup.hasLayer(marker)) {
-                markersToAdd.push(marker);
-            }
+        const shouldShow = markerMatchesFilters(hospital, filters, city, country);
+        
+        if (shouldShow) {
             bounds.extend(marker.getLatLng());
             visibleMarkers++;
-        } else if (markerClusterGroup.hasLayer(marker)) {
-            markersToRemove.push(marker);
-        }
-    });
-
-    requestAnimationFrame(() => {
-        markerClusterGroup.removeLayers(markersToRemove);
-        markerClusterGroup.addLayers(markersToAdd);
-
-        console.log(`Visible markers after update: ${visibleMarkers}`);
-        updateGauges();
-        updateNoHospitalsMessage(visibleMarkers);
-
-        if (visibleMarkers === 0) {
-            map.setView([50, 10], 4);
-        } else if (!map.getBounds().intersects(bounds)) {
-            map.fitBounds(bounds, { padding: [50, 50], maxZoom: map.getZoom() });
         }
 
-        console.log('Markers updated successfully');
+        return {
+            marker,
+            shouldShow
+        };
     });
+
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < markersToUpdate.length; i += BATCH_SIZE) {
+        const batch = markersToUpdate.slice(i, i + BATCH_SIZE);
+        
+        requestAnimationFrame(() => {
+            batch.forEach(({ marker, shouldShow }) => {
+                if (shouldShow && !markerClusterGroup.hasLayer(marker)) {
+                    markerClusterGroup.addLayer(marker);
+                } else if (!shouldShow && markerClusterGroup.hasLayer(marker)) {
+                    markerClusterGroup.removeLayer(marker);
+                }
+            });
+        });
+
+        if (i + BATCH_SIZE < markersToUpdate.length) {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+    }
+
+    updateGauges();
+    updateNoHospitalsMessage(visibleMarkers);
+
+    if (visibleMarkers === 0) {
+        map.setView([50, 10], 4);
+    } else if (!map.getBounds().intersects(bounds)) {
+        requestAnimationFrame(() => {
+            map.fitBounds(bounds, { 
+                padding: [50, 50], 
+                maxZoom: map.getZoom(),
+                duration: 0.5
+            });
+        });
+    }
 }
 
 // Filter and Search Functions
@@ -890,7 +923,6 @@ function createPopupContent(hospital) {
 function getTranslatedStatus(status) {
     if (!status) return '';
 
-    // Définir les correspondances de statut
     const statusMap = {
         'Deployed': 'deployed',
         'In Progress': 'inprogress',
@@ -1114,7 +1146,7 @@ function loadPreferences() {
         language = preferences.language || DEFAULT_LANGUAGE;
         const languageSelect = document.getElementById('language-select');
         if (languageSelect) {
-            languageSelect.value = language; // Définir la valeur correcte
+            languageSelect.value = language;
         }
 
         darkMode = preferences.theme === 'dark';
@@ -1380,7 +1412,6 @@ function initStatusTags() {
 function filterHospitals(status) {
     if (!status) return;
 
-    // Obtenir le statut original pour la comparaison
     const originalStatus = getOriginalStatus(status);
     const index = activeStatus.findIndex(s => s === originalStatus);
 
