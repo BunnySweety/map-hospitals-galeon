@@ -524,26 +524,47 @@ function addEventListeners() {
  * Handles language change
  * @param {Event} event - The change event
  */
-function handleLanguageChange(event) {
+async function handleLanguageChange(event) {
     const newLanguage = event.target.value;
     language = newLanguage;
-    applyTranslations(newLanguage);
+    
+    // Wait for translations to be loaded and applied
+    await applyTranslations(newLanguage);
+    
+    // Update UI elements
+    updateAllUI();
     savePreferences();
+}
+
+/**
+ * Updates all UI elements that need translation
+ */
+function updateAllUI() {
+    console.log('Updating all UI elements');
+    updatePlaceholders();
+    updateContinentSelect();
+    updateGaugeLabels();
+    updateStatusTags();
+    updateLegend();
     updateAllPopups();
     updateMarkers();
-    updateStatusTags();
 }
+
 
 /**
  * Updates all popups with new content
  */
 function updateAllPopups() {
+    console.log('Updating all popups');
     markers.forEach(marker => {
         if (marker.getPopup()) {
-            const newContent = createPopupContent(marker.hospitalData);
-            marker.getPopup().setContent(newContent);
-            if (marker.getPopup().isOpen()) {
-                marker.getPopup().update();
+            const hospital = marker.hospitalData;
+            if (hospital) {
+                const newContent = createPopupContent(hospital);
+                marker.getPopup().setContent(newContent);
+                if (marker.getPopup().isOpen()) {
+                    marker.getPopup().update();
+                }
             }
         }
     });
@@ -839,11 +860,8 @@ function createPopupContent(hospital) {
     const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
     const popupClass = isMobile && isLandscape ? 'popup-content mobile-landscape' : 'popup-content';
 
-    // Get the translated status
-    const statusKey = hospital.status.toLowerCase().replace(/\s+/g, "");
-    const translatedStatus = currentTranslations[statusKey] || 
-                           currentTranslations[`status${hospital.status.charAt(0).toUpperCase() + hospital.status.slice(1)}`] ||
-                           hospital.status;
+    const translatedStatus = getTranslatedStatus(hospital.status);
+    const statusClass = hospital.status.toLowerCase().replace(/\s+/g, "-");
 
     return `
     <div class="${popupClass}">
@@ -853,13 +871,70 @@ function createPopupContent(hospital) {
             <strong>${currentTranslations.address || 'Address'}:</strong><br>
             ${hospital.address}
         </div>
-        <a href="${hospital.website}" target="_blank" rel="noopener noreferrer" class="popup-link">${currentTranslations.visitWebsite || 'Visit Website'}</a>
+        <a href="${hospital.website}" target="_blank" rel="noopener noreferrer" class="popup-link">
+            ${currentTranslations.visitWebsite || 'Visit Website'}
+        </a>
         <div class="popup-status">
             <span>${currentTranslations.status || 'Status'}:</span>
-            <span class="status-tag status-${hospital.status.toLowerCase().replace(/\s+/g, "-")}">${translatedStatus}</span>
+            <span class="status-tag status-${statusClass}">${translatedStatus}</span>
         </div>
     </div>
     `;
+}
+
+/**
+ * Gets translated status from mapped key
+ * @param {string} status - Original status
+ * @returns {string} Translated status
+ */
+function getTranslatedStatus(status) {
+    if (!status) return '';
+
+    // Définir les correspondances de statut
+    const statusMap = {
+        'Deployed': 'deployed',
+        'In Progress': 'inprogress',
+        'Signed': 'signed'
+    };
+
+    const translationKey = statusMap[status];
+    
+    if (!translationKey) {
+        console.warn(`Unknown status: ${status}`);
+        return status;
+    }
+
+    return currentTranslations[translationKey] || status;
+}
+
+/**
+ * Gets mapped key from status
+ * @param {string} status - Status to map
+ * @returns {string} Mapped key
+ */
+function getMappedStatus(status) {
+    const statusMap = {
+        'Deployed': 'deployed',
+        'In Progress': 'inprogress',
+        'Signed': 'signed'
+    };
+    
+    return statusMap[status] || status.toLowerCase();
+}
+
+/**
+ * Gets original status from mapped key
+ * @param {string} key - Mapped key
+ * @returns {string} Original status
+ */
+function getOriginalStatus(key) {
+    const reverseMap = {
+        'deployed': 'Deployed',
+        'inprogress': 'In Progress',
+        'signed': 'Signed'
+    };
+    
+    return reverseMap[key] || key;
 }
 
 /**
@@ -886,25 +961,26 @@ function getStatusTag(status, isActive = false) {
     }
 }
 
-// Translation and Localization Functions
 /**
- * Applies translations to the UI
+ * Applies translations and returns a promise when completed
  * @param {string} lang - Language code
+ * @returns {Promise} Promise that resolves when translations are applied
  */
-function applyTranslations(lang) {
-    currentTranslations = translations[lang] || translations[DEFAULT_LANGUAGE];
-    document.querySelectorAll('[data-translate]').forEach(element => {
-        const key = element.getAttribute('data-translate');
-        if (currentTranslations[key]) {
-            element.textContent = currentTranslations[key];
-        }
+async function applyTranslations(lang) {
+    return new Promise((resolve) => {
+        console.log('Applying translations for language:', lang);
+        currentTranslations = translations[lang] || translations[DEFAULT_LANGUAGE];
+        
+        // Update all translatable elements
+        document.querySelectorAll('[data-translate]').forEach(element => {
+            const key = element.getAttribute('data-translate');
+            if (currentTranslations[key]) {
+                element.textContent = currentTranslations[key];
+            }
+        });
+
+        resolve();
     });
-    updatePlaceholders();
-    updateContinentSelect();
-    updateGaugeLabels();
-    updateStatusTags();
-    updateLegend();
-    updateMarkers();
 }
 
 /**
@@ -964,25 +1040,20 @@ function updateGaugeLabels() {
  * Updates status tags with translated text
  */
 function updateStatusTags() {
-    const statusTags = document.querySelectorAll('.status-tag');
-    statusTags.forEach(tag => {
-        // Get status from data attribute or class
-        const status = tag.dataset.status || tag.className.split(/\s+/).find(cls => cls.startsWith('status-'))?.replace('status-', '');
+    document.querySelectorAll('.status-tag').forEach(tag => {
+        const status = tag.dataset.status;
         if (status) {
-            // Convert status to correct translation key format
-            const translationKey = status.toLowerCase().replace(/\s+/g, "");
-            const translatedText = currentTranslations[translationKey] || 
-                                 currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] || 
-                                 status;
+            // Obtenir le statut original
+            const originalStatus = getOriginalStatus(status);
+            // Obtenir la traduction
+            const translatedText = currentTranslations[status] || originalStatus;
             
-            // Update the text content while preserving any child elements
+            // Préserver l'icône si elle existe
             const existingIcon = tag.querySelector('img');
             tag.textContent = translatedText;
             if (existingIcon) {
                 tag.insertBefore(existingIcon, tag.firstChild);
             }
-        } else {
-            console.warn('Status tag found without a status attribute or class:', tag);
         }
     });
 }
@@ -1043,7 +1114,7 @@ function loadPreferences() {
         language = preferences.language || DEFAULT_LANGUAGE;
         const languageSelect = document.getElementById('language-select');
         if (languageSelect) {
-            languageSelect.value = language;
+            languageSelect.value = language; // Définir la valeur correcte
         }
 
         darkMode = preferences.theme === 'dark';
@@ -1068,6 +1139,7 @@ function loadPreferences() {
         activeStatus = preferences.activeStatus || [];
 
         applyTranslations(language);
+        updateAllUI();
     } else {
         applyTranslations(DEFAULT_LANGUAGE);
     }
@@ -1308,19 +1380,19 @@ function initStatusTags() {
 function filterHospitals(status) {
     if (!status) return;
 
-    const statusLower = status.toLowerCase();
-    const index = activeStatus.findIndex(s => s.toLowerCase() === statusLower);
+    // Obtenir le statut original pour la comparaison
+    const originalStatus = getOriginalStatus(status);
+    const index = activeStatus.findIndex(s => s === originalStatus);
 
     if (index > -1) {
         activeStatus.splice(index, 1);
     } else {
-        activeStatus.push(status);
+        activeStatus.push(originalStatus);
     }
 
     updateStatusTagsVisually();
     document.dispatchEvent(new Event('mapUpdate'));
     savePreferences();
-    console.log('Active statuses:', activeStatus);
 }
 
 // Main Initialization
