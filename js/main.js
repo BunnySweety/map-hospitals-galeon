@@ -1471,14 +1471,13 @@ function initGauge(status) {
  * Initialize status tags once and prevent multiple initializations
  */
 function initStatusTags() {
-    const statusTagsContainer = document.querySelector('.status-tags-container');
+    const statusTagsContainer = document.querySelector('.status-filters');
     if (!statusTagsContainer) {
         console.error('Status tags container not found');
         return;
     }
 
-    // Clear existing status tags to prevent duplication
-    statusTagsContainer.innerHTML = ''; // Clear the container before adding new tags
+    statusTagsContainer.innerHTML = '';
 
     const statuses = ['deployed', 'inProgress', 'signed'];
 
@@ -1486,10 +1485,9 @@ function initStatusTags() {
         const statusTag = document.createElement('span');
         statusTag.classList.add('status-tag', `status-${status}`);
         statusTag.setAttribute('data-status', status);
-        statusTag.textContent = translations[language][`status${capitalize(status)}`] || status; // Apply translated text
+        statusTag.textContent = translations[language][`status${capitalize(status)}`] || status;
         statusTagsContainer.appendChild(statusTag);
 
-        // Add event listener for tag click
         statusTag.addEventListener('click', handleStatusTagClick);
     });
 
