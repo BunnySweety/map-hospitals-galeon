@@ -721,20 +721,31 @@ function handleMapClick() {
 
 // UI Update Functions
 /**
- * Updates status tags visually
+ * Updates status tags visually with proper status attributes
  */
 function updateStatusTagsVisually() {
     document.querySelectorAll('.status-tag').forEach(tag => {
         const status = tag.dataset.status;
         if (status) {
-            const isActive = activeStatus.some(s => s.toLowerCase() === status.toLowerCase());
+            const isActive = activeStatus.includes(status);
             tag.classList.toggle('active', isActive);
             tag.setAttribute('aria-pressed', isActive.toString());
         } else {
-            console.warn('Status tag found without a status attribute:', tag);
+            // Instead of just warning, attempt to fix the tag
+            const statusFromClass = tag.className.match(/status-(\w+)/);
+            if (statusFromClass) {
+                const derivedStatus = getOriginalStatus(statusFromClass[1]);
+                if (derivedStatus) {
+                    tag.setAttribute('data-status', derivedStatus);
+                    const isActive = activeStatus.includes(derivedStatus);
+                    tag.classList.toggle('active', isActive);
+                    tag.setAttribute('aria-pressed', isActive.toString());
+                }
+            } else {
+                console.warn('Status tag found without status class:', tag);
+            }
         }
     });
-    console.log('Status tags updated visually');
 }
 
 /**
@@ -962,7 +973,7 @@ function getColor(status) {
 }
 
 /**
- * Creates popup content for a hospital
+ * Creates popup content for a hospital with proper status tags
  * @param {Object} hospital - Hospital data
  * @returns {string} HTML content for the popup
  */
@@ -972,18 +983,18 @@ function createPopupContent(hospital) {
     const popupClass = isMobile && isLandscape ? 'popup-content mobile-landscape' : 'popup-content';
 
     const translatedStatus = getTranslatedStatus(hospital.status);
-    const statusClass = hospital.status.toLowerCase().replace(/\s+/g, "-");
+    const statusTag = getStatusTag(hospital.status, activeStatus.includes(hospital.status));
 
     return `
     <div class="${popupClass}">
         <h3 class="popup-title">${hospital.name}</h3>
         <div class="popup-image-wrapper">
             <img 
-                src="${DEFAULT_IMAGE}"
+                src="images/default-hospital.png"
                 data-src="${hospital.imageUrl}" 
                 alt="${hospital.name}"
                 class="popup-image"
-                data-loading-state="${IMAGE_LOADING_STATES.LOADING}"
+                data-loading-state="loading"
             />
         </div>
         <div class="popup-address">
@@ -995,7 +1006,7 @@ function createPopupContent(hospital) {
         </a>
         <div class="popup-status">
             <span>${currentTranslations.status || 'Status'}:</span>
-            <span class="status-tag status-${statusClass}">${translatedStatus}</span>
+            ${statusTag}
         </div>
     </div>
     `;
@@ -1056,27 +1067,33 @@ function getOriginalStatus(key) {
 }
 
 /**
- * Gets status tag HTML
+ * Gets status tag HTML with proper data attributes
  * @param {string} status - Hospital status
  * @param {boolean} isActive - Whether the status is active
  * @returns {string} HTML for the status tag
  */
 function getStatusTag(status, isActive = false) {
-    const statusKey = status.toLowerCase().replace(/\s+/g, "");
-    const translatedStatus = currentTranslations[statusKey] || 
-                           currentTranslations[`status${status.charAt(0).toUpperCase() + status.slice(1)}`] ||
-                           status;
+    if (!status) {
+        console.warn('Attempted to create status tag without status');
+        return '';
+    }
+    
+    const statusKey = getMappedStatus(status);
+    const translatedStatus = currentTranslations[statusKey] || status;
     const activeClass = isActive ? ' active' : '';
     const statusClass = status.toLowerCase().replace(/\s+/g, "-");
-
+    
+    let tagContent = '';
     if (mapCustomization.useCustomStatusIcons && mapCustomization.customStatusIconUrls[status]) {
-        return `<span class="status-tag status-${statusClass}${activeClass}">
-            <img src="${mapCustomization.customStatusIconUrls[status]}" alt="${translatedStatus}" style="width:20px;height:20px;margin-right:5px;">
-            ${translatedStatus}
-        </span>`;
+        tagContent = `<img src="${mapCustomization.customStatusIconUrls[status]}" alt="${translatedStatus}" style="width:20px;height:20px;margin-right:5px;">${translatedStatus}`;
     } else {
-        return `<span class="status-tag status-${statusClass}${activeClass}">${translatedStatus}</span>`;
+        tagContent = translatedStatus;
     }
+
+    return `<span class="status-tag status-${statusClass}${activeClass}" 
+                 data-status="${status}"
+                 role="button" 
+                 aria-pressed="${isActive}">${tagContent}</span>`;
 }
 
 /**
@@ -1155,23 +1172,19 @@ function updateGaugeLabels() {
 }
 
 /**
- * Updates status tags with translated text
+ * Updates status tags with proper data attributes
  */
 function updateStatusTags() {
+    const statusList = ['Deployed', 'In Progress', 'Signed'];
+    
     document.querySelectorAll('.status-tag').forEach(tag => {
-        const status = tag.dataset.status;
-        if (status) {
-            // Obtenir le statut original
-            const originalStatus = getOriginalStatus(status);
-            // Obtenir la traduction
-            const translatedText = currentTranslations[status] || originalStatus;
-            
-            // Préserver l'icône si elle existe
-            const existingIcon = tag.querySelector('img');
-            tag.textContent = translatedText;
-            if (existingIcon) {
-                tag.insertBefore(existingIcon, tag.firstChild);
-            }
+        const status = tag.dataset.status || tag.textContent.trim();
+        if (statusList.includes(status)) {
+            const isActive = activeStatus.includes(status);
+            const newTag = getStatusTag(status, isActive);
+            tag.outerHTML = newTag;
+        } else {
+            console.warn(`Invalid status found: ${status}`);
         }
     });
 }
@@ -1482,9 +1495,20 @@ function initGauge(status) {
 }
 
 /**
- * Initializes status tags
+ * Initializes status tags with proper attributes
  */
 function initStatusTags() {
+    const statusContainer = document.querySelector('.status-tags-container');
+    if (!statusContainer) {
+        console.warn('Status tags container not found');
+        return;
+    }
+
+    const statuses = ['Deployed', 'In Progress', 'Signed'];
+    statusContainer.innerHTML = statuses
+        .map(status => getStatusTag(status, activeStatus.includes(status)))
+        .join('');
+
     document.querySelectorAll('.status-tag').forEach(tag => {
         tag.removeEventListener('click', handleStatusTagClick);
         tag.addEventListener('click', handleStatusTagClick);
@@ -1492,13 +1516,22 @@ function initStatusTags() {
 }
 
 /**
- * Filters hospitals based on status
+ * Filters hospitals based on status with proper error handling
  * @param {string} status - The status to filter by
  */
 function filterHospitals(status) {
-    if (!status) return;
+    if (!status) {
+        console.warn('Attempted to filter with empty status');
+        return;
+    }
 
+    // Normalize status to match our expected format
     const originalStatus = getOriginalStatus(status);
+    if (!originalStatus) {
+        console.warn(`Invalid status provided: ${status}`);
+        return;
+    }
+
     const index = activeStatus.findIndex(s => s === originalStatus);
 
     if (index > -1) {
