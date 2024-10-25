@@ -9,6 +9,7 @@ let markerClusterGroup;
 let currentTranslations = {};
 let markersAdded = false;
 let isInitialized = false;
+let statusTagsInitialized = false;
 
 const gauges = {};
 const colors = {
@@ -129,7 +130,10 @@ async function initApplication() {
         await applyTranslations(language);
         
         // Initialize status tags only once after translations
-        initStatusTags();
+        if (!statusTagsInitialized) {
+            initStatusTags();
+            statusTagsInitialized = true;
+        }
 
         // Add markers
         console.log('Adding markers...');
@@ -734,25 +738,14 @@ function handleMapClick() {
  */
 function updateStatusTagsVisually() {
     document.querySelectorAll('.status-tag').forEach(tag => {
-        const status = tag.dataset.status;
+        const status = tag.dataset.originalStatus;
         if (status) {
             const isActive = activeStatus.includes(status);
             tag.classList.toggle('active', isActive);
             tag.setAttribute('aria-pressed', isActive.toString());
-        } else {
-            // Instead of just warning, attempt to fix the tag
-            const statusFromClass = tag.className.match(/status-(\w+)/);
-            if (statusFromClass) {
-                const derivedStatus = getOriginalStatus(statusFromClass[1]);
-                if (derivedStatus) {
-                    tag.setAttribute('data-status', derivedStatus);
-                    const isActive = activeStatus.includes(derivedStatus);
-                    tag.classList.toggle('active', isActive);
-                    tag.setAttribute('aria-pressed', isActive.toString());
-                }
-            } else {
-                console.warn('Status tag found without status class:', tag);
-            }
+            
+            const translatedStatus = getTranslatedStatus(status);
+            tag.textContent = translatedStatus;
         }
     });
 }
@@ -1027,13 +1020,13 @@ function createPopupContent(hospital) {
 function getTranslatedStatus(status) {
     if (!status) return '';
 
-    const statusMap = {
+    const translationKeys = {
         'Deployed': 'deployed',
-        'In Progress': 'inprogress',
+        'In Progress': 'inProgress',
         'Signed': 'signed'
     };
 
-    const translationKey = statusMap[status];
+    const translationKey = translationKeys[status];
     
     if (!translationKey) {
         console.warn(`Unknown status: ${status}`);
@@ -1499,15 +1492,10 @@ function initStatusTags() {
     console.log('Initializing status tags...');
     const statusContainer = document.querySelector('.status-tags-container');
     
-    // Si le conteneur existe déjà et a des tags, ne pas réinitialiser
-    if (statusContainer && statusContainer.children.length > 0) {
-        console.log('Status tags already initialized, skipping...');
-        return;
-    }
-
-    let container = statusContainer;
-    if (!container) {
-        container = document.createElement('div');
+    if (statusContainer) {
+        statusContainer.innerHTML = '';
+    } else {
+        const container = document.createElement('div');
         container.className = 'status-tags-container';
         const controls = document.querySelector('.controls');
         const searchInput = document.getElementById('hospital-search');
@@ -1517,23 +1505,29 @@ function initStatusTags() {
         } else if (controls) {
             controls.appendChild(container);
         }
+        return container;
     }
 
-    // Vider le conteneur pour éviter les doublons
-    container.innerHTML = '';
-
-    // Créer les tags une seule fois
     const statuses = ['Deployed', 'In Progress', 'Signed'];
-    const tags = statuses
-        .map(status => getStatusTag(status, activeStatus.includes(status)))
-        .join('');
     
-    container.innerHTML = tags;
-
-    // Ajouter les événements une seule fois
-    container.querySelectorAll('.status-tag').forEach(tag => {
-        tag.removeEventListener('click', handleStatusTagClick);
+    statuses.forEach(status => {
+        const translatedStatus = getTranslatedStatus(status);
+        const isActive = activeStatus.includes(status);
+        const tag = document.createElement('span');
+        
+        const statusClass = status.toLowerCase().replace(/\s+/g, "-");
+        tag.className = `status-tag status-${statusClass}${isActive ? ' active' : ''}`;
+        
+        tag.setAttribute('data-status', status);
+        tag.setAttribute('data-original-status', status);
+        tag.setAttribute('role', 'button');
+        tag.setAttribute('aria-pressed', isActive.toString());
+        
+        tag.textContent = translatedStatus;
+        
         tag.addEventListener('click', handleStatusTagClick);
+        
+        statusContainer.appendChild(tag);
     });
 }
 
