@@ -1044,7 +1044,7 @@ function getTranslatedStatus(status) {
 function getMappedStatus(status) {
     const statusMap = {
         'Deployed': 'deployed',
-        'In Progress': 'inprogress',
+        'In Progress': 'inProgress',
         'Signed': 'signed'
     };
     
